@@ -2,7 +2,7 @@
 Simple module for Unturned 3 to use as a tool while developing maps.
 
 # How to install
-Download the lastest available .zip file at releases, go to your Unturned folder, Modules and extract the zip there.
+Download the lastest available .zip file at **[releases](https://github.com/Senior-S/EditorHelper/releases)**, go to your Unturned folder, Modules and extract the zip there.
 Now start the game with BattlEye disabled and you can start using the module! ^^
 
 [![](https://dcbadge.limes.pink/api/server/https://discord.gg/Y3jD5K2Q8C)](https://discord.gg/Y3jD5K2Q8C)
