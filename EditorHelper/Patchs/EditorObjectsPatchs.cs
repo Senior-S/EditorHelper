@@ -25,10 +25,10 @@ public class EditorObjectsPatchs
         EditorHelper.Instance.ObjectsManager.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
     }
     
-    [HarmonyPatch(typeof(EditorObjects), "OnHandleTransformed")]
+    [HarmonyPatch(typeof(EditorObjects), "calculateHandleOffsets")]
     [HarmonyPostfix]
     [UsedImplicitly]
-    static void OnHandleTransformed()
+    static void calculateHandleOffsets()
     {
         EditorHelper.Instance.ObjectsManager.UpdateSelectedObject();
     }
