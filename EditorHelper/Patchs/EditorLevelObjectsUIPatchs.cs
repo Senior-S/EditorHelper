@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using EditorHelper.Editor;
+using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.Unturned;
 using UnityEngine;
@@ -13,21 +14,11 @@ public class EditorLevelObjectsUIPatchs
     [UsedImplicitly]
     static void Constructor(EditorLevelObjectsUI __instance)
     {
-        Bundle bundle = Bundles.getBundle("/Bundles/Textures/Edit/Icons/EditorLevelObjects/EditorLevelObjects.unity3d");
-        
-        SleekButtonIcon highlightButton = new(null)
+        if (EditorHelper.Instance.ObjectsManager == null)
         {
-            PositionOffset_X = 210f,
-            PositionOffset_Y = -30f,
-            PositionScale_Y = 1f,
-            SizeOffset_X = 200f,
-            SizeOffset_Y = 30f,
-            text = "Highlight objects",
-            tooltip = "Highlight all objects of the selected type"
-        };
-        highlightButton.onClickedButton += ProjectMain.HighlightObjects;
-        __instance.AddChild(highlightButton);
-        ProjectMain.HighlightButton = highlightButton;
-
+            EditorHelper.Instance.ObjectsManager = new ObjectsManager();
+        }
+        
+        EditorHelper.Instance.ObjectsManager.Initialize(ref __instance);
     }
 }

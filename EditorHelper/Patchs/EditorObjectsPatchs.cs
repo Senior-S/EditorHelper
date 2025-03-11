@@ -8,27 +8,20 @@ namespace EditorHelper.Patchs;
 [HarmonyPatch]
 public class EditorObjectsPatchs
 {
-    [HarmonyPatch(typeof(EditorObjects), "pointSelection")]
-    [HarmonyPostfix]
-    [UsedImplicitly]
-    static void pointSelection()
-    {
-        ProjectMain.UnhighlightAll();
-    }
-
     [HarmonyPatch(typeof(EditorObjects), "addSelection")]
     [HarmonyPostfix]
     [UsedImplicitly]
     static void addSelection(Transform select)
     {
-        ProjectMain.UnhighlightAll(select);
+        EditorHelper.Instance.ObjectsManager.SelectObject(select);
+        EditorHelper.Instance.ObjectsManager.UnhighlightAll();
     }
     
-    [HarmonyPatch(typeof(EditorObjects), "clearSelection")]
+    [HarmonyPatch(typeof(EditorObjects), "Update")]
     [HarmonyPostfix]
     [UsedImplicitly]
-    static void clearSelection()
-    {
-        ProjectMain.UnhighlightAll();
+    static void Update()
+    {        
+        EditorHelper.Instance.ObjectsManager.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
     }
 }
