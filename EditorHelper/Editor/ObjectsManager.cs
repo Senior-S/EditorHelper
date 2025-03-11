@@ -10,7 +10,7 @@ namespace EditorHelper.Editor;
 
 public class ObjectsManager
 {
-    public readonly List<Highlighter> HighlightedObjects = [];
+    private readonly List<Highlighter> _highlightedObjects = [];
     private readonly SleekButtonIcon _highlightButton;
     private readonly SleekButtonState _highlightColorsButton;
     
@@ -209,7 +209,7 @@ public class ObjectsManager
             }
             highlighter.overlay = true;
             highlighter.ConstantOn(_highlightColors[_currentColorIndex]);
-            HighlightedObjects.Add(highlighter);
+            _highlightedObjects.Add(highlighter);
         }
 
         _highlightButton.text = $"Highlight objects ({levelObjects.Count})";
@@ -312,17 +312,24 @@ public class ObjectsManager
         _objectScaleZ.Value = selectedObject.localScale.z;
     }
     
+    public void UpdateSelectedObject()
+    {
+        if (_selectedObject == null) return;
+
+        SelectObject(_selectedObject);
+    }
+    
     public void UnhighlightAll(Transform ignore = null)
     {
-        if (HighlightedObjects.Count < 1) return;
+        if (_highlightedObjects.Count < 1) return;
 
-        foreach (Highlighter highlightedObject in HighlightedObjects)
+        foreach (Highlighter highlightedObject in _highlightedObjects)
         {
             if (highlightedObject.transform == ignore) continue;
             
             Object.DestroyImmediate(highlightedObject);
         }
-        HighlightedObjects.Clear();
+        _highlightedObjects.Clear();
         _highlightButton.text = "Highlight objects";
     }
     

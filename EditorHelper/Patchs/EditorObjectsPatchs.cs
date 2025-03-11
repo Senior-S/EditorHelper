@@ -24,4 +24,12 @@ public class EditorObjectsPatchs
     {        
         EditorHelper.Instance.ObjectsManager.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
     }
+    
+    [HarmonyPatch(typeof(EditorObjects), "OnHandleTransformed")]
+    [HarmonyPostfix]
+    [UsedImplicitly]
+    static void OnHandleTransformed()
+    {
+        EditorHelper.Instance.ObjectsManager.UpdateSelectedObject();
+    }
 }
