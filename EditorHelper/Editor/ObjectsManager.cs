@@ -198,6 +198,11 @@ public class ObjectsManager
         LevelObject levelObject = FindLevelObject(_selectedObject.gameObject);
         if (levelObject?.asset == null) return;
 
+        if (_highlightedObjects.Count > 0)
+        {
+            UnhighlightAll(_selectedObject);
+        }
+
         List<LevelObject> levelObjects = GetObjectsByGuid(levelObject.asset.GUID);
         foreach (LevelObject lObj in levelObjects)
         {
@@ -293,6 +298,7 @@ public class ObjectsManager
     private void OnSwappedStateColor(SleekButtonState button, int index)
     {
         _currentColorIndex = index;
+        UnhighlightAll(_selectedObject);
     }
 
     public void SelectObject(Transform selectedObject)
