@@ -14,3 +14,5 @@ Yes, as far I know Jdance and Sultan have been working on a module called Breakd
 The module is a work in progress and features will be added as I upload more updates :)
 At the moment the module features are:
 - Highlight objects by type. *(Select an object and highlight all the same objects in the map with a counter displaying how much objects of this type were highlighted)*
+- Highlight color selector.
+- Manual position, rotation and scale setters. *(Change the exact position, rotation or scale by changing the numbers like in Unity)*
