@@ -14,10 +14,7 @@ public class EditorLevelObjectsUIPatchs
     [UsedImplicitly]
     static void Constructor(EditorLevelObjectsUI __instance)
     {
-        if (EditorHelper.Instance.ObjectsManager == null)
-        {
-            EditorHelper.Instance.ObjectsManager = new ObjectsManager();
-        }
+        EditorHelper.Instance.ObjectsManager = new ObjectsManager();
         
         EditorHelper.Instance.ObjectsManager.Initialize(ref __instance);
     }

@@ -25,6 +25,8 @@ public class RoadsManager
     private RoadSelection _roadSelection;
     private EditorDrag _editorDrag;
 
+    private Vector3 _copyPosition = Vector3.zero;
+
     private readonly SleekButtonState _coordinateButton;
     private readonly ISleekToggle _depthToggleButton;
 
@@ -101,13 +103,13 @@ public class RoadsManager
         {
             if (_isUsingHandle)
             {
-                releaseHandle();
+                ReleaseHandle();
             }
 
             _hasDragStart = false;
             if (_isDragging)
             {
-                stopDragging();
+                StopDragging();
                 ClearSelection();
             }
 
@@ -142,7 +144,7 @@ public class RoadsManager
         {
             if (!InputEx.GetKey(ControlsSettings.primary))
             {
-                releaseHandle();
+                ReleaseHandle();
                 return;
             }
 
@@ -235,6 +237,28 @@ public class RoadsManager
             }
             if (EditorRoads.selection != null)
             {
+                if (InputEx.GetKeyDown(KeyCode.B) && InputEx.GetKey(KeyCode.LeftControl))
+                {
+                    _copyPosition = _handles.GetPivotPosition();
+                }
+                if (InputEx.GetKeyDown(KeyCode.N) && _copyPosition != Vector3.zero && InputEx.GetKey(KeyCode.LeftControl))
+                {
+                    if (EditorRoads.road != null)
+                    {
+                        if (EditorRoads.tangentIndex > -1)
+                        {
+                            EditorRoads.road.moveTangent(EditorRoads.vertexIndex, EditorRoads.tangentIndex, _copyPosition - EditorRoads.joint.vertex);
+                        }
+                        else if (EditorRoads.vertexIndex > -1)
+                        {
+                            EditorRoads.road.moveVertex(EditorRoads.vertexIndex, _copyPosition);
+                        }
+                    }
+                    
+                    
+                    CalculateHandleOffsets();
+                }
+                
                 if (InputEx.GetKeyDown(ControlsSettings.tool_2) && EditorInteract.worldHit.transform != null)
                 {
                     Select();
@@ -245,7 +269,6 @@ public class RoadsManager
                     }
                     Quaternion pivotRotation = _handles.GetPivotRotation();
                     _handles.ExternallyTransformPivot(point, pivotRotation, modifyRotation: false);
-                    //applySelection();
                 }
                 if (InputEx.GetKeyDown(ControlsSettings.focus))
                 {
@@ -343,7 +366,7 @@ public class RoadsManager
             _hasDragStart = false;
             if (_isDragging)
             {
-                stopDragging();
+                StopDragging();
             }
         }
 
@@ -432,21 +455,19 @@ public class RoadsManager
         CalculateHandleOffsets();
     }
 
-    private void releaseHandle()
+    private void ReleaseHandle()
     {
-        //applySelection();
         _isUsingHandle = false;
         _handles.MouseUp();
     }
 
-    private void stopDragging()
+    private void StopDragging()
     {
         _dragStartViewportPoint = Vector2.zero;
         _dragStartScreenPoint = Vector2.zero;
         _dragEndViewportPoint = Vector2.zero;
         _dragEndScreenPoint = Vector2.zero;
         _isDragging = false;
-        //onDragStopped?.Invoke();
     }
 
     private void CalculateHandleOffsets()

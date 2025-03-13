@@ -23,7 +23,7 @@
         <DefineConstants>DEBUG;TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
-        <Version>0.0.3</Version>
+        <Version>0.0.4</Version>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
@@ -276,13 +276,16 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="Builders\ButtonBuilder.cs" />
+        <Compile Include="Editor\NodesManager.cs" />
         <Compile Include="Editor\ObjectsManager.cs" />
         <Compile Include="Editor\RoadsManager.cs" />
         <Compile Include="Models\RoadSelection.cs" />
+        <Compile Include="Patchs\EditorEnvironmentNodesUIPatchs.cs" />
         <Compile Include="Patchs\EditorRoadsPatchs.cs" />
         <Compile Include="Patchs\EditorRoadsUIPatchs.cs" />
         <Compile Include="Patchs\EditorLevelObjectsUIPatchs.cs" />
         <Compile Include="Patchs\EditorObjectsPatchs.cs" />
+        <Compile Include="Patchs\LocationDevkitNodeSystemPatchs.cs" />
         <Compile Include="ProjectMain.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
@@ -292,7 +295,7 @@
     
     <!-- Publicizer -->
     <ItemGroup>
-        <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.Unturned\.(Editor).*" />
+        <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.Unturned\.(Editor|LocationDevkitNodeSystem).*" />
     </ItemGroup>
     
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

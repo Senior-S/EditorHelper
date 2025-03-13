@@ -18,4 +18,6 @@ At the moment the module features are:
 - Manual position, rotation and scale setters. *(Change the exact position, rotation or scale by changing the numbers like in Unity)*
 - Road controls. *(Use the control arrows from objects with roads for better precision)*
 - Road radius. *(See a circle around your road point with a **accurated** radius of the road material)*
+- Road key binds. *(Ctrl+B and Ctrl+N support)*
 - Filter objects by mod. *(Paste the mod ID and highlight all objects that are relative to that mod)*
+- Name nodes shown in world. *(Option to display a world label with the location name)*

@@ -13,17 +13,22 @@ public class ButtonBuilder
     
     private float _positionOffsetX = 10f;
     private float _positionOffsetY = 10f;
-    private readonly float _positionScaleY = 1f;
+    // For future reference, the position scale is basically the pivot
+    // X:0 Y:0 = Left Top
+    private float _positionScaleX = 0f;
+    private float _positionScaleY = 1f;
 
     private float _spacing;
     
     // Almost all buttons require a text of some sort
     private string _text = "Button";
 
-    public ButtonBuilder(float sizeOffsetX = 200f, float sizeOffsetY = 30f)
+    public ButtonBuilder(float sizeOffsetX = 200f, float sizeOffsetY = 30f, float positionScaleX = 0f, float positionScaleY = 1f)
     {
         _sizeOffsetX = sizeOffsetX;
         _sizeOffsetY = sizeOffsetY;
+        _positionScaleX = positionScaleX;
+        _positionScaleY = positionScaleY;
 
         _spacing = _sizeOffsetY + 10f;
     }
@@ -53,6 +58,18 @@ public class ButtonBuilder
         return this;
     }
 
+    public ButtonBuilder SetPositionScaleX(float x)
+    {
+        _positionScaleX = x;
+        return this;
+    }
+    
+    public ButtonBuilder SetPositionScaleY(float y)
+    {
+        _positionScaleY = y;
+        return this;
+    }
+
     /// <summary>
     /// Modify the spacing only for the next build.
     /// </summary>
@@ -77,6 +94,7 @@ public class ButtonBuilder
         {
             PositionOffset_X = _positionOffsetX,
             PositionOffset_Y = _positionOffsetY,
+            PositionScale_X = _positionScaleX,
             PositionScale_Y = _positionScaleY,
             SizeOffset_X = _sizeOffsetX,
             SizeOffset_Y = _sizeOffsetY,
@@ -93,6 +111,7 @@ public class ButtonBuilder
         {
             PositionOffset_X = _positionOffsetX,
             PositionOffset_Y = _positionOffsetY,
+            PositionScale_X = _positionScaleX,
             PositionScale_Y = _positionScaleY,
             SizeOffset_X = _sizeOffsetX,
             SizeOffset_Y = _sizeOffsetY,
@@ -109,6 +128,7 @@ public class ButtonBuilder
         ISleekFloat32Field floatField = Glazier.Get().CreateFloat32Field();
         floatField.PositionOffset_X = _positionOffsetX;
         floatField.PositionOffset_Y = _positionOffsetY;
+        floatField.PositionScale_X = _positionScaleX;
         floatField.PositionScale_Y = _positionScaleY;
         floatField.SizeOffset_X = _sizeOffsetX;
         floatField.SizeOffset_Y = _sizeOffsetY;
@@ -127,6 +147,7 @@ public class ButtonBuilder
         ISleekToggle toggle = Glazier.Get().CreateToggle();
         toggle.PositionOffset_X = _positionOffsetX;
         toggle.PositionOffset_Y = _positionOffsetY;
+        toggle.PositionScale_X = _positionScaleX;
         toggle.PositionScale_Y = _positionScaleY;
         toggle.SizeOffset_X = _sizeOffsetX;
         toggle.SizeOffset_Y = _sizeOffsetY;
@@ -150,6 +171,7 @@ public class ButtonBuilder
         ISleekLabel label = Glazier.Get().CreateLabel();
         label.PositionOffset_X = _positionOffsetX;
         label.PositionOffset_Y = _positionOffsetY;
+        label.PositionScale_X = _positionScaleX;
         label.PositionScale_Y = _positionScaleY;
         label.SizeOffset_X = _sizeOffsetX;
         label.SizeOffset_Y = _sizeOffsetY;
@@ -165,6 +187,7 @@ public class ButtonBuilder
         ISleekField stringField = Glazier.Get().CreateStringField();
         stringField.PositionOffset_X = _positionOffsetX;
         stringField.PositionOffset_Y = _positionOffsetY;
+        stringField.PositionScale_X = _positionScaleX;
         stringField.PositionScale_Y = _positionScaleY;
         stringField.SizeOffset_X = _sizeOffsetX;
         stringField.SizeOffset_Y = _sizeOffsetY;

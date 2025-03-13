@@ -14,10 +14,8 @@ public class EditorRoadsUIPatchs
     [UsedImplicitly]
     static void constructor(EditorEnvironmentRoadsUI __instance)
     {
-        if (EditorHelper.Instance.RoadsManager == null)
-        {
-            EditorHelper.Instance.RoadsManager = new RoadsManager();
-            EditorHelper.Instance.RoadsManager.Initialize();
-        }
+        EditorHelper.Instance.RoadsManager = new RoadsManager();
+        
+        EditorHelper.Instance.RoadsManager.Initialize();
     }
 }

@@ -40,98 +40,98 @@ public class ObjectsManager
     
     public ObjectsManager()
     {
-        ButtonBuilder buttonBuilder = new();
+        ButtonBuilder builder = new();
         
-        buttonBuilder.SetPositionOffsetX(210f)
+        builder.SetPositionOffsetX(210f)
             .SetPositionOffsetY(-30f)
             .SetText("Highlight objects");
 
-        _highlightButton = buttonBuilder.BuildButton("Highlight all objects of the selected type");
+        _highlightButton = builder.BuildButton("Highlight all objects of the selected type");
         _highlightButton.onClickedButton += HighlightObjects;
 
-        buttonBuilder.SetText("Change the highlight color");
+        builder.SetText("Change the highlight color");
 
-        _highlightColorsButton = buttonBuilder.BuildButtonState(new GUIContent("Yellow"), new GUIContent("Red"), new GUIContent("Purple"), new GUIContent("Blue"));
+        _highlightColorsButton = builder.BuildButtonState(new GUIContent("Yellow"), new GUIContent("Red"), new GUIContent("Purple"), new GUIContent("Blue"));
         _highlightColorsButton.onSwappedState = OnSwappedStateColor;
         
-        buttonBuilder.SetText("Filter objects");
+        builder.SetText("Filter objects");
 
-        _filterButton = buttonBuilder.BuildButton("Highlight all objects that derive from this mod.");
+        _filterButton = builder.BuildButton("Highlight all objects that derive from this mod.");
         _filterButton.onClickedButton += OnFilterClicked;
 
-        buttonBuilder.SetText("Mod ID");
-        _filterField = buttonBuilder.BuildStringField();
+        builder.SetText("Mod ID");
+        _filterField = builder.BuildStringField();
         _filterField.OnTextSubmitted += OnFilterFieldSubmitted;
 
-        buttonBuilder.SetPositionOffsetX(20f)
+        builder.SetPositionOffsetX(20f)
             .SetPositionOffsetY(-390f)
             .SetSizeOffsetX(120f)
             .SetText("X:");
-        _objectPositionX = buttonBuilder.BuildFloatInput();
+        _objectPositionX = builder.BuildFloatInput();
         _objectPositionX.OnValueChanged += OnPositionValueUpdated;
 
-        buttonBuilder.SetOneTimeSpacing(0f);
-        buttonBuilder.SetPositionOffsetX(170f);
-        buttonBuilder.SetText("Y:");
-        _objectPositionY = buttonBuilder.BuildFloatInput();
+        builder.SetOneTimeSpacing(0f);
+        builder.SetPositionOffsetX(170f);
+        builder.SetText("Y:");
+        _objectPositionY = builder.BuildFloatInput();
         _objectPositionY.OnValueChanged += OnPositionValueUpdated;
         
-        buttonBuilder.SetOneTimeSpacing(0f);
-        buttonBuilder.SetPositionOffsetX(320f);
-        buttonBuilder.SetText("Z:");
-        _objectPositionZ = buttonBuilder.BuildFloatInput();
+        builder.SetOneTimeSpacing(0f);
+        builder.SetPositionOffsetX(320f);
+        builder.SetText("Z:");
+        _objectPositionZ = builder.BuildFloatInput();
         _objectPositionZ.OnValueChanged += OnPositionValueUpdated;
         
-        buttonBuilder
+        builder
             .SetOneTimeSpacing(25f)
             .SetPositionOffsetX(5f)
             .SetText("Position");
-        _objectPositionLabel = buttonBuilder.BuildLabel(TextAnchor.MiddleLeft);
+        _objectPositionLabel = builder.BuildLabel(TextAnchor.MiddleLeft);
         
-        buttonBuilder.SetPositionOffsetX(20f);
-        buttonBuilder.SetText("X:");
-        _objectRotationX = buttonBuilder.BuildFloatInput();
+        builder.SetPositionOffsetX(20f);
+        builder.SetText("X:");
+        _objectRotationX = builder.BuildFloatInput();
         _objectRotationX.OnValueChanged += OnRotationValueUpdated;
 
-        buttonBuilder.SetOneTimeSpacing(0f);
-        buttonBuilder.SetPositionOffsetX(170f);
-        buttonBuilder.SetText("Y:");
-        _objectRotationY = buttonBuilder.BuildFloatInput();
+        builder.SetOneTimeSpacing(0f);
+        builder.SetPositionOffsetX(170f);
+        builder.SetText("Y:");
+        _objectRotationY = builder.BuildFloatInput();
         _objectRotationY.OnValueChanged += OnRotationValueUpdated;
         
-        buttonBuilder.SetOneTimeSpacing(0f);
-        buttonBuilder.SetPositionOffsetX(320f);
-        buttonBuilder.SetText("Z:");
-        _objectRotationZ = buttonBuilder.BuildFloatInput();
+        builder.SetOneTimeSpacing(0f);
+        builder.SetPositionOffsetX(320f);
+        builder.SetText("Z:");
+        _objectRotationZ = builder.BuildFloatInput();
         _objectRotationZ.OnValueChanged += OnRotationValueUpdated;
         
-        buttonBuilder
+        builder
             .SetOneTimeSpacing(25f)
             .SetPositionOffsetX(5f)
             .SetText("Rotation");
-        _objectRotationLabel = buttonBuilder.BuildLabel(TextAnchor.MiddleLeft);
+        _objectRotationLabel = builder.BuildLabel(TextAnchor.MiddleLeft);
 
-        buttonBuilder.SetText("X:");
-        buttonBuilder.SetPositionOffsetX(20f);
-        _objectScaleX = buttonBuilder.BuildFloatInput();
+        builder.SetText("X:");
+        builder.SetPositionOffsetX(20f);
+        _objectScaleX = builder.BuildFloatInput();
         _objectScaleX.OnValueChanged += OnScaleValueUpdated;
         
-        buttonBuilder.SetOneTimeSpacing(0f);
-        buttonBuilder.SetPositionOffsetX(170f);
-        buttonBuilder.SetText("Y:");
-        _objectScaleY = buttonBuilder.BuildFloatInput();
+        builder.SetOneTimeSpacing(0f);
+        builder.SetPositionOffsetX(170f);
+        builder.SetText("Y:");
+        _objectScaleY = builder.BuildFloatInput();
         _objectScaleY.OnValueChanged += OnScaleValueUpdated;
         
-        buttonBuilder.SetOneTimeSpacing(0f);
-        buttonBuilder.SetPositionOffsetX(320f);
-        buttonBuilder.SetText("Z:");
-        _objectScaleZ = buttonBuilder.BuildFloatInput();
+        builder.SetOneTimeSpacing(0f);
+        builder.SetPositionOffsetX(320f);
+        builder.SetText("Z:");
+        _objectScaleZ = builder.BuildFloatInput();
         _objectScaleZ.OnValueChanged += OnScaleValueUpdated;
         
-        buttonBuilder.SetOneTimeSpacing(25f)
+        builder.SetOneTimeSpacing(25f)
             .SetPositionOffsetX(5f)
             .SetText("Scale");
-        _objectScaleLabel = buttonBuilder.BuildLabel(TextAnchor.MiddleLeft);
+        _objectScaleLabel = builder.BuildLabel(TextAnchor.MiddleLeft);
     }
 
     private void OnFilterFieldSubmitted(ISleekField field)
@@ -166,7 +166,6 @@ public class ObjectsManager
         uiInstance.AddChild(_objectScaleY);
         uiInstance.AddChild(_objectScaleZ);
         _filterText = string.Empty;
-        _filterButton.text = "Filter objects";
     }
 
     private void HighlightObjects(ISleekElement button)
@@ -328,12 +327,15 @@ public class ObjectsManager
         {
             UnhighlightAll();
         }
-        
+
         _highlightButton.IsVisible = visible;
         _highlightColorsButton.IsVisible = visible;
         
         _filterButton.IsVisible = visible;
-        _filterButton.text = "Filter objects";
+        if (visible && EditorLevelObjectsUI.active)
+        {
+            _filterButton.text = "Filter objects";
+        }
         _filterField.IsVisible = visible;
         
         _objectPositionLabel.IsVisible = visible;
