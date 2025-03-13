@@ -30,6 +30,11 @@ public class EditorObjectsPatchs
     [UsedImplicitly]
     static void calculateHandleOffsets()
     {
+        if (EditorHelper.Instance.ObjectsManager == null)
+        {
+            return;
+        }
+        
         EditorHelper.Instance.ObjectsManager.UpdateSelectedObject();
     }
 }

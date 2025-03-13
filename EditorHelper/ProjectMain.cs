@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using EditorHelper.Editor;
+﻿using EditorHelper.Editor;
 using HarmonyLib;
 using SDG.Framework.Modules;
 using SDG.Unturned;
@@ -11,6 +10,7 @@ public class EditorHelper : IModuleNexus
     public static EditorHelper Instance;
 
     public ObjectsManager ObjectsManager;
+    public RoadsManager RoadsManager;
     
     private Harmony _harmony;
 

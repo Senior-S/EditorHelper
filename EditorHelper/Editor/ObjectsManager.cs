@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using EditorHelper.Builders;
 using HighlightingSystem;
 using SDG.Unturned;
 using UnityEngine;
@@ -13,6 +14,10 @@ public class ObjectsManager
     private readonly List<Highlighter> _highlightedObjects = [];
     private readonly SleekButtonIcon _highlightButton;
     private readonly SleekButtonState _highlightColorsButton;
+    
+    private readonly SleekButtonIcon _filterButton;
+    private readonly ISleekField _filterField;
+    private string _filterText = string.Empty;
     
     private readonly ISleekLabel _objectPositionLabel;
     private readonly ISleekFloat32Field _objectPositionX;
@@ -32,151 +37,122 @@ public class ObjectsManager
     private readonly Color[] _highlightColors = [Color.yellow, Color.red, Color.magenta, Color.blue];
     private int _currentColorIndex = 0;
     private Transform _selectedObject = null;
-
-    // TODO: Make a library or some help functions to create UI elements
+    
     public ObjectsManager()
     {
-        _highlightButton = new SleekButtonIcon(null)
-        {
-            PositionOffset_X = 210f,
-            PositionOffset_Y = -30f,
-            PositionScale_Y = 1f,
-            SizeOffset_X = 200f,
-            SizeOffset_Y = 30f,
-            text = "Highlight objects",
-            tooltip = "Highlight all objects of the selected type"
-        };
-        _highlightButton.onClickedButton += HighlightObjects;
-        _highlightColorsButton = new SleekButtonState(new GUIContent("Yellow"), new GUIContent("Red"), new GUIContent("Purple"), new GUIContent("Blue"))
-        {
-            PositionOffset_X = 210f,
-            PositionOffset_Y = -70f,
-            PositionScale_Y = 1f,
-            SizeOffset_X = 200f,
-            SizeOffset_Y = 30f,
-            tooltip = "Change the highlight color",
-            onSwappedState = OnSwappedStateColor
-        };
+        ButtonBuilder buttonBuilder = new();
+        
+        buttonBuilder.SetPositionOffsetX(210f)
+            .SetPositionOffsetY(-30f)
+            .SetText("Highlight objects");
 
-        _objectPositionLabel = Glazier.Get().CreateLabel();
-        _objectPositionLabel.PositionOffset_Y = -415f;
-        _objectPositionLabel.PositionScale_Y = 1f;
-        _objectPositionLabel.SizeOffset_X = 200f;
-        _objectPositionLabel.SizeOffset_Y = 30f;
-        _objectPositionLabel.Text = "Position";
-        _objectPositionLabel.TextAlignment = TextAnchor.MiddleLeft;
+        _highlightButton = buttonBuilder.BuildButton("Highlight all objects of the selected type");
+        _highlightButton.onClickedButton += HighlightObjects;
+
+        buttonBuilder.SetText("Change the highlight color");
+
+        _highlightColorsButton = buttonBuilder.BuildButtonState(new GUIContent("Yellow"), new GUIContent("Red"), new GUIContent("Purple"), new GUIContent("Blue"));
+        _highlightColorsButton.onSwappedState = OnSwappedStateColor;
         
-        _objectPositionX = Glazier.Get().CreateFloat32Field();
-        _objectPositionX.PositionOffset_Y = -390f;
-        _objectPositionX.PositionOffset_X = 30f;
-        _objectPositionX.PositionScale_Y = 1f;
-        _objectPositionX.SizeOffset_X = 120f;
-        _objectPositionX.SizeOffset_Y = 30f;
-        _objectPositionX.Value = 0f;
-        _objectPositionX.AddLabel("X:", ESleekSide.LEFT);
+        buttonBuilder.SetText("Filter objects");
+
+        _filterButton = buttonBuilder.BuildButton("Highlight all objects that derive from this mod.");
+        _filterButton.onClickedButton += OnFilterClicked;
+
+        buttonBuilder.SetText("Mod ID");
+        _filterField = buttonBuilder.BuildStringField();
+        _filterField.OnTextSubmitted += OnFilterFieldSubmitted;
+
+        buttonBuilder.SetPositionOffsetX(20f)
+            .SetPositionOffsetY(-390f)
+            .SetSizeOffsetX(120f)
+            .SetText("X:");
+        _objectPositionX = buttonBuilder.BuildFloatInput();
         _objectPositionX.OnValueChanged += OnPositionValueUpdated;
-        
-        _objectPositionY = Glazier.Get().CreateFloat32Field();
-        _objectPositionY.PositionOffset_Y = -390f;
-        _objectPositionY.PositionOffset_X = 180f;
-        _objectPositionY.PositionScale_Y = 1f;
-        _objectPositionY.SizeOffset_X = 120f;
-        _objectPositionY.SizeOffset_Y = 30f;
-        _objectPositionY.Value = 0f;
-        _objectPositionY.AddLabel("Y:", ESleekSide.LEFT);
+
+        buttonBuilder.SetOneTimeSpacing(0f);
+        buttonBuilder.SetPositionOffsetX(170f);
+        buttonBuilder.SetText("Y:");
+        _objectPositionY = buttonBuilder.BuildFloatInput();
         _objectPositionY.OnValueChanged += OnPositionValueUpdated;
         
-        _objectPositionZ = Glazier.Get().CreateFloat32Field();
-        _objectPositionZ.PositionOffset_Y = -390f;
-        _objectPositionZ.PositionOffset_X = 330f;
-        _objectPositionZ.PositionScale_Y = 1f;
-        _objectPositionZ.SizeOffset_X = 120f;
-        _objectPositionZ.SizeOffset_Y = 30f;
-        _objectPositionZ.Value = 0f;
-        _objectPositionZ.AddLabel("Z:", ESleekSide.LEFT);
+        buttonBuilder.SetOneTimeSpacing(0f);
+        buttonBuilder.SetPositionOffsetX(320f);
+        buttonBuilder.SetText("Z:");
+        _objectPositionZ = buttonBuilder.BuildFloatInput();
         _objectPositionZ.OnValueChanged += OnPositionValueUpdated;
         
-        _objectRotationLabel = Glazier.Get().CreateLabel();
-        _objectRotationLabel.PositionOffset_Y = -470f;
-        _objectRotationLabel.PositionScale_Y = 1f;
-        _objectRotationLabel.SizeOffset_X = 200f;
-        _objectRotationLabel.SizeOffset_Y = 30f;
-        _objectRotationLabel.Text = "Rotation";
-        _objectRotationLabel.TextAlignment = TextAnchor.MiddleLeft;
+        buttonBuilder
+            .SetOneTimeSpacing(25f)
+            .SetPositionOffsetX(5f)
+            .SetText("Position");
+        _objectPositionLabel = buttonBuilder.BuildLabel(TextAnchor.MiddleLeft);
         
-        _objectRotationX = Glazier.Get().CreateFloat32Field();
-        _objectRotationX.PositionOffset_Y = -445f;
-        _objectRotationX.PositionOffset_X = 30f;
-        _objectRotationX.PositionScale_Y = 1f;
-        _objectRotationX.SizeOffset_X = 120f;
-        _objectRotationX.SizeOffset_Y = 30f;
-        _objectRotationX.Value = 0f;
-        _objectRotationX.AddLabel("X:", ESleekSide.LEFT);
+        buttonBuilder.SetPositionOffsetX(20f);
+        buttonBuilder.SetText("X:");
+        _objectRotationX = buttonBuilder.BuildFloatInput();
         _objectRotationX.OnValueChanged += OnRotationValueUpdated;
-            
-        _objectRotationY = Glazier.Get().CreateFloat32Field();
-        _objectRotationY.PositionOffset_Y = -445f;
-        _objectRotationY.PositionOffset_X = 180f;
-        _objectRotationY.PositionScale_Y = 1f;
-        _objectRotationY.SizeOffset_X = 120f;
-        _objectRotationY.SizeOffset_Y = 30f;
-        _objectRotationY.Value = 0f;
-        _objectRotationY.AddLabel("Y:", ESleekSide.LEFT);
+
+        buttonBuilder.SetOneTimeSpacing(0f);
+        buttonBuilder.SetPositionOffsetX(170f);
+        buttonBuilder.SetText("Y:");
+        _objectRotationY = buttonBuilder.BuildFloatInput();
         _objectRotationY.OnValueChanged += OnRotationValueUpdated;
         
-        _objectRotationZ = Glazier.Get().CreateFloat32Field();
-        _objectRotationZ.PositionOffset_Y = -445f;
-        _objectRotationZ.PositionOffset_X = 330f;
-        _objectRotationZ.PositionScale_Y = 1f;
-        _objectRotationZ.SizeOffset_X = 120f;
-        _objectRotationZ.SizeOffset_Y = 30f;
-        _objectRotationZ.Value = 0f;
-        _objectRotationZ.AddLabel("Z:", ESleekSide.LEFT);
+        buttonBuilder.SetOneTimeSpacing(0f);
+        buttonBuilder.SetPositionOffsetX(320f);
+        buttonBuilder.SetText("Z:");
+        _objectRotationZ = buttonBuilder.BuildFloatInput();
         _objectRotationZ.OnValueChanged += OnRotationValueUpdated;
         
-        _objectScaleLabel = Glazier.Get().CreateLabel();
-        _objectScaleLabel.PositionOffset_Y = -525f;
-        _objectScaleLabel.PositionScale_Y = 1f;
-        _objectScaleLabel.SizeOffset_X = 200f;
-        _objectScaleLabel.SizeOffset_Y = 30f;
-        _objectScaleLabel.Text = "Scale";
-        _objectScaleLabel.TextAlignment = TextAnchor.MiddleLeft;
-        
-        _objectScaleX = Glazier.Get().CreateFloat32Field();
-        _objectScaleX.PositionOffset_Y = -500f;
-        _objectScaleX.PositionOffset_X = 30f;
-        _objectScaleX.PositionScale_Y = 1f;
-        _objectScaleX.SizeOffset_X = 120f;
-        _objectScaleX.SizeOffset_Y = 30f;
-        _objectScaleX.Value = 0f;
-        _objectScaleX.AddLabel("X:", ESleekSide.LEFT);
+        buttonBuilder
+            .SetOneTimeSpacing(25f)
+            .SetPositionOffsetX(5f)
+            .SetText("Rotation");
+        _objectRotationLabel = buttonBuilder.BuildLabel(TextAnchor.MiddleLeft);
+
+        buttonBuilder.SetText("X:");
+        buttonBuilder.SetPositionOffsetX(20f);
+        _objectScaleX = buttonBuilder.BuildFloatInput();
         _objectScaleX.OnValueChanged += OnScaleValueUpdated;
         
-        _objectScaleY = Glazier.Get().CreateFloat32Field();
-        _objectScaleY.PositionOffset_Y = -500f;
-        _objectScaleY.PositionOffset_X = 180f;
-        _objectScaleY.PositionScale_Y = 1f;
-        _objectScaleY.SizeOffset_X = 120f;
-        _objectScaleY.SizeOffset_Y = 30f;
-        _objectScaleY.Value = 0f;
-        _objectScaleY.AddLabel("Y:", ESleekSide.LEFT);
+        buttonBuilder.SetOneTimeSpacing(0f);
+        buttonBuilder.SetPositionOffsetX(170f);
+        buttonBuilder.SetText("Y:");
+        _objectScaleY = buttonBuilder.BuildFloatInput();
         _objectScaleY.OnValueChanged += OnScaleValueUpdated;
         
-        _objectScaleZ = Glazier.Get().CreateFloat32Field();
-        _objectScaleZ.PositionOffset_Y = -500f;
-        _objectScaleZ.PositionOffset_X = 330f;
-        _objectScaleZ.PositionScale_Y = 1f;
-        _objectScaleZ.SizeOffset_X = 120f;
-        _objectScaleZ.SizeOffset_Y = 30f;
-        _objectScaleZ.Value = 0f;
-        _objectScaleZ.AddLabel("Z:", ESleekSide.LEFT);
+        buttonBuilder.SetOneTimeSpacing(0f);
+        buttonBuilder.SetPositionOffsetX(320f);
+        buttonBuilder.SetText("Z:");
+        _objectScaleZ = buttonBuilder.BuildFloatInput();
         _objectScaleZ.OnValueChanged += OnScaleValueUpdated;
+        
+        buttonBuilder.SetOneTimeSpacing(25f)
+            .SetPositionOffsetX(5f)
+            .SetText("Scale");
+        _objectScaleLabel = buttonBuilder.BuildLabel(TextAnchor.MiddleLeft);
+    }
+
+    private void OnFilterFieldSubmitted(ISleekField field)
+    {
+        _filterText = field.Text;
+    }
+
+    private void OnFilterClicked(ISleekElement button)
+    {
+        _filterText = _filterField.Text;
+        List<LevelObject> levelObjects = GetObjectsByMod(_filterText);
+        PrivateHighlight(levelObjects);
+        _filterButton.text = $"Filter objects ({levelObjects.Count})";
     }
 
     public void Initialize(ref EditorLevelObjectsUI uiInstance)
     {
         uiInstance.AddChild(_highlightButton);
         uiInstance.AddChild(_highlightColorsButton);
+        uiInstance.AddChild(_filterButton);
+        uiInstance.AddChild(_filterField);
         uiInstance.AddChild(_objectPositionLabel);
         uiInstance.AddChild(_objectPositionX);
         uiInstance.AddChild(_objectPositionY);
@@ -189,13 +165,15 @@ public class ObjectsManager
         uiInstance.AddChild(_objectScaleX);
         uiInstance.AddChild(_objectScaleY);
         uiInstance.AddChild(_objectScaleZ);
+        _filterText = string.Empty;
+        _filterButton.text = "Filter objects";
     }
 
     private void HighlightObjects(ISleekElement button)
     {
         if (_selectedObject == null) return;
         
-        LevelObject levelObject = FindLevelObject(_selectedObject.gameObject);
+        LevelObject levelObject = FindLevelObjectByGameObject(_selectedObject.gameObject);
         if (levelObject?.asset == null) return;
 
         if (_highlightedObjects.Count > 0)
@@ -204,9 +182,16 @@ public class ObjectsManager
         }
 
         List<LevelObject> levelObjects = GetObjectsByGuid(levelObject.asset.GUID);
+        PrivateHighlight(levelObjects, levelObject);
+
+        _highlightButton.text = $"Highlight objects ({levelObjects.Count})";
+    }
+
+    private void PrivateHighlight(List<LevelObject> levelObjects, LevelObject ignore = null)
+    {
         foreach (LevelObject lObj in levelObjects)
         {
-            if (lObj == null || lObj.transform == null || lObj.transform.gameObject == null || lObj == levelObject) continue;
+            if (lObj == null || lObj.transform == null || lObj.transform.gameObject == null || lObj == ignore || lObj.transform == _selectedObject) continue;
             Highlighter highlighter = lObj.transform.GetComponent<Highlighter>();
             if (!highlighter)
             {
@@ -216,13 +201,11 @@ public class ObjectsManager
             highlighter.ConstantOn(_highlightColors[_currentColorIndex]);
             _highlightedObjects.Add(highlighter);
         }
-
-        _highlightButton.text = $"Highlight objects ({levelObjects.Count})";
     }
 
     private void OnPositionValueUpdated(ISleekFloat32Field field, float value)
     {
-        LevelObject levelObject = FindLevelObject(_selectedObject.gameObject);
+        LevelObject levelObject = FindLevelObjectByGameObject(_selectedObject.gameObject);
         if (levelObject == null) return; // Just in case
 
         Vector3 position = _selectedObject.position;
@@ -247,7 +230,7 @@ public class ObjectsManager
     
     private void OnRotationValueUpdated(ISleekFloat32Field field, float value)
     {
-        LevelObject levelObject = FindLevelObject(_selectedObject.gameObject);
+        LevelObject levelObject = FindLevelObjectByGameObject(_selectedObject.gameObject);
         if (levelObject == null) return; // Just in case
 
         Vector3 rotation = _selectedObject.rotation.eulerAngles;
@@ -272,7 +255,7 @@ public class ObjectsManager
     
     private void OnScaleValueUpdated(ISleekFloat32Field field, float value)
     {
-        LevelObject levelObject = FindLevelObject(_selectedObject.gameObject);
+        LevelObject levelObject = FindLevelObjectByGameObject(_selectedObject.gameObject);
         if (levelObject == null) return; // Just in case
 
         Vector3 scale = _selectedObject.localScale;
@@ -341,9 +324,18 @@ public class ObjectsManager
     
     public void ChangeButtonsVisibility(bool visible)
     {
+        if (!visible)
+        {
+            UnhighlightAll();
+        }
+        
         _highlightButton.IsVisible = visible;
         _highlightColorsButton.IsVisible = visible;
-
+        
+        _filterButton.IsVisible = visible;
+        _filterButton.text = "Filter objects";
+        _filterField.IsVisible = visible;
+        
         _objectPositionLabel.IsVisible = visible;
         _objectPositionX.IsVisible = visible;
         _objectPositionY.IsVisible = visible;
@@ -360,12 +352,13 @@ public class ObjectsManager
         _objectScaleZ.IsVisible = visible;
     }
 
-    private LevelObject FindLevelObject(GameObject rootGameObject)
+    private LevelObject FindLevelObjectByGameObject(GameObject rootGameObject)
     {
         if (rootGameObject == null)
         {
             return null;
         }
+        
         Transform transform = rootGameObject.transform;
         if (Regions.tryGetCoordinate(transform.position, out byte x, out byte y))
         {
@@ -378,6 +371,13 @@ public class ObjectsManager
             }
         }
         return null;
+    }
+
+    private List<LevelObject> GetObjectsByMod(string filter)
+    {
+        IEnumerable<LevelObject> levelObjects = LevelObjects.objects.Cast<List<LevelObject>>().SelectMany(list => list);
+        
+        return levelObjects.Where(c => c != null && c.asset != null && c.asset.GetOriginName().Contains(filter)).ToList();
     }
 
     private List<LevelObject> GetObjectsByGuid(Guid guid)
