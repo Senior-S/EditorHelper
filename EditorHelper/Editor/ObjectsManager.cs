@@ -18,7 +18,9 @@ public class ObjectsManager
     private readonly SleekButtonIcon _filterButton;
     private readonly ISleekField _filterField;
     private string _filterText = string.Empty;
-    
+
+    private readonly SleekButtonIcon _adjacentPlaceButton;
+
     private readonly ISleekLabel _objectPositionLabel;
     private readonly ISleekFloat32Field _objectPositionX;
     private readonly ISleekFloat32Field _objectPositionY;
@@ -62,7 +64,13 @@ public class ObjectsManager
         builder.SetText("Mod ID");
         _filterField = builder.BuildStringField();
         _filterField.OnTextSubmitted += OnFilterFieldSubmitted;
-
+        
+        builder.SetPositionOffsetX(420f)
+            .SetPositionOffsetY(-30f)
+            .SetText("Place adjacent");
+        _adjacentPlaceButton = builder.BuildButton("Place the selected object adjacent to the world selected object");
+        _adjacentPlaceButton.onClickedButton += OnAdjacentPlaceClicked;
+        
         builder.SetPositionOffsetX(20f)
             .SetPositionOffsetY(-390f)
             .SetSizeOffsetX(120f)
@@ -134,25 +142,13 @@ public class ObjectsManager
         _objectScaleLabel = builder.BuildLabel(TextAnchor.MiddleLeft);
     }
 
-    private void OnFilterFieldSubmitted(ISleekField field)
-    {
-        _filterText = field.Text;
-    }
-
-    private void OnFilterClicked(ISleekElement button)
-    {
-        _filterText = _filterField.Text;
-        List<LevelObject> levelObjects = GetObjectsByMod(_filterText);
-        PrivateHighlight(levelObjects);
-        _filterButton.text = $"Filter objects ({levelObjects.Count})";
-    }
-
     public void Initialize(ref EditorLevelObjectsUI uiInstance)
     {
         uiInstance.AddChild(_highlightButton);
         uiInstance.AddChild(_highlightColorsButton);
         uiInstance.AddChild(_filterButton);
         uiInstance.AddChild(_filterField);
+        uiInstance.AddChild(_adjacentPlaceButton);
         uiInstance.AddChild(_objectPositionLabel);
         uiInstance.AddChild(_objectPositionX);
         uiInstance.AddChild(_objectPositionY);
@@ -166,6 +162,70 @@ public class ObjectsManager
         uiInstance.AddChild(_objectScaleY);
         uiInstance.AddChild(_objectScaleZ);
         _filterText = string.Empty;
+    }
+    
+    private void OnAdjacentPlaceClicked(ISleekElement button)
+    {
+        if (!_selectedObject) return;
+        LevelObject levelObject = FindLevelObjectByGameObject(_selectedObject.gameObject);
+        if (levelObject == null) return;
+
+        Vector3 chosenDirection = GetObjectFace(levelObject.transform);
+        
+        Bounds bounds = GetObjectBounds(levelObject.transform);
+        
+        if (EditorObjects.selectedObjectAsset == null && EditorObjects.selectedItemAsset == null)
+        {
+            EditorObjects.selectedObjectAsset = levelObject.asset;
+            EditorObjects.selectedItemAsset = null;
+        }
+        
+        
+        Vector3 point;
+        if (EditorObjects.selectedObjectAsset == levelObject.asset)
+        {
+            float boundSize = Mathf.Abs(Vector3.Dot(chosenDirection, levelObject.transform.right)) > 0.5f
+                ? bounds.size.x
+                : bounds.size.y;
+            Vector3 offset = chosenDirection * boundSize;
+            point = levelObject.transform.position + offset;            
+        }
+        else
+        {
+            // https://stackoverflow.com/questions/58089093/place-an-object-on-the-right-side-of-another-object-in-unity
+            float boundSize = Mathf.Abs(Vector3.Dot(chosenDirection, levelObject.transform.right)) > 0.5f
+                ? bounds.extents.x
+                : bounds.extents.y;
+            // ReSharper disable once PossibleNullReferenceException
+            Transform targetTransform = EditorObjects.selectedObjectAsset.GetOrLoadModel().transform;
+            Bounds targetBound = GetObjectBounds(targetTransform);
+            float targetBoundSize = Mathf.Abs(Vector3.Dot(chosenDirection, targetTransform.right)) > 0.5f
+                ? targetBound.extents.x
+                : targetBound.extents.y;
+            Vector3 offset = chosenDirection * (boundSize + targetBoundSize);
+            point = levelObject.transform.position + offset;
+        }
+        
+        EditorObjects.handles.SetPreferredPivot(point, _selectedObject.rotation);
+        LevelObjects.step++;
+        Transform transform = LevelObjects.registerAddObject(point, _selectedObject.rotation, Vector3.one, EditorObjects.selectedObjectAsset, EditorObjects.selectedItemAsset);
+        if (!transform) return;
+        
+        EditorObjects.clearSelection();
+        EditorObjects.addSelection(transform);
+    }
+
+    private void OnFilterFieldSubmitted(ISleekField field)
+    {
+        _filterText = field.Text;
+    }
+
+    private void OnFilterClicked(ISleekElement button)
+    {
+        _filterText = _filterField.Text;
+        List<LevelObject> levelObjects = GetObjectsByMod(_filterText);
+        PrivateHighlight(levelObjects);
+        _filterButton.text = $"Filter objects ({levelObjects.Count})";
     }
 
     private void HighlightObjects(ISleekElement button)
@@ -320,8 +380,15 @@ public class ObjectsManager
         _highlightedObjects.Clear();
         _highlightButton.text = "Highlight objects";
     }
+
+    // Basically a CustomUpdate which doesn't replace the original update function.
+    public void LateUpdate()
+    {
+        ChangeButtonsVisibility(EditorObjects.selection != null && EditorObjects.selection.Count == 1);
+        // TODO: Implement a grid system with options to automatically align objects with the grid corners.
+    }
     
-    public void ChangeButtonsVisibility(bool visible)
+    private void ChangeButtonsVisibility(bool visible)
     {
         if (!visible)
         {
@@ -337,6 +404,8 @@ public class ObjectsManager
             _filterButton.text = "Filter objects";
         }
         _filterField.IsVisible = visible;
+
+        _adjacentPlaceButton.IsVisible = visible;
         
         _objectPositionLabel.IsVisible = visible;
         _objectPositionX.IsVisible = visible;
@@ -387,5 +456,32 @@ public class ObjectsManager
         IEnumerable<LevelObject> levelObjects = LevelObjects.objects.Cast<List<LevelObject>>().SelectMany(list => list);
 
         return levelObjects.Where(c => c != null && c.asset != null && c.asset.GUID == guid).ToList();
+    }
+    
+    private Vector3 GetObjectFace(Transform objTransform)
+    {
+        Vector3 cameraDirection = MainCamera.instance.transform.forward;
+        
+        Vector3[] faces = {
+            objTransform.up, // Up? Yeah, using forward makes the object spawn up or down due the object by default is rotated 90 degrees
+            -objTransform.up,
+            objTransform.right,
+            -objTransform.right
+        };
+
+        // Vector3.Distance doesn't make almost any impact on performance unless you use it in the update function or similar
+        return faces.OrderBy(c => Vector3.Distance(c, cameraDirection)).First();
+    }
+    
+    private Bounds GetObjectBounds(Transform objectTransform)
+    {
+        if (objectTransform.TryGetComponent(out MeshFilter meshFilter))
+        {
+            return meshFilter.mesh.bounds;
+        }
+        List<MeshFilter> filters = objectTransform.GetComponentsInChildren<MeshFilter>(true)
+            .Where(c => !c.transform.name.Equals("nav", StringComparison.OrdinalIgnoreCase)).ToList();
+        
+        return filters.Count > 0 ? filters[0].mesh.bounds : new Bounds(objectTransform.position, Vector3.one);
     }
 }

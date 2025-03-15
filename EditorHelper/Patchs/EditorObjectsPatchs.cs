@@ -22,7 +22,7 @@ public class EditorObjectsPatchs
     [UsedImplicitly]
     static void Update()
     {        
-        EditorHelper.Instance.ObjectsManager.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
+        EditorHelper.Instance.ObjectsManager.LateUpdate();
     }
     
     [HarmonyPatch(typeof(EditorObjects), "calculateHandleOffsets")]

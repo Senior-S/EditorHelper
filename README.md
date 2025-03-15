@@ -5,10 +5,7 @@ Simple module for Unturned 3 to use as a tool while developing maps.
 Download the lastest available .zip file at **[releases](https://github.com/Senior-S/EditorHelper/releases)**, go to your Unturned folder, Modules and extract the zip there.
 Now start the game with BattlEye disabled and you can start using the module! ^^
 
-# May I have already seen this before but with more features?
-Yes, as far I know Jdance and Sultan have been working on a module called Breakdown that adds some tools to the Unturned editor, but as posts on the Unturned discord relates, this have been a thing since 2023 with no public releases nor promoting that it's even avaliable, so due adding some tools isn't exactly a big deal and the community seems interested in this type of tools, I released a open source, free and public tool that may or may not contain the same tools but made by me.
-
-[![](https://dcbadge.limes.pink/api/server/https://discord.gg/Y3jD5K2Q8C)](https://discord.gg/Y3jD5K2Q8C)
+**[Module showcase](https://youtu.be/Adg6y3W8xLk)**
 
 # Features
 The module is a work in progress and features will be added as I upload more updates :)
@@ -21,3 +18,10 @@ At the moment the module features are:
 - Road key binds. *(Ctrl+B and Ctrl+N support)*
 - Filter objects by mod. *(Paste the mod ID and highlight all objects that are relative to that mod)*
 - Name nodes shown in world. *(Option to display a world label with the location name)*
+- Adjacent placement. *(Ideal for roads)*
+- Instant play. *(Join the world at the position where your camera is)*
+
+# May I have already seen this before but with more features?
+Yes, as far I know Jdance and Sultan have been working on a module called Breakdown that adds some tools to the Unturned editor, but as posts on the Unturned discord relates, this have been a thing since 2023 with no public releases nor promoting that it's even avaliable, so due adding some tools isn't exactly a big deal and the community seems interested in this type of tools, I released a open source, free and public tool that may or may not contain the same tools but made by me.
+
+[![](https://dcbadge.limes.pink/api/server/https://discord.gg/Y3jD5K2Q8C)](https://discord.gg/Y3jD5K2Q8C)
