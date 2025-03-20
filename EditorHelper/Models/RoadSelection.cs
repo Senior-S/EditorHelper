@@ -10,8 +10,6 @@ public class RoadSelection
 
     public Quaternion fromRotation;
 
-    public Vector3 fromScale;
-
     public Matrix4x4 relativeToPivot;
 
     public Transform transform => _transform;
@@ -21,6 +19,5 @@ public class RoadSelection
         _transform = roadTransform;
         fromPosition = roadTransform.position;
         fromRotation = roadTransform.rotation;
-        fromScale = roadTransform.localScale;
     }
 }

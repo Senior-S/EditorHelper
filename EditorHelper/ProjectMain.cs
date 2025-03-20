@@ -13,6 +13,8 @@ public class EditorHelper : IModuleNexus
     public RoadsManager RoadsManager;
     public NodesManager NodesManager;
     public EditorManager EditorManager;
+    public FoliageManager FoliageManager;
+    public VisibilityManager VisibilityManager;
     
     private Harmony _harmony;
 

@@ -34,14 +34,14 @@ public class EditorManager
         _editorButton.onClickedButton += OnEditorClicked;
     }
 
-    private void OnEnemyConnected(SteamPlayer player)
-    {
-        Level.instance.StartCoroutine(TeleportPlayer(player));
-    }
-
     public void Initialize()
     {
         EditorDashboardUI.container.AddChild(_singleplayerButton);
+    }
+    
+    private void OnEnemyConnected(SteamPlayer player)
+    {
+        Level.instance.StartCoroutine(TeleportPlayer(player));
     }
 
     private void OnSingleplayerClicked(ISleekElement button)

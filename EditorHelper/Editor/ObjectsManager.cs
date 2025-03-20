@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using EditorHelper.Builders;
+using EditorHelper.LSystem;
 using HighlightingSystem;
 using SDG.Unturned;
 using UnityEngine;
@@ -9,6 +10,7 @@ using Object = UnityEngine.Object;
 
 namespace EditorHelper.Editor;
 
+// TODO: Add "tabs" or so for buttons to avoid flooding the user screen
 public class ObjectsManager
 {
     private readonly List<Highlighter> _highlightedObjects = [];
@@ -20,6 +22,7 @@ public class ObjectsManager
     private string _filterText = string.Empty;
 
     private readonly SleekButtonIcon _adjacentPlaceButton;
+    private readonly SleekButtonIcon _highlightWrongScaleButton;
 
     private readonly ISleekLabel _objectPositionLabel;
     private readonly ISleekFloat32Field _objectPositionX;
@@ -40,6 +43,7 @@ public class ObjectsManager
     private int _currentColorIndex = 0;
     private Transform _selectedObject = null;
     
+    // TODO: Add a way to automatically initialize the button
     public ObjectsManager()
     {
         ButtonBuilder builder = new();
@@ -70,6 +74,10 @@ public class ObjectsManager
             .SetText("Place adjacent");
         _adjacentPlaceButton = builder.BuildButton("Place the selected object adjacent to the world selected object");
         _adjacentPlaceButton.onClickedButton += OnAdjacentPlaceClicked;
+
+        builder.SetText("Highlight wrong objects");
+        _highlightWrongScaleButton = builder.BuildButton("Highlight all objects with a negative scale");
+        _highlightWrongScaleButton.onClickedButton += OnHighlightWrongScaleClicked;
         
         builder.SetPositionOffsetX(20f)
             .SetPositionOffsetY(-390f)
@@ -141,7 +149,32 @@ public class ObjectsManager
             .SetText("Scale");
         _objectScaleLabel = builder.BuildLabel(TextAnchor.MiddleLeft);
     }
+    
+    // This code is still an internal WIP so until it's finished it won't be added into the final module
+    /*private void TestRoadsOnonClickedButton(ISleekElement button)
+    {
+        if (!_selectedObject) return;
+        LevelObject levelObject = FindLevelObjectByGameObject(_selectedObject.gameObject);
+        if (levelObject == null) return;
+        
+        LSystemGenerator generator = new([new Rule('F', ["[+F][-F]"])], "[F]-F+", 3);
+        GameObject toDestroy = new GameObject("Testing");
+        RoadHelper roadHelper = toDestroy.AddComponent<RoadHelper>();
+        roadHelper.roadStraight = Assets.find(Guid.Parse("b832729132a546a29eaedac06b84a46f")) as ObjectAsset;
+        roadHelper.roadTee = Assets.find(Guid.Parse("8221c9c6360c4629a7dc1a197fac0196")) as ObjectAsset;
+        roadHelper.roadQuad = Assets.find(Guid.Parse("bec22e8664b54b06aaee361c062980e3")) as ObjectAsset;
+        roadHelper.roadCorner = Assets.find(Guid.Parse("329682e42ea141ea8d033278e88d763c")) as ObjectAsset;
+        roadHelper.roadEnd = Assets.find(Guid.Parse("27501590239d4699a8dc001efa4dee37")) as ObjectAsset;
 
+        Visualizer visualizer = new(generator, roadHelper, levelObject);
+        visualizer.Start();
+        
+        Object.Destroy(toDestroy);
+        generator = null;
+        roadHelper = null;
+        visualizer = null;
+    }*/
+    
     public void Initialize(ref EditorLevelObjectsUI uiInstance)
     {
         uiInstance.AddChild(_highlightButton);
@@ -149,6 +182,7 @@ public class ObjectsManager
         uiInstance.AddChild(_filterButton);
         uiInstance.AddChild(_filterField);
         uiInstance.AddChild(_adjacentPlaceButton);
+        uiInstance.AddChild(_highlightWrongScaleButton);
         uiInstance.AddChild(_objectPositionLabel);
         uiInstance.AddChild(_objectPositionX);
         uiInstance.AddChild(_objectPositionY);
@@ -162,6 +196,15 @@ public class ObjectsManager
         uiInstance.AddChild(_objectScaleY);
         uiInstance.AddChild(_objectScaleZ);
         _filterText = string.Empty;
+    }
+    
+    private void OnHighlightWrongScaleClicked(ISleekElement button)
+    {
+        List<LevelObject> levelObjects = GetWrongScaledObjects();
+        if (levelObjects.Count < 1) return;
+        
+        PrivateHighlight(levelObjects);
+        _highlightWrongScaleButton.text = $"Highlight wrong objects ({levelObjects.Count})";
     }
     
     private void OnAdjacentPlaceClicked(ISleekElement button)
@@ -179,7 +222,6 @@ public class ObjectsManager
             EditorObjects.selectedObjectAsset = levelObject.asset;
             EditorObjects.selectedItemAsset = null;
         }
-        
         
         Vector3 point;
         if (EditorObjects.selectedObjectAsset == levelObject.asset)
@@ -398,14 +440,21 @@ public class ObjectsManager
         _highlightButton.IsVisible = visible;
         _highlightColorsButton.IsVisible = visible;
         
+        bool oldVisible = _filterButton.IsVisible;
         _filterButton.IsVisible = visible;
-        if (visible && EditorLevelObjectsUI.active)
+        if (visible && EditorLevelObjectsUI.active && !oldVisible)
         {
             _filterButton.text = "Filter objects";
         }
         _filterField.IsVisible = visible;
 
         _adjacentPlaceButton.IsVisible = visible;
+        oldVisible = _highlightWrongScaleButton.IsVisible;
+        _highlightWrongScaleButton.IsVisible = visible;
+        if (visible && EditorLevelObjectsUI.active && !oldVisible)
+        {
+            _highlightWrongScaleButton.text = "Highlight wrong objects";
+        }
         
         _objectPositionLabel.IsVisible = visible;
         _objectPositionX.IsVisible = visible;
@@ -456,6 +505,26 @@ public class ObjectsManager
         IEnumerable<LevelObject> levelObjects = LevelObjects.objects.Cast<List<LevelObject>>().SelectMany(list => list);
 
         return levelObjects.Where(c => c != null && c.asset != null && c.asset.GUID == guid).ToList();
+    }
+
+    private List<LevelObject> GetWrongScaledObjects()
+    {
+        IEnumerable<LevelObject> levelObjects = LevelObjects.objects.Cast<List<LevelObject>>().SelectMany(list => list);
+
+        return levelObjects.Where(c => c != null && c.transform != null && HaveNegativeScale(c.transform.localScale)).ToList();
+    }
+
+    private bool HaveNegativeScale(Vector3 scale)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            if (scale[i] < 0f)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
     
     private Vector3 GetObjectFace(Transform objTransform)

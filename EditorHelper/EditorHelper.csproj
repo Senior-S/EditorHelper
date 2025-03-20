@@ -23,7 +23,7 @@
         <DefineConstants>DEBUG;TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
-        <Version>0.0.5</Version>
+        <Version>0.0.6</Version>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
@@ -277,17 +277,31 @@
     <ItemGroup>
         <Compile Include="Builders\ButtonBuilder.cs" />
         <Compile Include="Editor\EditorManager.cs" />
+        <Compile Include="Editor\FoliageManager.cs" />
         <Compile Include="Editor\NodesManager.cs" />
         <Compile Include="Editor\ObjectsManager.cs" />
         <Compile Include="Editor\RoadsManager.cs" />
+        <Compile Include="Editor\VisibilityManager.cs" />
+        <Compile Include="LSystem\AgentParameters.cs" />
+        <Compile Include="LSystem\Direction.cs" />
+        <Compile Include="LSystem\LSystemGenerator.cs" />
+        <Compile Include="LSystem\PlacementHelper.cs" />
+        <Compile Include="LSystem\RoadHelper.cs" />
+        <Compile Include="LSystem\Rule.cs" />
+        <Compile Include="LSystem\Visualizer.cs" />
+        <Compile Include="Models\CameraPosition.cs" />
+        <Compile Include="Models\ReunRoadTransform.cs" />
         <Compile Include="Models\RoadSelection.cs" />
         <Compile Include="Patchs\EditorDashboardUIPatchs.cs" />
         <Compile Include="Patchs\EditorEnvironmentNodesUIPatchs.cs" />
+        <Compile Include="Patchs\EditorLevelVisibilityUIPatchs.cs" />
         <Compile Include="Patchs\EditorRoadsPatchs.cs" />
         <Compile Include="Patchs\EditorRoadsUIPatchs.cs" />
         <Compile Include="Patchs\EditorLevelObjectsUIPatchs.cs" />
         <Compile Include="Patchs\EditorObjectsPatchs.cs" />
+        <Compile Include="Patchs\FoliageEditorPatchs.cs" />
         <Compile Include="Patchs\LocationDevkitNodeSystemPatchs.cs" />
+        <Compile Include="Patchs\RuntimeGizmosPatchs.cs" />
         <Compile Include="ProjectMain.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
@@ -297,7 +311,7 @@
     
     <!-- Publicizer -->
     <ItemGroup>
-        <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.Unturned\.(Editor|LocationDevkitNodeSystem|Level).*" />
+        <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage).*" />
     </ItemGroup>
     
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

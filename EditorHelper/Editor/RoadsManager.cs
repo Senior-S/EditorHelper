@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using EditorHelper.Builders;
 using EditorHelper.Models;
 using SDG.Unturned;
@@ -18,17 +20,25 @@ public class RoadsManager
     private Vector2 _dragEndScreenPoint;
     private bool _hasDragStart;
     private bool _isDragging;
+    // TODO: Save this stuff to a file, same as EditorObjects do
+    private float _snapTransform;
     // Not used but kept for consistency with the EditorObjects
-    private readonly float _snapTransform;
     private readonly float _snapRotation;
+    // Used for Ctrl+Z
+    private int _step;
+    private IReun[] _reun = [];
+    private int _frame;
+    private Vector3 _fromPosition = Vector3.zero;
+    private Vector3 _toPosition = Vector3.zero;
 
     private RoadSelection _roadSelection;
     private EditorDrag _editorDrag;
-
+    
     private Vector3 _copyPosition = Vector3.zero;
 
     private readonly SleekButtonState _coordinateButton;
     private readonly ISleekToggle _depthToggleButton;
+    private readonly ISleekFloat32Field _snapTransformField;
 
     public RoadsManager()
     {
@@ -44,6 +54,8 @@ public class RoadsManager
         _snapRotation = 15f;
         _roadSelection = null;
         _editorDrag = null;
+        _step = 0;
+        _frame = 0;
 
         ButtonBuilder builder = new(40f, 40f);
         builder.SetPositionOffsetX(5f);
@@ -64,14 +76,31 @@ public class RoadsManager
             new GUIContent(local.format("CoordinateButtonTextGlobal"), bundle.load<Texture>("Global")),
             new GUIContent(local.format("CoordinateButtonTextLocal"), bundle.load<Texture>("Local")));
         _coordinateButton.onSwappedState = OnSwappedState;
+
+        builder.SetText(local.format("SnapTransformLabelText"));
+        _snapTransformField = builder.BuildFloatInput(ESleekSide.RIGHT);
+        _snapTransformField.OnValueChanged += OnSnapTransformFieldValueChanged;
         
         bundle.unload();
+        if (Level.isEditor)
+        {
+            _reun = new IReun[256];
+            _step = 0;
+            _frame = 0;
+        }
     }
     
     public void Initialize()
     {
         EditorUI.window.AddChild(_depthToggleButton);
         EditorUI.window.AddChild(_coordinateButton);
+        _snapTransformField.Value = _snapTransform;
+        EditorUI.window.AddChild(_snapTransformField);
+    }
+    
+    private void OnSnapTransformFieldValueChanged(ISleekFloat32Field field, float value)
+    {
+        _snapTransform = value;
     }
 
     private void OnSwappedState(SleekButtonState button, int index)
@@ -91,6 +120,66 @@ public class RoadsManager
         _roadSelection = new RoadSelection(EditorRoads.selection);
         CalculateHandleOffsets();
     }
+    
+    private void Undo()
+    {
+        while (_frame <= _reun.Length - 1)
+        {
+            if (_reun[_frame] != null)
+            {
+                _reun[_frame].undo();
+            }
+            if (_frame < _reun.Length - 1 && _reun[_frame + 1] != null)
+            {
+                _frame++;
+                if (_reun[_frame].step != _step)
+                {
+                    _step--;
+                    break;
+                }
+                continue;
+            }
+            break;
+        }
+        CalculateHandleOffsets();
+    }
+
+    private void Redo()
+    {
+        while (_frame >= 0)
+        {
+            if (_reun[_frame] != null)
+            {
+                _reun[_frame].redo();
+            }
+            if (_frame > 0 && _reun[_frame - 1] != null)
+            {
+                _frame--;
+                if (_reun[_frame].step != _step)
+                {
+                    _step++;
+                    break;
+                }
+                continue;
+            }
+            break;
+        }
+        CalculateHandleOffsets();
+    }
+    
+    private void Register(IReun newReun)
+    {
+        if (_frame > 0)
+        {
+            _reun = new IReun[_reun.Length];
+            _frame = 0;
+        }
+        for (int num = _reun.Length - 1; num > 0; num--)
+        {
+            _reun[num] = _reun[num - 1];
+        }
+        _reun[0] = newReun;
+    }
 
     public void CustomUpdate()
     {
@@ -98,6 +187,7 @@ public class RoadsManager
 
         _depthToggleButton.IsVisible = buttonVisible;
         _coordinateButton.IsVisible = buttonVisible;
+        _snapTransformField.IsVisible = buttonVisible;
         
         if (!EditorRoads.isPaving || EditorInteract.isFlying || !Glazier.Get().ShouldGameProcessInput)
         {
@@ -124,10 +214,10 @@ public class RoadsManager
         }
 
         bool flag = EditorRoads.selection && _handles.Raycast(EditorInteract.ray);
-        if (EditorRoads.selection)
+        if (EditorRoads.selection && EditorRoads.road != null)
         {
             _handles.Render(EditorInteract.ray);
-            RoadMaterial roadMaterial = LevelRoads.materials[EditorRoads.selected];
+            RoadMaterial roadMaterial = LevelRoads.materials[EditorRoads.road.material];
             Quaternion rotation = EditorRoads.selection.rotation;
 
             float radius = roadMaterial.width;
@@ -147,7 +237,7 @@ public class RoadsManager
                 ReleaseHandle();
                 return;
             }
-
+            
             _handles.wantsToSnap = InputEx.GetKey(ControlsSettings.snap);
             _handles.MouseMove(EditorInteract.ray);
             return;
@@ -156,6 +246,14 @@ public class RoadsManager
         if (InputEx.GetKeyDown(ControlsSettings.tool_0) && _dragMode != EDragMode.TRANSFORM)
         {
             _dragMode = EDragMode.TRANSFORM;
+        }
+        if (InputEx.GetKeyDown(KeyCode.Z) && InputEx.GetKey(KeyCode.LeftControl))
+        {
+            Undo();
+        }
+        if (InputEx.GetKeyDown(KeyCode.X) && InputEx.GetKey(KeyCode.LeftControl))
+        {
+            Redo();
         }
 
         if (!_isUsingHandle)
@@ -174,6 +272,7 @@ public class RoadsManager
                         _hasDragStart = true;
                         _dragStartViewportPoint = InputEx.NormalizedMousePosition;
                         _dragStartScreenPoint = Input.mousePosition;
+                        
                     }
 
                     if (!InputEx.GetKey(ControlsSettings.modify))
@@ -200,8 +299,7 @@ public class RoadsManager
                     {
                         (max.y, min.y) = (min.y, max.y);
                     }
-
-                    //onDragStarted?.Invoke(min, max);
+                    
                     if (!_isDragging)
                     {
                         _isDragging = true;
@@ -280,7 +378,7 @@ public class RoadsManager
         #region Original Update Code
         if (EditorInteract.worldHit.transform != null)
         {
-            EditorRoads.highlighter.gameObject.SetActive(!_isDragging);
+            EditorRoads.highlighter.gameObject.SetActive(!_isDragging && !_isUsingHandle);
             EditorRoads.highlighter.position = EditorInteract.worldHit.point;
         }
 
@@ -381,14 +479,13 @@ public class RoadsManager
 
     private void DrawRotationCircle(Vector3 axis0, Vector3 axis1, float radius, Color color)
     {
-        RuntimeGizmos.Get().Circle(EditorRoads.selection.position, axis0, axis1, radius, color, 0f, 32, EGizmoLayer.Foreground);
+        RuntimeGizmos.Get().Circle(EditorRoads.selection.position, axis0, axis1, radius, color, 0f, 12, EGizmoLayer.Foreground);
     }
     
     private void OnHandlePreTransform(Matrix4x4 worldToPivot)
     {
         _roadSelection.fromPosition = _roadSelection.transform.position;
         _roadSelection.fromRotation = _roadSelection.transform.rotation;
-        _roadSelection.fromScale = _roadSelection.transform.localScale;
         _roadSelection.relativeToPivot = worldToPivot * _roadSelection.transform.localToWorldMatrix;
     }
 
@@ -424,9 +521,6 @@ public class RoadsManager
     private void OnHandleTransformed(Matrix4x4 pivotToWorld)
     {
         Matrix4x4 matrix = pivotToWorld * _roadSelection.relativeToPivot;
-        //_roadSelection.transform.position = matrix.GetPosition();
-        //_roadSelection.transform.SetRotation_RoundIfNearlyAxisAligned(matrix.GetRotation());
-        //_roadSelection.transform.SetLocalScale_RoundIfNearlyEqualToOne(matrix.lossyScale);
         
         Vector3 point = matrix.GetPosition();
         float oldY = _roadSelection.transform.position.y;
@@ -459,6 +553,19 @@ public class RoadsManager
     {
         _isUsingHandle = false;
         _handles.MouseUp();
+        _step++;
+        
+        Vector3 toPosition = Vector3.zero;
+        if (EditorRoads.tangentIndex > -1)
+        {
+            toPosition = EditorRoads.road.joints[EditorRoads.vertexIndex].tangents[EditorRoads.tangentIndex];
+        }
+        else if (EditorRoads.vertexIndex > -1)
+        {
+            toPosition = EditorRoads.road.joints[EditorRoads.vertexIndex].vertex;
+        }
+        
+        Register(new ReunRoadTransform(_step, _roadSelection.fromPosition, toPosition, EditorRoads.vertexIndex, EditorRoads.tangentIndex));
     }
 
     private void StopDragging()
@@ -485,13 +592,118 @@ public class RoadsManager
         else
         {
             Quaternion rotation = EditorRoads.selection.rotation;
-            if (EditorRoads.road.joints.Count > 1 && EditorRoads.vertexIndex > 0)
+            Road road = EditorRoads.road;
+            if (road.joints.Count > 1)
             {
-                Vector3 forward = EditorRoads.road.joints[EditorRoads.vertexIndex - 1].vertex - EditorRoads.joint.vertex;
+                Vector3 forward = CalculateLocalPoint(road, EditorRoads.joint);
+                if (forward - EditorRoads.joint.vertex != Vector3.zero)
+                {
+                    forward -= EditorRoads.joint.vertex;
+                }
                 rotation = Quaternion.LookRotation(forward);
             }
             
             _handles.SetPreferredPivot(EditorRoads.selection.position, rotation);
         }
+    }
+    
+    private Vector3 CalculateLocalPoint(Road road, RoadJoint actualJoint)
+    {
+        int idealSampleIndex = -1;
+        foreach (RoadSample roadSample in road.samples)
+        {
+            Vector3 tempPos = road.getPosition(roadSample.index, roadSample.time);
+
+            // From my tests the max distance that a point will be is 2.8f
+            if (Vector3.Distance(tempPos, actualJoint.vertex) > 3f) continue;
+            
+            int index = road.samples.IndexOf(roadSample);
+            if (index == road.samples.Count - 1)
+            {
+                idealSampleIndex = index - 1;
+            }
+            else
+            {
+                idealSampleIndex = index + 1;
+            }
+            
+            break;
+        };
+
+        // Just in case something go wrong
+        if (idealSampleIndex == -1)
+        {
+            return actualJoint.vertex;
+        }
+        
+        RoadSample sample = road.samples[idealSampleIndex];
+        Vector3 position = road.getPosition(sample.index, sample.time);
+
+        if (!actualJoint.ignoreTerrain)
+        {
+            position.y = LevelGround.getHeight(position);
+        }
+        if (sample.index < road.joints.Count - 1)
+        {
+            position.y += Mathf.Lerp(actualJoint.offset, road.joints[sample.index + 1].offset, sample.time);
+        }
+        else if (road.isLoop)
+        {
+            position.y += Mathf.Lerp(actualJoint.offset, road.joints[0].offset, sample.time);
+        }
+        else
+        {
+            position.y += actualJoint.offset;
+        }
+
+        return position;
+
+        /*int roadJointIndex = road.joints.IndexOf(actualJoint);
+        bool shouldLower = roadJointIndex >= road.joints.Count - 1;
+        if (shouldLower)
+        {
+            roadJointIndex--;
+        }
+        else
+        {
+            roadJointIndex++;
+        }
+
+        RoadSample sample = shouldLower
+            ? road.samples.LastOrDefault(c => c.index == roadJointIndex)
+            : road.samples.FirstOrDefault(c => c.index == roadJointIndex);
+        if (sample == null)
+        {
+            // Probably using a while loop isn't the optimal way but in almost 99% of the cases the first FirstOrDefault will find the required sample
+            while (sample == null)
+            {
+                sample = shouldLower
+                    ? road.samples.LastOrDefault(c => c.index == --roadJointIndex)
+                    : road.samples.FirstOrDefault(c => c.index == ++roadJointIndex);
+                if (roadJointIndex < 0 || roadJointIndex >= road.joints.Count)
+                {
+                    return actualJoint.vertex;
+                }
+            }
+        }
+        Vector3 position = road.getPosition(sample.index, sample.time);
+        if (!actualJoint.ignoreTerrain)
+        {
+            position.y = LevelGround.getHeight(position);
+        }
+        if (sample.index < road.joints.Count - 1)
+        {
+            position.y += Mathf.Lerp(actualJoint.offset, road.joints[sample.index + 1].offset, sample.time);
+        }
+        else if (road.isLoop)
+        {
+            position.y += Mathf.Lerp(actualJoint.offset, road.joints[0].offset, sample.time);
+        }
+        else
+        {
+            position.y += actualJoint.offset;
+        }
+
+        return position;*/
     }
 }
