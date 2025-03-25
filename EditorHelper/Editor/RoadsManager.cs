@@ -375,7 +375,7 @@ public class RoadsManager
             }
         }
 
-        if (InputEx.GetKeyDown(KeyCode.B) && InputEx.GetKeyDown(KeyCode.LeftControl))
+        if (InputEx.GetKeyDown(KeyCode.R) && InputEx.GetKeyDown(KeyCode.LeftControl))
         {
             LevelRoads.bakeRoads();
             // Bake roads may take more than a frame, so returning here avoids the user making changes in this exact frame
