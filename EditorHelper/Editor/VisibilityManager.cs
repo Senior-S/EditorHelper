@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using EditorHelper.Builders;
 using EditorHelper.Models;
+using SDG.Framework.Utilities;
 using SDG.Unturned;
 
 namespace EditorHelper.Editor;
@@ -38,11 +40,19 @@ public class VisibilityManager
     
     public void Initialize()
     {
-        EditorLevelVisibilityUI.container.AddChild(_removeLocationButton);
-        EditorLevelVisibilityUI.container.AddChild(_saveLocationButton);
+        TimeUtility.InvokeAfterDelay(() => DelayedStart(), 0f);
 
         UpdatePositions();
     }
+
+    private IEnumerator DelayedStart()
+    {
+        yield return null;
+        yield return null;
+        EditorLevelVisibilityUI.container.AddChild(_removeLocationButton);
+        EditorLevelVisibilityUI.container.AddChild(_saveLocationButton);
+        yield break;
+    } 
 
     private void OnRemoveLocationButtonClicked(ISleekElement button)
     {

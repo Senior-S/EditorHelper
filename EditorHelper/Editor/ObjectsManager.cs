@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using EditorHelper.Builders;
-using EditorHelper.LSystem;
+using EditorHelper.Models;
 using HighlightingSystem;
 using SDG.Unturned;
 using UnityEngine;
@@ -13,6 +14,11 @@ namespace EditorHelper.Editor;
 // TODO: Add "tabs" or so for buttons to avoid flooding the user screen
 public class ObjectsManager
 {
+    /// <summary>
+    /// Index of the focused object
+    /// </summary>
+    private int _focusHighlightIndex = 0;
+    private readonly List<Transform> _highlightedTransforms = [];
     private readonly List<Highlighter> _highlightedObjects = [];
     private readonly SleekButtonIcon _highlightButton;
     private readonly SleekButtonState _highlightColorsButton;
@@ -23,7 +29,8 @@ public class ObjectsManager
 
     private readonly SleekButtonIcon _adjacentPlaceButton;
     private readonly SleekButtonIcon _highlightWrongScaleButton;
-
+    private readonly SleekButtonIcon _selectHighlightedButton;
+    
     private readonly ISleekLabel _objectPositionLabel;
     private readonly ISleekFloat32Field _objectPositionX;
     private readonly ISleekFloat32Field _objectPositionY;
@@ -39,6 +46,10 @@ public class ObjectsManager
     private readonly ISleekFloat32Field _objectScaleY;
     private readonly ISleekFloat32Field _objectScaleZ;
 
+    // https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.conditionalweaktable-2?view=net-9.0
+    private readonly ConditionalWeakTable<ReunObjectRemove, ReunObjectRemoveExtension> _cwtObjectRemove;
+    private readonly ConditionalWeakTable<EditorCopy, EditorCopyExtension> _cwtEditorCopy;
+    
     private readonly Color[] _highlightColors = [Color.yellow, Color.red, Color.magenta, Color.blue];
     private int _currentColorIndex = 0;
     private Transform _selectedObject = null;
@@ -78,6 +89,10 @@ public class ObjectsManager
         builder.SetText("Highlight wrong objects");
         _highlightWrongScaleButton = builder.BuildButton("Highlight all objects with a negative scale");
         _highlightWrongScaleButton.onClickedButton += OnHighlightWrongScaleClicked;
+
+        builder.SetText("Select highlighted objects");
+        _selectHighlightedButton = builder.BuildButton("Select all highlighted objects");
+        _selectHighlightedButton.onClickedButton += OnSelectHighlightedClicked;
         
         builder.SetPositionOffsetX(20f)
             .SetPositionOffsetY(-390f)
@@ -148,8 +163,11 @@ public class ObjectsManager
             .SetPositionOffsetX(5f)
             .SetText("Scale");
         _objectScaleLabel = builder.BuildLabel(TextAnchor.MiddleLeft);
+
+        _cwtObjectRemove = new ConditionalWeakTable<ReunObjectRemove, ReunObjectRemoveExtension>();
+        _cwtEditorCopy = new ConditionalWeakTable<EditorCopy, EditorCopyExtension>();
     }
-    
+
     // This code is still an internal WIP so until it's finished it won't be added into the final module
     /*private void TestRoadsOnonClickedButton(ISleekElement button)
     {
@@ -183,6 +201,7 @@ public class ObjectsManager
         uiInstance.AddChild(_filterField);
         uiInstance.AddChild(_adjacentPlaceButton);
         uiInstance.AddChild(_highlightWrongScaleButton);
+        uiInstance.AddChild(_selectHighlightedButton);
         uiInstance.AddChild(_objectPositionLabel);
         uiInstance.AddChild(_objectPositionX);
         uiInstance.AddChild(_objectPositionY);
@@ -196,6 +215,16 @@ public class ObjectsManager
         uiInstance.AddChild(_objectScaleY);
         uiInstance.AddChild(_objectScaleZ);
         _filterText = string.Empty;
+    }
+    
+    private void OnSelectHighlightedClicked(ISleekElement button)
+    {
+        if (_highlightedObjects.Count < 1) return;
+        
+        List<Transform> toSelect = _highlightedObjects.Select(c => c.transform).ToList();
+        UnhighlightAll();
+        
+        toSelect.ForEach(EditorObjects.addSelection);
     }
     
     private void OnHighlightWrongScaleClicked(ISleekElement button)
@@ -290,9 +319,16 @@ public class ObjectsManager
 
     private void PrivateHighlight(List<LevelObject> levelObjects, LevelObject ignore = null)
     {
+        _highlightedTransforms.Clear();
+        _focusHighlightIndex = 0;
+        if (ignore != null)
+        {
+            _highlightedTransforms.Add(ignore.transform);
+        }
         foreach (LevelObject lObj in levelObjects)
         {
             if (lObj == null || lObj.transform == null || lObj.transform.gameObject == null || lObj == ignore || lObj.transform == _selectedObject) continue;
+            _highlightedTransforms.Add(lObj.transform);
             Highlighter highlighter = lObj.transform.GetComponent<Highlighter>();
             if (!highlighter)
             {
@@ -314,14 +350,32 @@ public class ObjectsManager
         // Probably there's a better way of check this
         if (field == _objectPositionX)
         {
+            if (_objectPositionX.Value > Level.size || _objectPositionX.Value < Level.size * -1)
+            {
+                _objectPositionX.Value = position.x;
+                return;
+            }
+            
             position.x = _objectPositionX.Value;
         }
         else if (field == _objectPositionY)
         {
+            if (_objectPositionY.Value > Level.size || _objectPositionY.Value < Level.size * -1)
+            {
+                _objectPositionY.Value = position.y;
+                return;
+            }
+            
             position.y = _objectPositionY.Value;
         }
         else if (field == _objectPositionZ)
         {
+            if (_objectPositionZ.Value > Level.size || _objectPositionZ.Value < Level.size * -1)
+            {
+                _objectPositionZ.Value = position.z;
+                return;
+            }
+            
             position.z = _objectPositionZ.Value;
         }
         
@@ -385,6 +439,32 @@ public class ObjectsManager
         UnhighlightAll(_selectedObject);
     }
 
+    public void OnObjectRemoved(ReunObjectRemove reunObjectRemove, Transform transform)
+    {
+        _cwtObjectRemove.Add(reunObjectRemove, new ReunObjectRemoveExtension(transform));
+    }
+
+    public void OnObjectRemovedUndo(ReunObjectRemove reunObjectRemove, Transform transform)
+    {
+        if (_cwtObjectRemove.TryGetValue(reunObjectRemove, out ReunObjectRemoveExtension value))
+        {
+            value.Undo(transform);
+        }
+    }
+
+    public void OnObjectCopied(EditorCopy editorCopy, EditorSelection selection)
+    {
+        _cwtEditorCopy.Add(editorCopy, new EditorCopyExtension(selection.transform));
+    }
+    
+    public void OnObjectPasted(EditorCopy editorCopy, Transform transform)
+    {
+        if (_cwtEditorCopy.TryGetValue(editorCopy, out EditorCopyExtension value))
+        {
+            value.Apply(transform);
+        }
+    }
+
     public void SelectObject(Transform selectedObject)
     {
         _selectedObject = selectedObject;
@@ -411,12 +491,14 @@ public class ObjectsManager
     
     public void UnhighlightAll(Transform ignore = null)
     {
+        _highlightedTransforms.Clear();
         if (_highlightedObjects.Count < 1) return;
 
         foreach (Highlighter highlightedObject in _highlightedObjects)
         {
-            if (highlightedObject.transform == ignore) continue;
+            if (!highlightedObject || !highlightedObject.transform || highlightedObject.transform == ignore) continue;
             
+            _highlightedTransforms.Remove(highlightedObject.transform);
             Object.DestroyImmediate(highlightedObject);
         }
         _highlightedObjects.Clear();
@@ -426,8 +508,47 @@ public class ObjectsManager
     // Basically a CustomUpdate which doesn't replace the original update function.
     public void LateUpdate()
     {
-        ChangeButtonsVisibility(EditorObjects.selection != null && EditorObjects.selection.Count == 1);
+        if (EditorObjects.selection == null) return;
+        ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
         // TODO: Implement a grid system with options to automatically align objects with the grid corners.
+
+        // In a normal function I'll usually avoid extra indentation, but if in a future I add more stuff I can't cancel the whole execution just
+        // for a feature.
+        if (_highlightedTransforms.Count > 0 && EditorObjects.selection.Count == 1)
+        {
+            if (Input.GetKeyDown(KeyCode.LeftArrow))
+            {
+                _focusHighlightIndex -= 1;
+                
+                if (_focusHighlightIndex < 0)
+                {
+                    _focusHighlightIndex = _highlightedTransforms.Count - 1;
+                }
+                
+                Transform selection = _highlightedTransforms[_focusHighlightIndex].transform;
+                // It doesn't use EditorObjects::clearSelection due it removes the highlight from the selection
+                EditorObjects.selection.Clear();
+                EditorObjects.selection.Add(new EditorSelection(selection, selection.position, selection.rotation, selection.localScale));
+                EditorObjects.calculateHandleOffsets();
+                MainCamera.instance.transform.parent.position = EditorObjects.handles.GetPivotPosition() - 15f * MainCamera.instance.transform.forward;
+            }
+            if (Input.GetKeyDown(KeyCode.RightArrow))
+            {
+                _focusHighlightIndex += 1;
+                if (_focusHighlightIndex >= _highlightedTransforms.Count)
+                {
+                    _focusHighlightIndex = 0;
+                }
+                
+                Transform selection = _highlightedTransforms[_focusHighlightIndex].transform;
+                // It doesn't use EditorObjects::clearSelection due it removes the highlight from the selection
+                EditorObjects.selection.Clear();
+                EditorObjects.selection.Add(new EditorSelection(selection, selection.position, selection.rotation, selection.localScale));
+                EditorObjects.calculateHandleOffsets();
+                MainCamera.instance.transform.parent.position = EditorObjects.handles.GetPivotPosition() - 15f * MainCamera.instance.transform.forward;
+            }
+        }
+        
     }
     
     private void ChangeButtonsVisibility(bool visible)
@@ -455,6 +576,8 @@ public class ObjectsManager
         {
             _highlightWrongScaleButton.text = "Highlight wrong objects";
         }
+
+        _selectHighlightedButton.IsVisible = visible;
         
         _objectPositionLabel.IsVisible = visible;
         _objectPositionX.IsVisible = visible;

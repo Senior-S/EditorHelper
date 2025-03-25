@@ -23,7 +23,7 @@
         <DefineConstants>DEBUG;TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
-        <Version>0.0.6</Version>
+        <Version>0.0.7</Version>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
@@ -290,6 +290,8 @@
         <Compile Include="LSystem\Rule.cs" />
         <Compile Include="LSystem\Visualizer.cs" />
         <Compile Include="Models\CameraPosition.cs" />
+        <Compile Include="Models\EditorCopyExtension.cs" />
+        <Compile Include="Models\ReunObjectRemoveExtension.cs" />
         <Compile Include="Models\ReunRoadTransform.cs" />
         <Compile Include="Models\RoadSelection.cs" />
         <Compile Include="Patchs\EditorDashboardUIPatchs.cs" />
@@ -300,6 +302,7 @@
         <Compile Include="Patchs\EditorLevelObjectsUIPatchs.cs" />
         <Compile Include="Patchs\EditorObjectsPatchs.cs" />
         <Compile Include="Patchs\FoliageEditorPatchs.cs" />
+        <Compile Include="Patchs\ReunObjectRemovePatchs.cs" />
         <Compile Include="Patchs\LocationDevkitNodeSystemPatchs.cs" />
         <Compile Include="Patchs\RuntimeGizmosPatchs.cs" />
         <Compile Include="ProjectMain.cs" />
@@ -311,7 +314,7 @@
     
     <!-- Publicizer -->
     <ItemGroup>
-        <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage).*" />
+        <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage|ReunObjectRemove).*" />
     </ItemGroup>
     
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

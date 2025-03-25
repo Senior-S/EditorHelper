@@ -21,14 +21,14 @@ public class EditorHelper : IModuleNexus
     public void initialize()
     {
         Instance = this;
-        
+
         _harmony = new Harmony("com.seniors.editorhelper");
         _harmony.PatchAll(this.GetType().Assembly);
 
         CommandWindow.LogWarning($"Editor helper v{this.GetType().Assembly.GetName().Version}");
         CommandWindow.Log("<<SSPlugins>>");
     }
-
+    
     public void shutdown()
     {
         _harmony.UnpatchAll(_harmony.Id);

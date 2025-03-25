@@ -1,4 +1,6 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using EditorHelper.Builders;
 using SDG.Unturned;
 using UnityEngine;
@@ -13,7 +15,7 @@ public class EditorManager
     private readonly SleekButtonIcon _editorButton;
 
     private Vector3 _cameraPosition = Vector3.zero;
-    
+
     public EditorManager()
     {
         ButtonBuilder builder = new(positionScaleX: 0.5f);
@@ -27,8 +29,8 @@ public class EditorManager
 
         Provider.onEnemyConnected += OnEnemyConnected;
         
-        builder.SetOneTimeSpacing(0f)
-            .SetPositionOffsetY(-30f)
+        builder
+            .SetPositionOffsetY(-40f)
             .SetText("Back to editor");
         _editorButton = builder.BuildButton("Join to the map spawning a player at your camera position");
         _editorButton.onClickedButton += OnEditorClicked;
@@ -57,6 +59,7 @@ public class EditorManager
     {
         yield return new WaitForEndOfFrame();
         yield return new WaitForEndOfFrame();
+        yield return new WaitForEndOfFrame();
         player.player.teleportToLocation(_cameraPosition, 0f);
         PlayerUI.container.AddChild(_editorButton);
 
@@ -66,7 +69,10 @@ public class EditorManager
     private IEnumerator SendToSingleplayer()
     {
         Level.exit();
+        EditorHelper.Instance.ObjectsManager = null;
+        EditorHelper.Instance.VisibilityManager = null;
         yield return new WaitUntil(() => Level.isExiting == false);
+        yield return new WaitForEndOfFrame();
         yield return new WaitForEndOfFrame();
         yield return new WaitForEndOfFrame();
         Provider.map = _levelInfo.name;
@@ -78,6 +84,7 @@ public class EditorManager
     {
         Provider.RequestDisconnect("Going back to editor");
         yield return new WaitUntil(() => Level.isExiting == false);
+        yield return new WaitForEndOfFrame();
         yield return new WaitForEndOfFrame();
         yield return new WaitForEndOfFrame();
         Level.edit(_levelInfo);
