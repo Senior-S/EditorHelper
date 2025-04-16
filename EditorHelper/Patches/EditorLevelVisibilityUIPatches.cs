@@ -2,10 +2,10 @@
 using HarmonyLib;
 using SDG.Unturned;
 
-namespace EditorHelper.Patchs;
+namespace EditorHelper.Patches;
 
 [HarmonyPatch]
-public class EditorLevelVisibilityUIPatchs
+public class EditorLevelVisibilityUIPatches
 {
     [HarmonyPatch(typeof(EditorLevelVisibilityUI), MethodType.Constructor)]
     [HarmonyPostfix]

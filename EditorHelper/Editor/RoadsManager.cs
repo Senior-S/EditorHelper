@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using EditorHelper.Builders;
 using EditorHelper.Models;
@@ -28,8 +27,8 @@ public class RoadsManager
     private int _step;
     private IReun[] _reun = [];
     private int _frame;
-    private Vector3 _fromPosition = Vector3.zero;
-    private Vector3 _toPosition = Vector3.zero;
+    //private Vector3 _fromPosition = Vector3.zero;
+    //private Vector3 _toPosition = Vector3.zero;
 
     private RoadSelection _roadSelection;
     private EditorDrag _editorDrag;
@@ -213,7 +212,7 @@ public class RoadsManager
             _handles.SetPreferredMode(TransformHandles.EMode.Position);
         }
 
-        bool flag = EditorRoads.selection && _handles.Raycast(EditorInteract.ray);
+        bool selectingHandle = EditorRoads.selection && _handles.Raycast(EditorInteract.ray);
         if (EditorRoads.selection && EditorRoads.road != null)
         {
             _handles.Render(EditorInteract.ray);
@@ -260,7 +259,7 @@ public class RoadsManager
         {
             if (InputEx.GetKeyDown(ControlsSettings.primary))
             {
-                if (flag)
+                if (selectingHandle)
                 {
                     _handles.MouseDown(EditorInteract.ray);
                     _isUsingHandle = true;
@@ -378,7 +377,6 @@ public class RoadsManager
         if (InputEx.GetKeyDown(KeyCode.R) && InputEx.GetKeyDown(KeyCode.LeftControl))
         {
             LevelRoads.bakeRoads();
-            // Bake roads may take more than a frame, so returning here avoids the user making changes in this exact frame
             return;
         }
 
@@ -420,7 +418,7 @@ public class RoadsManager
             }
         }
 
-        if (!InputEx.GetKeyDown(ControlsSettings.primary))
+        if (!InputEx.GetKeyDown(ControlsSettings.primary) || selectingHandle)
         {
             return;
         }
@@ -435,7 +433,7 @@ public class RoadsManager
         }
         else
         {
-            if (!EditorInteract.worldHit.transform || flag)
+            if (!EditorInteract.worldHit.transform)
             {
                 return;
             }
@@ -598,119 +596,48 @@ public class RoadsManager
         }
         else
         {
-            Quaternion rotation = EditorRoads.selection.rotation;
             Road road = EditorRoads.road;
-            if (road.joints.Count > 1)
-            {
-                Vector3 forward = CalculateLocalPoint(road, EditorRoads.joint);
-                if (forward - EditorRoads.joint.vertex != Vector3.zero)
-                {
-                    forward -= EditorRoads.joint.vertex;
-                }
-                rotation = Quaternion.LookRotation(forward);
-            }
-            
-            _handles.SetPreferredPivot(EditorRoads.selection.position, rotation);
+
+            _handles.SetPreferredPivot(EditorRoads.selection.position, CalculateLocalPoint(road, EditorRoads.path));
         }
     }
     
-    private Vector3 CalculateLocalPoint(Road road, RoadJoint actualJoint)
+    // Cubic bezier formula
+    private Vector3 GetBezierPoint(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
     {
-        int idealSampleIndex = -1;
-        foreach (RoadSample roadSample in road.samples)
-        {
-            Vector3 tempPos = road.getPosition(roadSample.index, roadSample.time);
+        float u = 1 - t;
+        float tt = t * t;
+        float uu = u * u;
+        float uuu = uu * u;
+        float ttt = tt * t;
 
-            // From my tests the max distance that a point will be is 2.8f
-            if (Vector3.Distance(tempPos, actualJoint.vertex) > 3f) continue;
-            
-            int index = road.samples.IndexOf(roadSample);
-            if (index == road.samples.Count - 1)
-            {
-                idealSampleIndex = index - 1;
-            }
-            else
-            {
-                idealSampleIndex = index + 1;
-            }
-            
-            break;
-        };
+        Vector3 point = uuu * p0; // (1 - t)^3 * p0
+        point += 3 * uu * t * p1; // 3(1 - t)^2 * t * p1
+        point += 3 * u * tt * p2; // 3(1 - t) * t^2 * p2
+        point += ttt * p3;        // t^3 * p3
 
-        // Just in case something go wrong
-        if (idealSampleIndex == -1)
+        return point;
+    }
+
+    private Quaternion CalculateLocalPoint(Road road, RoadPath actualPath)
+    {
+        if (road.paths.Count < 2) return actualPath.vertex.rotation;
+        
+        int actualIndex = road.paths.IndexOf(actualPath);
+        int nextPathIndex = actualIndex;
+        if (nextPathIndex >= 0 && nextPathIndex < road.paths.Count() - 1)
         {
-            return actualJoint.vertex;
+            nextPathIndex += 1;
+        }
+        else
+        {
+            nextPathIndex -= 1;
         }
         
-        RoadSample sample = road.samples[idealSampleIndex];
-        Vector3 position = road.getPosition(sample.index, sample.time);
-
-        if (!actualJoint.ignoreTerrain)
-        {
-            position.y = LevelGround.getHeight(position);
-        }
-        if (sample.index < road.joints.Count - 1)
-        {
-            position.y += Mathf.Lerp(actualJoint.offset, road.joints[sample.index + 1].offset, sample.time);
-        }
-        else if (road.isLoop)
-        {
-            position.y += Mathf.Lerp(actualJoint.offset, road.joints[0].offset, sample.time);
-        }
-        else
-        {
-            position.y += actualJoint.offset;
-        }
-
-        return position;
-
-        /*int roadJointIndex = road.joints.IndexOf(actualJoint);
-        bool shouldLower = roadJointIndex >= road.joints.Count - 1;
-        if (shouldLower)
-        {
-            roadJointIndex--;
-        }
-        else
-        {
-            roadJointIndex++;
-        }
-
-        RoadSample sample = shouldLower
-            ? road.samples.LastOrDefault(c => c.index == roadJointIndex)
-            : road.samples.FirstOrDefault(c => c.index == roadJointIndex);
-        if (sample == null)
-        {
-            // Probably using a while loop isn't the optimal way but in almost 99% of the cases the first FirstOrDefault will find the required sample
-            while (sample == null)
-            {
-                sample = shouldLower
-                    ? road.samples.LastOrDefault(c => c.index == --roadJointIndex)
-                    : road.samples.FirstOrDefault(c => c.index == ++roadJointIndex);
-                if (roadJointIndex < 0 || roadJointIndex >= road.joints.Count)
-                {
-                    return actualJoint.vertex;
-                }
-            }
-        }
-        Vector3 position = road.getPosition(sample.index, sample.time);
-        if (!actualJoint.ignoreTerrain)
-        {
-            position.y = LevelGround.getHeight(position);
-        }
-        if (sample.index < road.joints.Count - 1)
-        {
-            position.y += Mathf.Lerp(actualJoint.offset, road.joints[sample.index + 1].offset, sample.time);
-        }
-        else if (road.isLoop)
-        {
-            position.y += Mathf.Lerp(actualJoint.offset, road.joints[0].offset, sample.time);
-        }
-        else
-        {
-            position.y += actualJoint.offset;
-        }
-
-        return position;*/
+        Vector3 position = GetBezierPoint(road.paths[nextPathIndex].vertex.position, road.paths[nextPathIndex].tangents[nextPathIndex > actualIndex ? 0 : 1].position,
+            actualPath.vertex.position, actualPath.tangents[nextPathIndex > actualIndex ? 1 : 0].position, 0.75f);
+        return nextPathIndex > actualIndex 
+            ? Quaternion.LookRotation(actualPath.vertex.position - position)
+            : Quaternion.LookRotation(position - actualPath.vertex.position);
     }
 }

@@ -4,10 +4,10 @@ using JetBrains.Annotations;
 using SDG.Unturned;
 using UnityEngine;
 
-namespace EditorHelper.Patchs;
+namespace EditorHelper.Patches;
 
 [HarmonyPatch]
-public class ReunObjectRemovePatchs
+public class ReunObjectRemovePatches
 {
     [HarmonyPatch(typeof(ReunObjectRemove), MethodType.Constructor)]
     // If I don't specify the method name and the argument types the patch doesn't work (: 

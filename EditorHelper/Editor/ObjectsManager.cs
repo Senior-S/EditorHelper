@@ -46,6 +46,12 @@ public class ObjectsManager
     private readonly ISleekFloat32Field _objectScaleY;
     private readonly ISleekFloat32Field _objectScaleZ;
 
+    public int ObjectsLayerMask { get; private set; } = LayerMask.GetMask("Large", "Medium", "Small", "Barricade", "Structure");
+    private readonly ISleekBox _layersContainer;
+    //private readonly ISleekToggle[] _layersToggle;
+    private readonly Dictionary<ISleekToggle, string> _toggleToLayer = new();
+    private readonly SleekButtonIcon _layersMaskButton;
+    
     // https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.conditionalweaktable-2?view=net-9.0
     private readonly ConditionalWeakTable<ReunObjectRemove, ReunObjectRemoveExtension> _cwtObjectRemove;
     private readonly ConditionalWeakTable<EditorCopy, EditorCopyExtension> _cwtEditorCopy;
@@ -163,9 +169,77 @@ public class ObjectsManager
             .SetPositionOffsetX(5f)
             .SetText("Scale");
         _objectScaleLabel = builder.BuildLabel(TextAnchor.MiddleLeft);
+        
+        builder.SetPositionScaleX(0.5f)
+            .SetPositionScaleY(1)
+            .SetPositionOffsetX(-125f)
+            .SetPositionOffsetY(-210f)
+            .SetSizeOffsetX(250f)
+            .SetSizeOffsetY(160f)
+            .SetText("");
 
+        _layersContainer = builder.BuildBox();
+        builder.SetPositionScaleX(0.5f)
+            .SetPositionScaleY(0.5f)
+            .SetSizeOffsetX(40f)
+            .SetSizeOffsetY(40f)
+            .SetPositionOffsetX(-120f)
+            .SetPositionOffsetY(-60f);
+        
+        List<ISleekToggle> toggles = 
+        [
+            builder.SetText("Large").BuildToggle(),
+            builder.SetText("Medium").BuildToggle()
+        ];
+        builder.SetPositionOffsetX(5f)
+            .SetPositionOffsetY(-60f);
+        toggles.AddRange([
+            builder.SetText("Small").BuildToggle(),
+            builder.SetText("Structure").BuildToggle()
+        ]);
+        builder.SetPositionOffsetX(-60f)
+            .SetPositionOffsetY(30f);
+        toggles.Add(builder.SetText("Barricade").BuildToggle());
+        
+        _toggleToLayer[toggles[0]] = "Large";
+        _toggleToLayer[toggles[1]] = "Medium";
+        _toggleToLayer[toggles[2]] = "Small";
+        _toggleToLayer[toggles[3]] = "Structure";
+        _toggleToLayer[toggles[4]] = "Barricade";
+        
+        //_layersToggle = toggles.ToArray();
+        for (int i = 0; i < toggles.Count; i++)
+        {
+            ISleekToggle toggle = toggles[i];
+            _layersContainer.AddChild(toggle);
+            toggle.OnValueChanged += OnLayerToggleChanged;
+        }
+
+        _layersContainer.IsVisible = false;
+        
+        builder.SetPositionScaleX(1f)
+            .SetPositionScaleY(1f)
+            .SetPositionOffsetX(-230f)
+            .SetPositionOffsetY(-30f)
+            .SetSizeOffsetX(200)
+            .SetSizeOffsetY(30)
+            .SetText("Change layer mask");
+        
+        _layersMaskButton = builder.BuildButton("Change the layer mask that determines what can be selected");
+        _layersMaskButton.onClickedButton += OnLayersMaskButtonClicked;
+        
         _cwtObjectRemove = new ConditionalWeakTable<ReunObjectRemove, ReunObjectRemoveExtension>();
         _cwtEditorCopy = new ConditionalWeakTable<EditorCopy, EditorCopyExtension>();
+    }
+
+    private void OnLayerToggleChanged(ISleekToggle toggle, bool state)
+    {
+        ObjectsLayerMask = _toggleToLayer.Where(kvp => kvp.Key.Value).Aggregate(0, (current, kvp) => current | 1 << LayerMask.NameToLayer(kvp.Value));;
+    }
+
+    private void OnLayersMaskButtonClicked(ISleekElement button)
+    {
+        _layersContainer.IsVisible = !_layersContainer.IsVisible;
     }
 
     // This code is still an internal WIP so until it's finished it won't be added into the final module
@@ -195,6 +269,8 @@ public class ObjectsManager
     
     public void Initialize(ref EditorLevelObjectsUI uiInstance)
     {
+        EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y = -265f;
+        
         uiInstance.AddChild(_highlightButton);
         uiInstance.AddChild(_highlightColorsButton);
         uiInstance.AddChild(_filterButton);
@@ -214,6 +290,8 @@ public class ObjectsManager
         uiInstance.AddChild(_objectScaleX);
         uiInstance.AddChild(_objectScaleY);
         uiInstance.AddChild(_objectScaleZ);
+        uiInstance.AddChild(_layersContainer);
+        uiInstance.AddChild(_layersMaskButton);
         _filterText = string.Empty;
     }
     
@@ -467,6 +545,8 @@ public class ObjectsManager
 
     public void SelectObject(Transform selectedObject)
     {
+        
+        
         _selectedObject = selectedObject;
 
         _objectPositionX.Value = selectedObject.position.x;

@@ -15,8 +15,8 @@ public class ButtonBuilder
     private float _positionOffsetY = 10f;
     // For future reference, the position scale is basically the pivot
     // X:0 Y:0 = Left Top
-    private float _positionScaleX = 0f;
-    private float _positionScaleY = 1f;
+    private float _positionScaleX;
+    private float _positionScaleY;
 
     private float _spacing;
     
@@ -77,8 +77,8 @@ public class ButtonBuilder
     /// <returns>Button builder instance</returns>
     public ButtonBuilder SetOneTimeSpacing(float spacing)
     {
-        _positionOffsetY -= -_spacing;
-        _positionOffsetY += -spacing;
+        _positionOffsetY += _positionScaleY < 1f ? -_spacing : _spacing;
+        _positionOffsetY += _positionScaleY < 1f ? spacing : -spacing;
         return this;
     }
     
@@ -86,6 +86,11 @@ public class ButtonBuilder
     {
         _text = text;
         return this;
+    }
+
+    private void ApplySpacing()
+    {
+        _positionOffsetY += _positionScaleY < 1f ? _spacing : -_spacing;
     }
 
     public SleekButtonState BuildButtonState(params GUIContent[] states)
@@ -100,8 +105,8 @@ public class ButtonBuilder
             SizeOffset_Y = _sizeOffsetY,
             tooltip = _text
         };
-        
-        _positionOffsetY += -_spacing;
+
+        ApplySpacing();
         return buttonState;
     }
 
@@ -119,7 +124,7 @@ public class ButtonBuilder
             tooltip = tooltip
         };
         
-        _positionOffsetY += -_spacing;
+        ApplySpacing();
         return button;
     }
 
@@ -138,7 +143,7 @@ public class ButtonBuilder
             floatField.AddLabel(_text, labelSide);
         }
         
-        _positionOffsetY += -_spacing;
+        ApplySpacing();
         return floatField;
     }
     
@@ -162,7 +167,7 @@ public class ButtonBuilder
             toggle.AddLabel(_text, labelSide);
         }
 
-        _positionOffsetY += -_spacing;
+        ApplySpacing();
         return toggle;
     }
 
@@ -178,7 +183,7 @@ public class ButtonBuilder
         label.Text = _text;
         label.TextAlignment = textAnchor;
 
-        _positionOffsetY += -_spacing;
+        ApplySpacing();
         return label;
     }
 
@@ -196,7 +201,27 @@ public class ButtonBuilder
             stringField.PlaceholderText = _text;
         }
         
-        _positionOffsetY += -_spacing;
+        ApplySpacing();
         return stringField;
+    }
+
+    public ISleekBox BuildBox(TextAnchor textAnchor = TextAnchor.MiddleCenter)
+    {
+        ISleekBox box = Glazier.Get().CreateBox();
+        box.PositionOffset_X = _positionOffsetX;
+        box.PositionOffset_Y = _positionOffsetY;
+        box.PositionScale_X = _positionScaleX;
+        box.PositionScale_Y = _positionScaleY;
+        box.SizeOffset_X = _sizeOffsetX;
+        box.SizeOffset_Y = _sizeOffsetY;
+        if (_text.Length > 0)
+        {
+            box.Text = _text;
+            box.TextAlignment = textAnchor;
+            box.AllowRichText = true;
+        }
+        
+        ApplySpacing();
+        return box;
     }
 }

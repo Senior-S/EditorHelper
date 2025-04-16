@@ -2,20 +2,18 @@
 using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.Unturned;
-using UnityEngine;
 
-namespace EditorHelper.Patchs;
+namespace EditorHelper.Patches;
 
 [HarmonyPatch]
-public class EditorLevelObjectsUIPatchs
+public class EditorLevelObjectsUIPatches
 {
     [HarmonyPatch(typeof(EditorLevelObjectsUI), MethodType.Constructor)]
     [HarmonyPostfix]
     [UsedImplicitly]
-    static void Constructor(EditorLevelObjectsUI __instance)
+    private static void Constructor(EditorLevelObjectsUI __instance)
     {
         EditorHelper.Instance.ObjectsManager = new ObjectsManager();
-        
         EditorHelper.Instance.ObjectsManager.Initialize(ref __instance);
     }
 }

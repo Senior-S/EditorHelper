@@ -3,10 +3,10 @@ using JetBrains.Annotations;
 using SDG.Unturned;
 using UnityEngine;
 
-namespace EditorHelper.Patchs;
+namespace EditorHelper.Patches;
 
 [HarmonyPatch]
-public class EditorRoadsPatchs
+public class EditorRoadsPatches
 {
     [HarmonyPatch(typeof(EditorRoads), "select")]
     [HarmonyPostfix]

@@ -10,17 +10,30 @@ using JetBrains.Annotations;
 using SDG.Unturned;
 using UnityEngine;
 
-namespace EditorHelper.Patchs;
+namespace EditorHelper.Patches;
 
 [HarmonyPatch]
-public class EditorObjectsPatchs
+public class EditorObjectsPatches
 {
+    [HarmonyPatch(typeof(EditorObjects), "addSelection")]
+    [HarmonyPrefix]
+    [UsedImplicitly]
+    static bool addSelectionPrefix(Transform select)
+    {
+        if(EditorHelper.Instance.ObjectsManager == null) return true;
+        bool isIncluded = (EditorHelper.Instance.ObjectsManager.ObjectsLayerMask & (1 << select.gameObject.layer)) != 0;
+
+        return isIncluded;
+    }
+    
     [HarmonyPatch(typeof(EditorObjects), "addSelection")]
     [HarmonyPostfix]
     [UsedImplicitly]
-    static void addSelection(Transform select)
+    static void addSelectionPostfix(Transform select)
     {
         if(EditorHelper.Instance.ObjectsManager == null) return;
+        //bool isIncluded = (EditorHelper.Instance.ObjectsManager.ObjectsLayerMask & (1 << select.gameObject.layer)) != 0;
+        
         EditorHelper.Instance.ObjectsManager.SelectObject(select);
         EditorHelper.Instance.ObjectsManager.UnhighlightAll();
     }

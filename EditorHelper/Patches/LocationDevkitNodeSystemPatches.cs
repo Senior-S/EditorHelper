@@ -3,10 +3,10 @@ using JetBrains.Annotations;
 using SDG.Framework.Devkit;
 using SDG.Unturned;
 
-namespace EditorHelper.Patchs;
+namespace EditorHelper.Patches;
 
 [HarmonyPatch]
-public class LocationDevkitNodeSystemPatchs
+public class LocationDevkitNodeSystemPatches
 {
     [HarmonyPatch(typeof(LocationDevkitNodeSystem), "OnUpdateGizmos")]
     [HarmonyPrefix]

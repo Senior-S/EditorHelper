@@ -1,6 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using EditorHelper.Builders;
 using SDG.Unturned;
 using UnityEngine;
@@ -13,6 +11,9 @@ public class EditorManager
     
     private readonly SleekButtonIcon _singleplayerButton;
     private readonly SleekButtonIcon _editorButton;
+    
+    private readonly ISleekBox _alertBox;
+    private readonly SleekButtonIcon _acceptButton;
 
     private Vector3 _cameraPosition = Vector3.zero;
 
@@ -34,11 +35,46 @@ public class EditorManager
             .SetText("Back to editor");
         _editorButton = builder.BuildButton("Join to the map spawning a player at your camera position");
         _editorButton.onClickedButton += OnEditorClicked;
+
+        builder.SetSizeOffsetX(250)
+            .SetSizeOffsetY(80f)
+            .SetPositionScaleX(0.5f)
+            .SetPositionScaleY(0.15f);
+        
+        builder.SetPositionOffsetX(-125f);
+        _alertBox = builder.BuildBox();
+
+        builder.SetSizeOffsetX(100f)
+            .SetSizeOffsetY(30f)
+            .SetText("Ok")
+            .SetPositionOffsetX(-50f)
+            .SetOneTimeSpacing(30f);
+        
+        _acceptButton = builder.BuildButton(string.Empty);
+        _acceptButton.onClickedButton += OnAcceptButtonClicked;
+        _alertBox.IsVisible = false;
+        _acceptButton.IsVisible = false;
     }
 
     public void Initialize()
     {
         EditorDashboardUI.container.AddChild(_singleplayerButton);
+        
+        EditorDashboardUI.container.AddChild(_alertBox);
+        EditorDashboardUI.container.AddChild(_acceptButton);
+    }
+    
+    private void OnAcceptButtonClicked(ISleekElement button)
+    {
+        _alertBox.IsVisible = false;
+        _acceptButton.IsVisible = false;
+    }
+
+    public void DisplayAlert(string text)
+    {
+        _alertBox.Text = text;
+        _alertBox.IsVisible = true;
+        _acceptButton.IsVisible = true;
     }
     
     private void OnEnemyConnected(SteamPlayer player)

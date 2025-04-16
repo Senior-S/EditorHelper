@@ -4,10 +4,10 @@ using JetBrains.Annotations;
 using SDG.Unturned;
 using UnityEngine;
 
-namespace EditorHelper.Patchs;
+namespace EditorHelper.Patches;
 
 [HarmonyPatch]
-public class RuntimeGizmosPatchs
+public class RuntimeGizmosPatches
 {
 	// Fix for out of memory exception:
 	// https://discord.com/channels/324229387295653889/1351234563992584315

@@ -5,11 +5,8 @@ namespace EditorHelper.Models;
 
 public class ReunRoadTransform : IReun
 {
-    // Not used for roads
-    private Transform _model;
-
-    private readonly int _vertexIndex = -1;
-    private readonly int _tangentIndex = -1;
+    private readonly int _vertexIndex;
+    private readonly int _tangentIndex;
 
     private readonly Vector3 _fromPosition;
     private readonly Vector3 _toPosition;
@@ -27,7 +24,7 @@ public class ReunRoadTransform : IReun
             EditorRoads.road.moveVertex(_vertexIndex, _toPosition);
         }
         
-        return _model;
+        return null;
     }
 
     public void undo()

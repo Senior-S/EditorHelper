@@ -3,10 +3,10 @@ using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.Unturned;
 
-namespace EditorHelper.Patchs;
+namespace EditorHelper.Patches;
 
 [HarmonyPatch]
-public class FoliageEditorPatchs
+public class FoliageEditorPatches
 {
     [HarmonyPatch(typeof(FoliageEditor), "update")]
     [HarmonyPrefix]

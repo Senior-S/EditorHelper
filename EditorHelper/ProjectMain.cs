@@ -1,4 +1,7 @@
-﻿using EditorHelper.Editor;
+﻿using System.Threading.Tasks;
+using EditorHelper.Commands;
+using EditorHelper.Editor;
+using EditorHelper.Extras;
 using HarmonyLib;
 using SDG.Framework.Modules;
 using SDG.Unturned;
@@ -25,10 +28,22 @@ public class EditorHelper : IModuleNexus
         _harmony = new Harmony("com.seniors.editorhelper");
         _harmony.PatchAll(this.GetType().Assembly);
 
+        Task.Run(UpdaterCore.Init);
+        
         CommandWindow.LogWarning($"Editor helper v{this.GetType().Assembly.GetName().Version}");
         CommandWindow.Log("<<SSPlugins>>");
     }
-    
+
+    public static void RegisterCommands()
+    {
+        Commander.register(new HealCommand());
+        Commander.register(new MaxSkillsCommand());
+        Commander.register(new ICommand());
+        Commander.register(new VCommand());
+        Commander.register(new ExpCommand());
+        Commander.register(new TpCommand());
+    }
+
     public void shutdown()
     {
         _harmony.UnpatchAll(_harmony.Id);
