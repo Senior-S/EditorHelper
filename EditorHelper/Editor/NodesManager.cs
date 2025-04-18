@@ -22,6 +22,7 @@ public class NodesManager
     public void Initialize(ref EditorEnvironmentNodesUI uiInstance)
     {
         uiInstance.AddChild(_nodeNameToggle);
+        LevelVisibility.nodesVisible = false;
     }
 
     public void CustomUpdate()

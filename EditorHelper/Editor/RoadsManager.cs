@@ -489,6 +489,8 @@ public class RoadsManager
     
     private void OnHandlePreTransform(Matrix4x4 worldToPivot)
     {
+        _roadSelection ??= new RoadSelection(EditorRoads.selection);
+        
         _roadSelection.fromPosition = _roadSelection.transform.position;
         _roadSelection.fromRotation = _roadSelection.transform.rotation;
         _roadSelection.relativeToPivot = worldToPivot * _roadSelection.transform.localToWorldMatrix;
