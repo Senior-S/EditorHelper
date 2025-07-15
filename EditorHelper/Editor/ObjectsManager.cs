@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using EditorHelper.Builders;
 using EditorHelper.Models;
 using HighlightingSystem;
+using Newtonsoft.Json;
 using SDG.Unturned;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -51,6 +53,15 @@ public class ObjectsManager
     //private readonly ISleekToggle[] _layersToggle;
     private readonly Dictionary<ISleekToggle, string> _toggleToLayer = new();
     private readonly SleekButtonIcon _layersMaskButton;
+
+    private readonly SleekButtonIcon _schematicsButton;
+    private readonly ISleekBox _schematicsContainer;
+    private readonly SleekList<SchematicModel> _schematicsScrollBox;
+    private readonly ISleekField _schematicName;
+    private string _schematicNameValue = string.Empty;
+    private readonly SleekButtonIcon _saveSchematicButton;
+    private readonly SleekButtonIcon _schematicsHowToButton;
+    private readonly SleekButtonIcon _schematicsReload;
     
     // https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.conditionalweaktable-2?view=net-9.0
     private readonly ConditionalWeakTable<ReunObjectRemove, ReunObjectRemoveExtension> _cwtObjectRemove;
@@ -63,7 +74,7 @@ public class ObjectsManager
     // TODO: Add a way to automatically initialize the button
     public ObjectsManager()
     {
-        ButtonBuilder builder = new();
+        UIBuilder builder = new();
         
         builder.SetPositionOffsetX(210f)
             .SetPositionOffsetY(-30f)
@@ -227,9 +238,155 @@ public class ObjectsManager
         
         _layersMaskButton = builder.BuildButton("Change the layer mask that determines what can be selected");
         _layersMaskButton.onClickedButton += OnLayersMaskButtonClicked;
+
+        builder.SetText("Schematics");
+        _schematicsButton = builder.BuildButton("Open the schematics screen");
+        _schematicsButton.onClickedButton += OnSchematicsButtonClicked;
+        
+        builder.SetPositionScaleX(0.5f)
+            .SetPositionScaleY(0.5f)
+            .SetPositionOffsetX(-325f)
+            .SetPositionOffsetY(200f)
+            .SetSizeOffsetX(650f)
+            .SetSizeOffsetY(400f)
+            .SetOneTimeSpacing(0f)
+            .SetText("");
+
+        _schematicsContainer = builder.BuildBox();
+        _schematicsContainer.IsVisible = false;
+
+        builder.SetOneTimeSpacing(0)
+            .SetPositionScaleX(0.5f)
+            .SetPositionScaleY(0f)
+            .SetPositionOffsetX(-150f)
+            .SetPositionOffsetY(-35f)
+            .SetSizeOffsetX(300f)
+            .SetSizeOffsetY(30f)
+            .SetText("Schematic name");
+        
+        _schematicName = builder.BuildStringField();
+        _schematicName.OnTextSubmitted += SchematicNameOnTextSubmitted;
+        _schematicsContainer.AddChild(_schematicName);
+        
+        builder.SetOneTimeSpacing(0)
+            .SetPositionOffsetX(160f)
+            .SetSizeOffsetX(200f)
+            .SetSizeOffsetY(30f)
+            .SetText("Save schematic");
+        
+        _saveSchematicButton = builder.BuildButton("Save schematic");
+        _saveSchematicButton.onClickedButton += OnSaveSchematicButtonClickedButton;
+        _schematicsContainer.AddChild(_saveSchematicButton);
+        
+        builder.SetOneTimeSpacing(0)
+            .SetPositionOffsetX(-360f)
+            .SetSizeOffsetX(200f)
+            .SetSizeOffsetY(30f)
+            .SetText("How to use schematics");
+        
+        _schematicsHowToButton = builder.BuildButton("How to use schematics");
+        _schematicsHowToButton.onClickedButton += OnSchematicsHowToButtonClickedButton;
+        _schematicsContainer.AddChild(_schematicsHowToButton);
+
+        builder.SetOneTimeSpacing(0)
+            .SetPositionScaleX(0.5f)
+            .SetPositionScaleY(1f)
+            .SetPositionOffsetX(-100f)
+            .SetPositionOffsetY(5f)
+            .SetSizeOffsetX(200f)
+            .SetSizeOffsetY(30f)
+            .SetText("Reload schematics");
+        
+        _schematicsReload = builder.BuildButton("Reload all schematics in the schematics folder");
+        _schematicsReload.onClickedButton += OnSchematicsReloadClickedButton;
+        _schematicsContainer.AddChild(_schematicsReload);
+
+        // This shitty scroll box took like half an hour due Nelson's way of doing it sucks :>
+        // So for anyone reading this and for the future me, I added comments to know how to read it and use it.
+        builder = new UIBuilder().SetPositionScaleX(0f)
+            .SetPositionScaleY(1f) // IMPORTANT! We want to start the scroll box at the bottom
+            .SetPositionOffsetX(10f)
+            .SetPositionOffsetY(-390f) // Then we define the area of the scroll box. It's negative due we're already at the bottom so we need to go up.
+            .SetSizeOffsetX(630f) // Size/Area of the scrollbox
+            .SetSizeOffsetY(-10f) // And once the scrollbox area is done we added the bottom padding
+            .SetOneTimeSpacing(0f);
+
+        _schematicsScrollBox = builder.BuildScrollBox<SchematicModel>(50, 10);
+        _schematicsScrollBox.onCreateElement = OnCreateSchematicModel;
+
+        _schematicsScrollBox.SetData(EditorHelper.Instance.SchematicsManager.Schematics);
+        _schematicsContainer.AddChild(_schematicsScrollBox);
         
         _cwtObjectRemove = new ConditionalWeakTable<ReunObjectRemove, ReunObjectRemoveExtension>();
         _cwtEditorCopy = new ConditionalWeakTable<EditorCopy, EditorCopyExtension>();
+    }
+
+    private void OnSchematicsReloadClickedButton(ISleekElement button)
+    {
+        EditorHelper.Instance.SchematicsManager.ReloadSchematics();
+        _schematicsScrollBox.SetData(EditorHelper.Instance.SchematicsManager.Schematics);
+    }
+
+    private void OnSchematicsHowToButtonClickedButton(ISleekElement button)
+    {
+        Provider.openURL("https://www.youtube.com/watch?v=9myiTLl7Eq4");
+    }
+
+    private void OnSaveSchematicButtonClickedButton(ISleekElement button)
+    {
+        if (EditorObjects.copies.Count < 1)
+        {
+            EditorHelper.Instance.EditorManager.DisplayAlert("You need to have copied at least 1 object to create a schematic.");
+            return;
+        }
+
+        if (_schematicNameValue.Length < 2)
+        {
+            EditorHelper.Instance.EditorManager.DisplayAlert("Please provide a schematic name with at least 2 letters!");
+            return;
+        }
+        
+        EditorHelper.Instance.SchematicsManager.SaveSchematic(_schematicNameValue);
+    }
+
+    private void SchematicNameOnTextSubmitted(ISleekField field)
+    {
+        _schematicNameValue = field.Text;
+    }
+
+    private ISleekElement OnCreateSchematicModel(SchematicModel item)
+    {
+        UIBuilder builder = new();
+        // The schematic model may not be fully loaded yet, if that's the case the SchematicModel won't have any objects.
+        string objectsCount = item.Objects.Count == 0 ? "Unknown objects" : $"{item.Objects.Count} objects";
+        
+        builder.SetText($"{item.Name} by {item.Author} ({objectsCount})");
+        ISleekButton button = builder.CreateSimpleButton();
+        button.OnClicked += OnSchematicClicked;
+        
+        return button;
+    }
+
+    private void OnSchematicClicked(ISleekElement button)
+    {
+        int index = Mathf.FloorToInt(button.PositionOffset_Y / 60f);
+        
+        SchematicModel? model = EditorHelper.Instance.SchematicsManager.TryLoadSchematic(index);
+        if (model == null)
+        {
+            // Errors are provided by the try load method so it isn't required here
+            return; 
+        }
+
+        List<EditorCopy> copies = model.Objects.Select(c => c.ToEditorCopy()).ToList();
+        EditorObjects.copies.Clear();
+        EditorObjects.copies.AddRange(copies);
+        _schematicsScrollBox.SetData(EditorHelper.Instance.SchematicsManager.Schematics);
+    }
+
+    private void OnSchematicsButtonClicked(ISleekElement button)
+    {
+        _schematicsContainer.IsVisible = !_schematicsContainer.IsVisible;
     }
 
     private void OnLayerToggleChanged(ISleekToggle toggle, bool state)
@@ -269,7 +426,7 @@ public class ObjectsManager
     
     public void Initialize(ref EditorLevelObjectsUI uiInstance)
     {
-        EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y = -265f;
+        EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y = -300f;
         
         uiInstance.AddChild(_highlightButton);
         uiInstance.AddChild(_highlightColorsButton);
@@ -292,6 +449,10 @@ public class ObjectsManager
         uiInstance.AddChild(_objectScaleZ);
         uiInstance.AddChild(_layersContainer);
         uiInstance.AddChild(_layersMaskButton);
+        uiInstance.AddChild(_schematicsButton);
+        uiInstance.AddChild(_schematicsContainer);
+        
+        _schematicsScrollBox.SetData(EditorHelper.Instance.SchematicsManager.Schematics);
         _filterText = string.Empty;
     }
     

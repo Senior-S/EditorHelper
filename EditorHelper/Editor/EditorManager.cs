@@ -19,7 +19,7 @@ public class EditorManager
 
     public EditorManager()
     {
-        ButtonBuilder builder = new(positionScaleX: 0.5f);
+        UIBuilder builder = new(positionScaleX: 0.5f);
         
         builder.SetPositionOffsetX(150f)
             .SetPositionOffsetY(-30f)

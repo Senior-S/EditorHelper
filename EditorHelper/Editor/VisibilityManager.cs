@@ -11,7 +11,7 @@ namespace EditorHelper.Editor;
 public class VisibilityManager
 {
     // Usually the button builder shouldn't be saved into a field, but in this case it's required to properly align new button positions
-    private readonly ButtonBuilder _builder;
+    private readonly UIBuilder _builder;
     private readonly SleekButtonIcon _saveLocationButton;
     private readonly SleekButtonIcon _removeLocationButton;
 
@@ -24,7 +24,7 @@ public class VisibilityManager
         _savedLocationsButton = [];
         _selectedPosition = null;
         
-        _builder = new ButtonBuilder();
+        _builder = new UIBuilder();
 
         _builder.SetPositionOffsetY(-40f)
             .SetText("Remove location");

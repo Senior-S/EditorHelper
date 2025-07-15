@@ -38,6 +38,7 @@ public class RoadsManager
     private readonly SleekButtonState _coordinateButton;
     private readonly ISleekToggle _depthToggleButton;
     private readonly ISleekFloat32Field _snapTransformField;
+    private readonly ISleekToggle _handlePriorizeToggleButton;
 
     public RoadsManager()
     {
@@ -56,9 +57,9 @@ public class RoadsManager
         _step = 0;
         _frame = 0;
 
-        ButtonBuilder builder = new(40f, 40f);
+        UIBuilder builder = new(40f, 40f);
         builder.SetPositionOffsetX(5f);
-        builder.SetPositionOffsetY(-260f);
+        builder.SetPositionOffsetY(-330f);
 
         builder.SetText("Radius includes depth");
         _depthToggleButton = builder.BuildToggle("Should the display radius of the road include the depth?");
@@ -79,6 +80,12 @@ public class RoadsManager
         builder.SetText(local.format("SnapTransformLabelText"));
         _snapTransformField = builder.BuildFloatInput(ESleekSide.RIGHT);
         _snapTransformField.OnValueChanged += OnSnapTransformFieldValueChanged;
+
+        builder.SetText("Prioritize handle")
+            .SetSizeOffsetX(40f)
+            .SetSizeOffsetY(40f);
+        _handlePriorizeToggleButton = builder.BuildToggle("When clicking should the click prioritize the arrows?");
+        _handlePriorizeToggleButton.Value = true;
         
         bundle.unload();
         if (Level.isEditor)
@@ -95,6 +102,7 @@ public class RoadsManager
         EditorUI.window.AddChild(_coordinateButton);
         _snapTransformField.Value = _snapTransform;
         EditorUI.window.AddChild(_snapTransformField);
+        EditorUI.window.AddChild(_handlePriorizeToggleButton);
     }
     
     private void OnSnapTransformFieldValueChanged(ISleekFloat32Field field, float value)
@@ -187,6 +195,7 @@ public class RoadsManager
         _depthToggleButton.IsVisible = buttonVisible;
         _coordinateButton.IsVisible = buttonVisible;
         _snapTransformField.IsVisible = buttonVisible;
+        _handlePriorizeToggleButton.IsVisible = buttonVisible;
         
         if (!EditorRoads.isPaving || EditorInteract.isFlying || !Glazier.Get().ShouldGameProcessInput)
         {
@@ -418,7 +427,7 @@ public class RoadsManager
             }
         }
 
-        if (!InputEx.GetKeyDown(ControlsSettings.primary) || selectingHandle)
+        if (!InputEx.GetKeyDown(ControlsSettings.primary) || (selectingHandle && _handlePriorizeToggleButton.Value))
         {
             return;
         }

@@ -10,7 +10,7 @@ public class NodesManager
     
     public NodesManager()
     {
-        ButtonBuilder builder = new(40f, 40f);
+        UIBuilder builder = new(40f, 40f);
         
         builder.SetPositionOffsetX(200f)
             .SetPositionOffsetY(-75f)

@@ -52,6 +52,9 @@
         <Reference Include="HighlightingSystem">
           <HintPath>..\Libs\HighlightingSystem.dll</HintPath>
         </Reference>
+        <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+          <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+        </Reference>
         <Reference Include="SDG.Glazier.Runtime">
           <HintPath>..\Libs\SDG.Glazier.Runtime.dll</HintPath>
         </Reference>
@@ -283,7 +286,7 @@
         </Reference>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="Builders\ButtonBuilder.cs" />
+        <Compile Include="Builders\UIBuilder.cs" />
         <Compile Include="Commands\ExpCommand.cs" />
         <Compile Include="Commands\HealCommand.cs" />
         <Compile Include="Commands\ICommand.cs" />
@@ -307,9 +310,14 @@
         <Compile Include="LSystem\Visualizer.cs" />
         <Compile Include="Models\CameraPosition.cs" />
         <Compile Include="Models\EditorCopyExtension.cs" />
+        <Compile Include="Models\JsonWithMetadata.cs" />
+        <Compile Include="Models\PositionModel.cs" />
         <Compile Include="Models\ReunObjectRemoveExtension.cs" />
         <Compile Include="Models\ReunRoadTransform.cs" />
         <Compile Include="Models\RoadSelection.cs" />
+        <Compile Include="Models\RotationModel.cs" />
+        <Compile Include="Models\SchematicModel.cs" />
+        <Compile Include="Models\SerializableEditorCopy.cs" />
         <Compile Include="Patches\CommanderPatches.cs" />
         <Compile Include="Patches\EditorDashboardUIPatches.cs" />
         <Compile Include="Patches\EditorEnvironmentNodesUIPatches.cs" />
@@ -332,6 +340,7 @@
         <Compile Include="Patches\RuntimeGizmosPatches.cs" />
         <Compile Include="ProjectMain.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
+        <Compile Include="Schematics\SchematicsManager.cs" />
     </ItemGroup>
     <ItemGroup>
       <None Include="packages.config" />

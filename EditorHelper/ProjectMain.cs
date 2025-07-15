@@ -1,7 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using EditorHelper.Commands;
 using EditorHelper.Editor;
 using EditorHelper.Extras;
+using EditorHelper.Schematics;
 using HarmonyLib;
 using SDG.Framework.Modules;
 using SDG.Unturned;
@@ -19,16 +22,19 @@ public class EditorHelper : IModuleNexus
     public FoliageManager FoliageManager;
     public VisibilityManager VisibilityManager;
     
+    public SchematicsManager SchematicsManager;
+    
     private Harmony _harmony;
 
     public void initialize()
     {
         Instance = this;
-
+        
         _harmony = new Harmony("com.seniors.editorhelper");
         _harmony.PatchAll(this.GetType().Assembly);
 
         Task.Run(UpdaterCore.Init);
+        SchematicsManager = new SchematicsManager();
         
         CommandWindow.LogWarning($"Editor helper v{this.GetType().Assembly.GetName().Version}");
         CommandWindow.Log("<<SSPlugins>>");
