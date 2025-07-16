@@ -32,7 +32,7 @@ public class SchematicsManager
         ReloadSchematics();
     }
 
-    public SchematicModel TryLoadSchematic(int index)
+    public SchematicModel TryLoadSchematic(int index, string schematicSearchValue)
     {
         if (Schematics.Count < index)
         {
@@ -40,10 +40,15 @@ public class SchematicsManager
             return null;
         }
 
-        SchematicModel schematic = Schematics[index];
-        if (!Schematics[index].Name.EndsWith(".json"))
+        SchematicModel schematic = schematicSearchValue.Length > 0 
+            ? Schematics.Where(c => c.Name.ToLower().Contains(schematicSearchValue)).ElementAt(index) 
+            : Schematics[index];
+
+        index = Schematics.IndexOf(schematic);
+        
+        if (!schematic.Name.EndsWith(".json"))
         {
-            return Schematics[index];
+            return schematic;
         }
         
         string text = File.ReadAllText(Path.Combine(_schematicsFolder, schematic.Name));

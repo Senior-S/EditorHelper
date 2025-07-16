@@ -62,6 +62,8 @@ public class ObjectsManager
     private readonly SleekButtonIcon _saveSchematicButton;
     private readonly SleekButtonIcon _schematicsHowToButton;
     private readonly SleekButtonIcon _schematicsReload;
+    private readonly ISleekField _schematicSearch;
+    private string _schematicSearchValue = string.Empty;
     
     // https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.conditionalweaktable-2?view=net-9.0
     private readonly ConditionalWeakTable<ReunObjectRemove, ReunObjectRemoveExtension> _cwtObjectRemove;
@@ -256,11 +258,11 @@ public class ObjectsManager
         _schematicsContainer.IsVisible = false;
 
         builder.SetOneTimeSpacing(0)
-            .SetPositionScaleX(0.5f)
-            .SetPositionScaleY(0f)
-            .SetPositionOffsetX(-150f)
-            .SetPositionOffsetY(-35f)
-            .SetSizeOffsetX(300f)
+            .SetPositionScaleX(0)
+            .SetPositionScaleY(0)
+            .SetPositionOffsetX(-210f)
+            .SetPositionOffsetY(0)
+            .SetSizeOffsetX(200f)
             .SetSizeOffsetY(30f)
             .SetText("Schematic name");
         
@@ -269,7 +271,9 @@ public class ObjectsManager
         _schematicsContainer.AddChild(_schematicName);
         
         builder.SetOneTimeSpacing(0)
-            .SetPositionOffsetX(160f)
+            .SetPositionOffsetX(0)
+            .SetPositionOffsetX(-210f)
+            .SetPositionOffsetY(40f)
             .SetSizeOffsetX(200f)
             .SetSizeOffsetY(30f)
             .SetText("Save schematic");
@@ -279,7 +283,8 @@ public class ObjectsManager
         _schematicsContainer.AddChild(_saveSchematicButton);
         
         builder.SetOneTimeSpacing(0)
-            .SetPositionOffsetX(-360f)
+            .SetPositionOffsetX(-210f)
+            .SetPositionOffsetY(80f)
             .SetSizeOffsetX(200f)
             .SetSizeOffsetY(30f)
             .SetText("How to use schematics");
@@ -287,6 +292,19 @@ public class ObjectsManager
         _schematicsHowToButton = builder.BuildButton("How to use schematics");
         _schematicsHowToButton.onClickedButton += OnSchematicsHowToButtonClickedButton;
         _schematicsContainer.AddChild(_schematicsHowToButton);
+        
+        builder.SetOneTimeSpacing(0)
+            .SetPositionScaleX(0.5f)
+            .SetPositionScaleY(0)
+            .SetPositionOffsetX(-100f)
+            .SetPositionOffsetY(-40f)
+            .SetSizeOffsetX(200f)
+            .SetSizeOffsetY(30f)
+            .SetText("Search Term");
+
+        _schematicSearch = builder.BuildStringField();
+        _schematicSearch.OnTextSubmitted += OnSchematicSearchTextChanged;
+        _schematicsContainer.AddChild(_schematicSearch);
 
         builder.SetOneTimeSpacing(0)
             .SetPositionScaleX(0.5f)
@@ -314,17 +332,23 @@ public class ObjectsManager
         _schematicsScrollBox = builder.BuildScrollBox<SchematicModel>(50, 10);
         _schematicsScrollBox.onCreateElement = OnCreateSchematicModel;
 
-        _schematicsScrollBox.SetData(EditorHelper.Instance.SchematicsManager.Schematics);
+        UpdateSchematicsScrollbox();
         _schematicsContainer.AddChild(_schematicsScrollBox);
         
         _cwtObjectRemove = new ConditionalWeakTable<ReunObjectRemove, ReunObjectRemoveExtension>();
         _cwtEditorCopy = new ConditionalWeakTable<EditorCopy, EditorCopyExtension>();
     }
 
+    private void OnSchematicSearchTextChanged(ISleekField field)
+    {
+        _schematicSearchValue = field.Text.ToLower();
+        UpdateSchematicsScrollbox();
+    }
+
     private void OnSchematicsReloadClickedButton(ISleekElement button)
     {
         EditorHelper.Instance.SchematicsManager.ReloadSchematics();
-        _schematicsScrollBox.SetData(EditorHelper.Instance.SchematicsManager.Schematics);
+        UpdateSchematicsScrollbox();
     }
 
     private void OnSchematicsHowToButtonClickedButton(ISleekElement button)
@@ -347,6 +371,7 @@ public class ObjectsManager
         }
         
         EditorHelper.Instance.SchematicsManager.SaveSchematic(_schematicNameValue);
+        UpdateSchematicsScrollbox();
     }
 
     private void SchematicNameOnTextSubmitted(ISleekField field)
@@ -371,7 +396,7 @@ public class ObjectsManager
     {
         int index = Mathf.FloorToInt(button.PositionOffset_Y / 60f);
         
-        SchematicModel? model = EditorHelper.Instance.SchematicsManager.TryLoadSchematic(index);
+        SchematicModel? model = EditorHelper.Instance.SchematicsManager.TryLoadSchematic(index, _schematicSearchValue);
         if (model == null)
         {
             // Errors are provided by the try load method so it isn't required here
@@ -381,7 +406,7 @@ public class ObjectsManager
         List<EditorCopy> copies = model.Objects.Select(c => c.ToEditorCopy()).ToList();
         EditorObjects.copies.Clear();
         EditorObjects.copies.AddRange(copies);
-        _schematicsScrollBox.SetData(EditorHelper.Instance.SchematicsManager.Schematics);
+        UpdateSchematicsScrollbox();
     }
 
     private void OnSchematicsButtonClicked(ISleekElement button)
@@ -834,6 +859,19 @@ public class ObjectsManager
         _objectScaleX.IsVisible = visible;
         _objectScaleY.IsVisible = visible;
         _objectScaleZ.IsVisible = visible;
+    }
+
+    private void UpdateSchematicsScrollbox()
+    {
+        if (_schematicSearchValue.Length > 0)
+        {
+            _schematicsScrollBox.SetData(EditorHelper.Instance.SchematicsManager.Schematics
+                .Where(c => c.Name.ToLower().Contains(_schematicSearchValue)).ToList());
+        }
+        else
+        {
+            _schematicsScrollBox.SetData(EditorHelper.Instance.SchematicsManager.Schematics);
+        }
     }
 
     private LevelObject FindLevelObjectByGameObject(GameObject rootGameObject)
