@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.Remoting.Messaging;
 using EditorHelper.Builders;
 using EditorHelper.Models;
 using HighlightingSystem;
 using Newtonsoft.Json;
+using SDG.Provider;
 using SDG.Unturned;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -64,14 +66,18 @@ public class ObjectsManager
     private readonly SleekButtonIcon _schematicsReload;
     private readonly ISleekField _schematicSearch;
     private string _schematicSearchValue = string.Empty;
+
+    private readonly ISleekField _tagField;
     
     // https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.conditionalweaktable-2?view=net-9.0
     private readonly ConditionalWeakTable<ReunObjectRemove, ReunObjectRemoveExtension> _cwtObjectRemove;
     private readonly ConditionalWeakTable<EditorCopy, EditorCopyExtension> _cwtEditorCopy;
     
+    private readonly Dictionary<LevelObject, LevelObjectExtension> _dicLevelObjects;
+    
     private readonly Color[] _highlightColors = [Color.yellow, Color.red, Color.magenta, Color.blue];
     private int _currentColorIndex = 0;
-    private Transform _selectedObject = null;
+    private Transform? _selectedObject = null;
     
     // TODO: Add a way to automatically initialize the button
     public ObjectsManager()
@@ -244,6 +250,11 @@ public class ObjectsManager
         builder.SetText("Schematics");
         _schematicsButton = builder.BuildButton("Open the schematics screen");
         _schematicsButton.onClickedButton += OnSchematicsButtonClicked;
+
+        builder.SetText("Object tag");
+        
+        _tagField = builder.BuildStringField();
+        _tagField.OnTextSubmitted += TagFieldOnOnTextSubmitted;
         
         builder.SetPositionScaleX(0.5f)
             .SetPositionScaleY(0.5f)
@@ -337,6 +348,25 @@ public class ObjectsManager
         
         _cwtObjectRemove = new ConditionalWeakTable<ReunObjectRemove, ReunObjectRemoveExtension>();
         _cwtEditorCopy = new ConditionalWeakTable<EditorCopy, EditorCopyExtension>();
+        _dicLevelObjects = new Dictionary<LevelObject, LevelObjectExtension>();
+        
+        LoadObjectTags();
+    }
+
+    private void TagFieldOnOnTextSubmitted(ISleekField field)
+    {
+        if (_selectedObject == null) return;
+        LevelObject? levelObject = FindLevelObjectByGameObject(_selectedObject);
+        if (levelObject == null) return;
+        
+        if (_dicLevelObjects.TryGetValue(levelObject, out LevelObjectExtension extension))
+        {
+            extension?.UpdateTag(field.Text);
+        }
+        else
+        {
+            _dicLevelObjects.Add(levelObject, new LevelObjectExtension(field.Text));
+        }
     }
 
     private void OnSchematicSearchTextChanged(ISleekField field)
@@ -451,7 +481,7 @@ public class ObjectsManager
     
     public void Initialize(ref EditorLevelObjectsUI uiInstance)
     {
-        EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y = -300f;
+        EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y = -340f;
         
         uiInstance.AddChild(_highlightButton);
         uiInstance.AddChild(_highlightColorsButton);
@@ -476,6 +506,7 @@ public class ObjectsManager
         uiInstance.AddChild(_layersMaskButton);
         uiInstance.AddChild(_schematicsButton);
         uiInstance.AddChild(_schematicsContainer);
+        uiInstance.AddChild(_tagField);
         
         _schematicsScrollBox.SetData(EditorHelper.Instance.SchematicsManager.Schematics);
         _filterText = string.Empty;
@@ -503,7 +534,7 @@ public class ObjectsManager
     private void OnAdjacentPlaceClicked(ISleekElement button)
     {
         if (!_selectedObject) return;
-        LevelObject levelObject = FindLevelObjectByGameObject(_selectedObject.gameObject);
+        LevelObject? levelObject = FindLevelObjectByGameObject(_selectedObject);
         if (levelObject == null) return;
 
         Vector3 chosenDirection = GetObjectFace(levelObject.transform);
@@ -567,7 +598,7 @@ public class ObjectsManager
     {
         if (_selectedObject == null) return;
         
-        LevelObject levelObject = FindLevelObjectByGameObject(_selectedObject.gameObject);
+        LevelObject? levelObject = FindLevelObjectByGameObject(_selectedObject);
         if (levelObject?.asset == null) return;
 
         if (_highlightedObjects.Count > 0)
@@ -606,7 +637,8 @@ public class ObjectsManager
 
     private void OnPositionValueUpdated(ISleekFloat32Field field, float value)
     {
-        LevelObject levelObject = FindLevelObjectByGameObject(_selectedObject.gameObject);
+        if (_selectedObject == null) return;
+        LevelObject? levelObject = FindLevelObjectByGameObject(_selectedObject);
         if (levelObject == null) return; // Just in case
 
         Vector3 position = _selectedObject.position;
@@ -649,7 +681,8 @@ public class ObjectsManager
     
     private void OnRotationValueUpdated(ISleekFloat32Field field, float value)
     {
-        LevelObject levelObject = FindLevelObjectByGameObject(_selectedObject.gameObject);
+        if (_selectedObject == null) return;
+        LevelObject? levelObject = FindLevelObjectByGameObject(_selectedObject);
         if (levelObject == null) return; // Just in case
 
         Vector3 rotation = _selectedObject.rotation.eulerAngles;
@@ -674,7 +707,8 @@ public class ObjectsManager
     
     private void OnScaleValueUpdated(ISleekFloat32Field field, float value)
     {
-        LevelObject levelObject = FindLevelObjectByGameObject(_selectedObject.gameObject);
+        if (_selectedObject == null) return;
+        LevelObject? levelObject = FindLevelObjectByGameObject(_selectedObject);
         if (levelObject == null) return; // Just in case
 
         Vector3 scale = _selectedObject.localScale;
@@ -731,10 +765,31 @@ public class ObjectsManager
 
     public void SelectObject(Transform selectedObject)
     {
+        LevelObject? levelObject = FindLevelObjectByGameObject(selectedObject);
+        string tag = string.Empty;
+        if (levelObject != null && _dicLevelObjects.TryGetValue(levelObject, out LevelObjectExtension extension))
+        {
+            tag = extension.Tag;
+        }
+
+        _tagField.Text = tag;
         
+        if (!InputEx.GetKey(ControlsSettings.modify) && EditorObjects.selection.Count == 1 && tag != string.Empty && selectedObject != null)
+        {
+            List<KeyValuePair<LevelObject, LevelObjectExtension>> objects = _dicLevelObjects.Where(c => c.Value.Tag == tag).ToList();
+            if (objects.Count > 1)
+            {
+                SelectSameTagObjects(objects.Select(c => c.Key.transform).ToList());
+            }
+        }
         
         _selectedObject = selectedObject;
-
+        
+        if (_selectedObject == null)
+        {
+            return;
+        }
+        
         _objectPositionX.Value = selectedObject.position.x;
         _objectPositionY.Value = selectedObject.position.y;
         _objectPositionZ.Value = selectedObject.position.z;
@@ -751,11 +806,24 @@ public class ObjectsManager
     public void UpdateSelectedObject()
     {
         if (_selectedObject == null) return;
-
+        
         SelectObject(_selectedObject);
     }
+
+    private void SelectSameTagObjects(List<Transform> selectedObjects)
+    {
+        EditorObjects.selection.Clear();
+        //selectedObjects.ForEach(EditorObjects.addSelection);
+        foreach (Transform select in selectedObjects)
+        {
+            HighlighterTool.highlight(select, Color.yellow);
+            EditorObjects.selectDecals(select, true);
+            EditorObjects.selection.Add(new EditorSelection(select, select.position, select.rotation, select.localScale));    
+        }
+        EditorObjects.calculateHandleOffsets();
+    }
     
-    public void UnhighlightAll(Transform ignore = null)
+    public void UnhighlightAll(Transform? ignore = null)
     {
         _highlightedTransforms.Clear();
         if (_highlightedObjects.Count < 1) return;
@@ -824,6 +892,8 @@ public class ObjectsManager
             UnhighlightAll();
         }
 
+        _tagField.IsVisible = visible;
+        EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y = visible ? -340f : -300f;
         _highlightButton.IsVisible = visible;
         _highlightColorsButton.IsVisible = visible;
         
@@ -874,19 +944,18 @@ public class ObjectsManager
         }
     }
 
-    private LevelObject FindLevelObjectByGameObject(GameObject rootGameObject)
+    private LevelObject? FindLevelObjectByGameObject(Transform transform)
     {
-        if (rootGameObject == null)
+        if (transform == null)
         {
             return null;
         }
         
-        Transform transform = rootGameObject.transform;
         if (Regions.tryGetCoordinate(transform.position, out byte x, out byte y))
         {
             for (int i = 0; i < LevelObjects.objects[x, y].Count; i++)
             {
-                if (LevelObjects.objects[x, y][i].transform == transform)
+                if (LevelObjects.objects[x, y][i] != null && LevelObjects.objects[x, y][i].transform == transform)
                 {
                     return LevelObjects.objects[x, y][i];
                 }
@@ -954,5 +1023,49 @@ public class ObjectsManager
             .Where(c => !c.transform.name.Equals("nav", StringComparison.OrdinalIgnoreCase)).ToList();
         
         return filters.Count > 0 ? filters[0].mesh.bounds : new Bounds(objectTransform.position, Vector3.one);
+    }
+
+    public void SaveObjectTags()
+    {
+        if (_dicLevelObjects.Count < 1) return;
+
+        List<SerializableLevelObjectTag> tags = [];
+        foreach (KeyValuePair<LevelObject, LevelObjectExtension> lObj in _dicLevelObjects)
+        {
+            tags.Add(new SerializableLevelObjectTag(lObj.Key.instanceID, lObj.Value.Tag));
+        }
+        
+        string? json = JsonConvert.SerializeObject(tags);
+        if (json == null) return;
+        
+        using StreamWriter writer =  File.CreateText(Path.Combine(Level.info.path, "Level/ObjectsTags.json"));
+        writer.Write(json);
+        writer.Flush();
+        writer.Close();
+    }
+
+    public void LoadObjectTags()
+    {
+        string path = Path.Combine(Level.info.path, "Level/ObjectsTags.json");
+        if (!File.Exists(path)) return;
+        string text = File.ReadAllText(path);
+        List<SerializableLevelObjectTag>? objectTags = JsonConvert.DeserializeObject<List<SerializableLevelObjectTag>>(text);
+        if (objectTags == null)
+        {
+            return;
+        }
+        List<LevelObject> objects = LevelObjects.objects.Cast<List<LevelObject>>().SelectMany(list => list).ToList();
+        if (objects == null || !objects.Any()) return;
+        foreach (SerializableLevelObjectTag objTag in objectTags)
+        {
+            LevelObject? levelObject = objects.FirstOrDefault(c => c.instanceID == objTag.InstanceID);
+            if (levelObject == null)
+            {
+                UnturnedLog.warn($"[ObjectTag] Level Object with instance id {objTag.InstanceID} for tag: {objTag.Tag} not found!");
+                continue;
+            }
+            
+            _dicLevelObjects.Add(levelObject, new LevelObjectExtension(objTag.Tag));
+        }
     }
 }

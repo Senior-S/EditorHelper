@@ -2,6 +2,7 @@
 using EditorHelper.Builders;
 using SDG.Unturned;
 using UnityEngine;
+using Action = System.Action;
 
 namespace EditorHelper.Editor;
 
@@ -15,7 +16,19 @@ public class EditorManager
     private readonly ISleekBox _alertBox;
     private readonly SleekButtonIcon _acceptButton;
 
+    private readonly SleekButtonIcon _yesButton;
+    private readonly SleekButtonIcon _noButton;
+
     private Vector3 _cameraPosition = Vector3.zero;
+
+    /// <summary>
+    /// Action executed if the answer is positive
+    /// </summary>
+    private Action _questionAction;
+    /// <summary>
+    /// Action executed after the user answer.
+    /// </summary>
+    private Action _questionPostAction;
 
     public EditorManager()
     {
@@ -44,16 +57,49 @@ public class EditorManager
         builder.SetPositionOffsetX(-125f);
         _alertBox = builder.BuildBox();
 
-        builder.SetSizeOffsetX(100f)
+        builder.SetPositionScaleX(0.5f)
+            .SetPositionScaleY(1f)
+            .SetSizeOffsetX(100f)
             .SetSizeOffsetY(30f)
             .SetText("Ok")
             .SetPositionOffsetX(-50f)
+            .SetPositionOffsetY(5f)
             .SetOneTimeSpacing(30f);
-        
+
         _acceptButton = builder.BuildButton(string.Empty);
         _acceptButton.onClickedButton += OnAcceptButtonClicked;
+        
+        builder.SetPositionScaleX(0.5f)
+            .SetPositionScaleY(1f)
+            .SetOneTimeSpacing(0)
+            .SetPositionOffsetX(-110f)
+            .SetText("Yes");
+        
+        _yesButton = builder.BuildButton(string.Empty);
+        _yesButton.onClickedButton += (_) =>
+        {
+            _questionAction?.Invoke();
+            
+            _questionPostAction?.Invoke();
+        };
+
+        builder.SetOneTimeSpacing(0)
+            .SetPositionOffsetX(10f)
+            .SetText("No");
+        
+        _noButton = builder.BuildButton(string.Empty);
+        _noButton.onClickedButton += (_) =>
+        {
+            _questionPostAction?.Invoke();
+        };
+        
         _alertBox.IsVisible = false;
         _acceptButton.IsVisible = false;
+        _yesButton.IsVisible = false;
+        _noButton.IsVisible = false;
+        _alertBox.AddChild(_yesButton);
+        _alertBox.AddChild(_noButton);
+        _alertBox.AddChild(_acceptButton);
     }
 
     public void Initialize()
@@ -61,7 +107,6 @@ public class EditorManager
         EditorDashboardUI.container.AddChild(_singleplayerButton);
         
         EditorDashboardUI.container.AddChild(_alertBox);
-        EditorDashboardUI.container.AddChild(_acceptButton);
     }
     
     private void OnAcceptButtonClicked(ISleekElement button)
@@ -76,6 +121,22 @@ public class EditorManager
         _alertBox.IsVisible = true;
         _acceptButton.IsVisible = true;
     }
+
+    /// <summary>
+    /// Display a question to the user via the Alert Box
+    /// </summary>
+    /// <param name="text">Question</param>
+    /// <param name="yesAction">Action executed if the answers is positive</param>
+    /// <param name="postAction">Action executed after the user have answered</param>
+    public void DisplayQuestion(string text, Action yesAction, Action postAction)
+    {
+        _questionAction = yesAction;
+        _questionPostAction = postAction;
+        _alertBox.Text = text;
+        _alertBox.IsVisible = true;
+        _yesButton.IsVisible = true;
+        _noButton.IsVisible = true;
+    }
     
     private void OnEnemyConnected(SteamPlayer player)
     {
@@ -84,11 +145,13 @@ public class EditorManager
 
     private void OnSingleplayerClicked(ISleekElement button)
     {
-        _levelInfo = Level.info;
-        _cameraPosition = MainCamera.instance.transform.parent.position;
-        
-        Level.save();
-        Level.instance.StartCoroutine(SendToSingleplayer());
+        DisplayQuestion("Save the level before joining singleplayer?", Level.save,
+            () =>
+            {
+                _levelInfo = Level.info;
+                _cameraPosition = MainCamera.instance.transform.parent.position;
+                Level.instance.StartCoroutine(SendToSingleplayer());
+            });
     }
 
     private IEnumerator TeleportPlayer(SteamPlayer player)

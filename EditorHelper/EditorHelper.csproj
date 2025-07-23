@@ -13,6 +13,7 @@
         <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
         <LangVersion>Latest</LangVersion>
         <FileAlignment>512</FileAlignment>
+        <Nullable>enable</Nullable>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
@@ -311,6 +312,7 @@
         <Compile Include="Models\CameraPosition.cs" />
         <Compile Include="Models\EditorCopyExtension.cs" />
         <Compile Include="Models\JsonWithMetadata.cs" />
+        <Compile Include="Models\LevelObjectExtension.cs" />
         <Compile Include="Models\PositionModel.cs" />
         <Compile Include="Models\ReunObjectRemoveExtension.cs" />
         <Compile Include="Models\ReunRoadTransform.cs" />
@@ -318,6 +320,7 @@
         <Compile Include="Models\RotationModel.cs" />
         <Compile Include="Models\SchematicModel.cs" />
         <Compile Include="Models\SerializableEditorCopy.cs" />
+        <Compile Include="Models\SerializableLevelObjectTag.cs" />
         <Compile Include="Patches\CommanderPatches.cs" />
         <Compile Include="Patches\EditorDashboardUIPatches.cs" />
         <Compile Include="Patches\EditorEnvironmentNodesUIPatches.cs" />
@@ -328,6 +331,7 @@
         <Compile Include="Patches\EditorLevelObjectsUIPatches.cs" />
         <Compile Include="Patches\EditorObjectsPatches.cs" />
         <Compile Include="Patches\FoliageEditorPatches.cs" />
+        <Compile Include="Patches\FoliageResourceInfoAssetPatches.cs" />
         <Compile Include="Patches\LevelObjectsPatches.cs" />
         <Compile Include="Patches\LevelPlayersPatches.cs" />
         <Compile Include="Patches\LevelRoadsPatches.cs" />

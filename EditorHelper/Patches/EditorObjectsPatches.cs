@@ -32,10 +32,20 @@ public class EditorObjectsPatches
     static void addSelectionPostfix(Transform select)
     {
         if(EditorHelper.Instance.ObjectsManager == null) return;
-        //bool isIncluded = (EditorHelper.Instance.ObjectsManager.ObjectsLayerMask & (1 << select.gameObject.layer)) != 0;
         
         EditorHelper.Instance.ObjectsManager.SelectObject(select);
-        EditorHelper.Instance.ObjectsManager.UnhighlightAll();
+        EditorHelper.Instance.ObjectsManager.UnhighlightAll();   
+    }
+    
+    
+    [HarmonyPatch(typeof(EditorObjects), "clearSelection")]
+    [HarmonyPostfix]
+    [UsedImplicitly]
+    static void clearSelectionPostfix()
+    {
+        if(EditorHelper.Instance.ObjectsManager == null) return;
+        
+        EditorHelper.Instance.ObjectsManager.SelectObject(null);
     }
     
     [HarmonyPatch(typeof(EditorObjects), "Update")]

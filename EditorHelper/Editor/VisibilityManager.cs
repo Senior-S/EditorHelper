@@ -26,7 +26,11 @@ public class VisibilityManager
         
         _builder = new UIBuilder();
 
-        _builder.SetPositionOffsetY(-40f)
+        _builder.SetPositionScaleX(0f)
+            .SetSizeOffsetX(200f)
+            .SetSizeOffsetY(30f)
+            .SetPositionScaleY(1f)
+            .SetPositionOffsetY(-40f)
             .SetText("Remove location");
 
         _removeLocationButton = _builder.BuildButton("Remove your selected position");
@@ -40,19 +44,11 @@ public class VisibilityManager
     
     public void Initialize()
     {
-        TimeUtility.InvokeAfterDelay(() => DelayedStart(), 0f);
+        EditorLevelVisibilityUI.container.AddChild(_removeLocationButton);
+        EditorLevelVisibilityUI.container.AddChild(_saveLocationButton);
 
         UpdatePositions();
     }
-
-    private IEnumerator DelayedStart()
-    {
-        yield return null;
-        yield return null;
-        EditorLevelVisibilityUI.container.AddChild(_removeLocationButton);
-        EditorLevelVisibilityUI.container.AddChild(_saveLocationButton);
-        yield break;
-    } 
 
     private void OnRemoveLocationButtonClicked(ISleekElement button)
     {
