@@ -13,6 +13,8 @@ public class EditorManager
     private readonly SleekButtonIcon _singleplayerButton;
     private readonly SleekButtonIcon _editorButton;
     
+    private readonly SleekButtonIcon _docsButton;
+    
     private readonly ISleekBox _alertBox;
     private readonly SleekButtonIcon _acceptButton;
 
@@ -48,6 +50,7 @@ public class EditorManager
             .SetText("Back to editor");
         _editorButton = builder.BuildButton("Join to the map spawning a player at your camera position");
         _editorButton.onClickedButton += OnEditorClicked;
+
 
         builder.SetSizeOffsetX(250)
             .SetSizeOffsetY(80f)
@@ -92,6 +95,17 @@ public class EditorManager
         {
             _questionPostAction?.Invoke();
         };
+
+        builder.SetPositionScaleX(0.5f)
+            .SetPositionOffsetY(0.5f)
+            .SetSizeOffsetX(200f)
+            .SetSizeOffsetY(30f)
+            .SetPositionOffsetX(-100f)
+            .SetPositionOffsetY(-150f)
+            .SetText("Documentation");
+        
+        _docsButton = builder.BuildButton("Open the documentation website");
+        _docsButton.onClickedButton += (_) => Provider.openURL("https://editorhelper.sshost.club/");
         
         _alertBox.IsVisible = false;
         _acceptButton.IsVisible = false;
@@ -107,6 +121,7 @@ public class EditorManager
         EditorDashboardUI.container.AddChild(_singleplayerButton);
         
         EditorDashboardUI.container.AddChild(_alertBox);
+        EditorPauseUI.container.AddChild(_docsButton);
     }
     
     private void OnAcceptButtonClicked(ISleekElement button)

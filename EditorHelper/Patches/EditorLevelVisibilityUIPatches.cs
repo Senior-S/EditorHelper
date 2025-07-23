@@ -7,11 +7,15 @@ namespace EditorHelper.Patches;
 [HarmonyPatch]
 public class EditorLevelVisibilityUIPatches
 {
-    [HarmonyPatch(typeof(EditorLevelVisibilityUI), MethodType.Constructor)]
+    [HarmonyPatch(typeof(EditorLevelVisibilityUI), "open")]
     [HarmonyPostfix]
-    static void Constructor()
+    static void openPostfix()
     {
-        EditorHelper.Instance.VisibilityManager ??= new VisibilityManager();
+        if (EditorHelper.Instance.VisibilityManager == null || 
+            EditorHelper.Instance.VisibilityManager.LastMapPath != Level.info.path)
+        {
+            EditorHelper.Instance.VisibilityManager = new VisibilityManager();
+        }
         
         EditorHelper.Instance.VisibilityManager.Initialize();
     }

@@ -5,6 +5,7 @@ using EditorHelper.Builders;
 using EditorHelper.Models;
 using SDG.Framework.Utilities;
 using SDG.Unturned;
+using UnityEngine;
 
 namespace EditorHelper.Editor;
 
@@ -18,6 +19,8 @@ public class VisibilityManager
     private readonly Dictionary<CameraPosition, SleekButtonIcon> _savedLocationsButton;
 
     private CameraPosition _selectedPosition;
+
+    public string LastMapPath = string.Empty;
     
     public VisibilityManager()
     {
@@ -41,15 +44,16 @@ public class VisibilityManager
         _saveLocationButton = _builder.BuildButton("Save your current camera location");
         _saveLocationButton.onClickedButton += OnSaveLocationButtonClicked;
     }
-    
+
     public void Initialize()
     {
         EditorLevelVisibilityUI.container.AddChild(_removeLocationButton);
         EditorLevelVisibilityUI.container.AddChild(_saveLocationButton);
-
+        
         UpdatePositions();
+        LastMapPath = Level.info.path;
     }
-
+    
     private void OnRemoveLocationButtonClicked(ISleekElement button)
     {
         if (_selectedPosition == null || !_savedLocationsButton.TryGetValue(_selectedPosition, out SleekButtonIcon positionButton))
@@ -87,10 +91,10 @@ public class VisibilityManager
 
     private void UpdatePositions()
     {
-        _builder.SetPositionOffsetY(-130f);
-        SleekFullscreenBox container = EditorLevelVisibilityUI.container;
         List<KeyValuePair<CameraPosition, SleekButtonIcon>> list = _savedLocationsButton.ToList();
         if (list.Count < 1) return;
+        _builder.SetPositionOffsetY(-130f);
+        SleekFullscreenBox container = EditorLevelVisibilityUI.container;
         const string tooltip = "Teleport to the saved position";
         for (int i = 0; i < list.Count; i++)
         {
