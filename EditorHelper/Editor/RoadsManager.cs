@@ -263,6 +263,11 @@ public class RoadsManager
         {
             Redo();
         }
+        if (InputEx.GetKeyDown(KeyCode.R) && InputEx.GetKeyDown(KeyCode.LeftControl))
+        {
+            LevelRoads.bakeRoads();
+            return;
+        }
 
         if (!_isUsingHandle)
         {
@@ -381,12 +386,6 @@ public class RoadsManager
                     MainCamera.instance.transform.parent.position = _handles.GetPivotPosition() - 15f * MainCamera.instance.transform.forward;
                 }
             }
-        }
-
-        if (InputEx.GetKeyDown(KeyCode.R) && InputEx.GetKeyDown(KeyCode.LeftControl))
-        {
-            LevelRoads.bakeRoads();
-            return;
         }
 
         #region Original Update Code
