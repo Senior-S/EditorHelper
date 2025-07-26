@@ -18,6 +18,7 @@ public class EditorHelper : IModuleNexus
     public NodesManager NodesManager;
     public EditorManager EditorManager;
     public FoliageManager FoliageManager;
+    public VehicleSpawnsManager VehicleSpawnsManager;
     public VisibilityManager VisibilityManager;
     
     public SchematicsManager SchematicsManager;
@@ -33,6 +34,8 @@ public class EditorHelper : IModuleNexus
 
         Task.Run(UpdaterCore.Init);
         SchematicsManager = new SchematicsManager();
+        
+        Level.onLevelExited += () => Task.Run(UpdaterCore.Init);
         
         CommandWindow.LogWarning($"Editor helper v{this.GetType().Assembly.GetName().Version}");
         CommandWindow.Log("<<SSPlugins>>");

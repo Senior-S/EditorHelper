@@ -43,3 +43,7 @@ Highlight all objects with a negative scale.
 ## Object tag
 
 It lets you assign “tags” to objects to create groups of objects, if two objects have the same tag when you select one it will automatically select all objects with the same type, to modify the tag of an group object select it by pressing **SHIFT**.
+
+## Functional Copy/Paste
+
+When copying an object it will kept the material index and palette GUID.

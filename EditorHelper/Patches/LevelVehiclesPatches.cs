@@ -1,7 +1,9 @@
 ﻿using System.Linq;
+using EditorHelper.Editor;
 using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.Unturned;
+using UnityEngine;
 
 namespace EditorHelper.Patches;
 
@@ -41,5 +43,15 @@ public class LevelVehiclesPatches
         }
         
         return true;
+    }
+    
+    [HarmonyPatch(typeof(LevelVehicles), "addSpawn")]
+    [HarmonyPostfix]
+    [UsedImplicitly]
+    static void addSpawn(Vector3 point, float angle)
+    {
+        if (EditorHelper.Instance.VehicleSpawnsManager == null) return;
+        
+        EditorHelper.Instance.VehicleSpawnsManager.UpdateVehicleSpawns();
     }
 }
