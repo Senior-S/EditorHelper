@@ -291,9 +291,11 @@
         <Compile Include="Commands\ExpCommand.cs" />
         <Compile Include="Commands\HealCommand.cs" />
         <Compile Include="Commands\ICommand.cs" />
+        <Compile Include="Commands\JumpCommand.cs" />
         <Compile Include="Commands\MaxSkillsCommand.cs" />
         <Compile Include="Commands\TpCommand.cs" />
         <Compile Include="Commands\VCommand.cs" />
+        <Compile Include="Editor\AnimalSpawnsManager.cs" />
         <Compile Include="Editor\EditorManager.cs" />
         <Compile Include="Editor\FoliageManager.cs" />
         <Compile Include="Editor\NodesManager.cs" />
@@ -336,12 +338,14 @@
         <Compile Include="Patches\EditorSpawnsVehiclesUIPatches.cs" />
         <Compile Include="Patches\FoliageEditorPatches.cs" />
         <Compile Include="Patches\FoliageResourceInfoAssetPatches.cs" />
+        <Compile Include="Patches\LevelAnimalPatches.cs" />
         <Compile Include="Patches\LevelObjectsPatches.cs" />
         <Compile Include="Patches\LevelPlayersPatches.cs" />
         <Compile Include="Patches\LevelRoadsPatches.cs" />
         <Compile Include="Patches\LevelVehiclesPatches.cs" />
         <Compile Include="Patches\LevelZombiesPatches.cs" />
         <Compile Include="Patches\MenuDashboardUIPatches.cs" />
+        <Compile Include="Patches\MenuUIPatches.cs" />
         <Compile Include="Patches\ReunObjectRemovePatches.cs" />
         <Compile Include="Patches\LocationDevkitNodeSystemPatches.cs" />
         <Compile Include="Patches\RoadPatches.cs" />

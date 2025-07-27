@@ -14,6 +14,7 @@ public class EditorSpawnsPatches
     static void constructor(EditorSpawns __instance)
     {
         EditorHelper.Instance.VehicleSpawnsManager ??= new VehicleSpawnsManager();
+        EditorHelper.Instance.AnimalSpawnsManager ??= new AnimalSpawnsManager();
     }
     
     [HarmonyPatch(typeof(EditorSpawns), "Update")]
@@ -21,8 +22,15 @@ public class EditorSpawnsPatches
     [UsedImplicitly]
     static void Update(EditorSpawns __instance)
     {
-        if (EditorHelper.Instance.VehicleSpawnsManager == null) return;
+        if (EditorHelper.Instance.VehicleSpawnsManager != null)
+        {
+            EditorHelper.Instance.VehicleSpawnsManager.CustomUpdateUI();
+        }
+
+        if (EditorHelper.Instance.AnimalSpawnsManager != null)
+        {
+            EditorHelper.Instance.AnimalSpawnsManager.CustomUpdate();
+        }
         
-        EditorHelper.Instance.VehicleSpawnsManager.CustomUpdateUI();
     }
 }

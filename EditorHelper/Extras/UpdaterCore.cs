@@ -46,11 +46,11 @@ public static class UpdaterCore
         return false;
     }
 
-    private static Version LatestVersion
+    public static Version LatestVersion
     {
         get
         {
-            if (_hasConfig && _globalConfig.KeySet("LatestVersion") && Version.TryParse(_globalConfig["LatestVersion"], out var latest))
+            if (_hasConfig && _globalConfig != null && _globalConfig.KeySet("LatestVersion") && Version.TryParse(_globalConfig["LatestVersion"], out Version? latest))
             {
                 return latest;
             }

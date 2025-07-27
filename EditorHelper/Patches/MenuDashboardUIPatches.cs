@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using EditorHelper.Builders;
 using EditorHelper.Extras;
 using HarmonyLib;
 using JetBrains.Annotations;
@@ -6,6 +9,7 @@ using SDG.NetTransport;
 using SDG.Unturned;
 using Steamworks;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 namespace EditorHelper.Patches;
 
@@ -216,6 +220,42 @@ public class MenuDashboardUIPatches
 
             string updateAlert = UpdaterCore.IsOutDated ? "<size=+2><b>Outdated version, please download the latest version to get the latest features!</b></size>" : "You're using the latest version!";
 
+            // I'll love to don't require this but lately ppl have been reported bugs of outdated version due they don't see the top announce
+            // So to assure the best experience for now it will be required to have the latest version.
+            if (UpdaterCore.IsOutDated)
+            {
+                UIBuilder builder = new();
+
+                builder.SetPositionScaleX(0.5f)
+                    .SetPositionScaleY(0.5f)
+                    .SetSizeOffsetX(400f)
+                    .SetSizeOffsetY(150f)
+                    .SetPositionOffsetX(-200f)
+                    .SetPositionOffsetY(-75f)
+                    .SetText($"You're not using the latest version of the module! This version may contain bugs and issues that can make you lost several hours of your time.\nPlease update to the version {UpdaterCore.LatestVersion} to enjoy the best experience the module have to offer!");
+
+                ISleekBox box = builder.BuildBox();
+
+                builder.SetPositionScaleY(1f)
+                    .SetOneTimeSpacing(0f)
+                    .SetPositionOffsetX(-100f)
+                    .SetPositionOffsetY(5f)
+                    .SetSizeOffsetX(200f)
+                    .SetSizeOffsetY(30f)
+                    .SetText("Update");
+
+                SleekButtonIcon updateButton = builder.BuildButton("Update your module right now");
+                updateButton.onClickedButton += (_) =>
+                {
+                    OpenUrl("https://seniors.gumroad.com/l/editorhelper");
+                    
+                    Provider.QuitGame("EditorHelper required an update!");
+                };
+                
+                box.AddChild(updateButton);
+                MenuUI.container.AddChild(box);
+            }
+            
             MenuDashboardUI.battlEyeBodyLabel.AllowRichText = true;
             MenuDashboardUI.battlEyeBodyLabel.Text = $"{updateAlert}\nGet the latest news, releases, and previews of future updates on my discord, click on this alert to join!";
             #endregion
@@ -362,11 +402,6 @@ public class MenuDashboardUIPatches
             UnturnedLog.info(text);
         }
 
-        /*if (SteamUser.BLoggedOn() && Glazier.Get().SupportsAutomaticLayout && !MenuDashboardUI.readNewsPreview())
-        {
-            MenuUI.instance.StartCoroutine(MenuUI.instance.requestSteamNews());
-        }*/
-
         #region Update
 
         if (UpdaterCore.TryGetTexts(out string updateMessage, out string title, out string subtitle))
@@ -423,7 +458,12 @@ public class MenuDashboardUIPatches
         }
 
         #endregion
-
+        
+        if (UpdaterCore.IsOutDated)
+        {
+            MenuUI.instance.escapeMenu();
+            MenuPauseUI.close();
+        }
         return false;
     }
 
@@ -435,5 +475,35 @@ public class MenuDashboardUIPatches
         Provider.provider.browserService.open("https://discord.gg/Y3jD5K2Q8C");
 
         return false;
+    }
+    
+    // https://brockallen.com/2016/09/24/process-start-for-urls-on-net-core/
+    private static void OpenUrl(string url)
+    {
+        try
+        {
+            Process.Start(url);
+        }
+        catch
+        {
+            // hack because of this: https://github.com/dotnet/corefx/issues/10361
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                url = url.Replace("&", "^&");
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                Process.Start("xdg-open", url);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                Process.Start("open", url);
+            }
+            else
+            {
+                throw;
+            }
+        }
     }
 }

@@ -12,12 +12,13 @@ namespace EditorHelper;
 public class EditorHelper : IModuleNexus
 {
     public static EditorHelper Instance;
-
+    
     public ObjectsManager ObjectsManager;
     public RoadsManager RoadsManager;
     public NodesManager NodesManager;
     public EditorManager EditorManager;
     public FoliageManager FoliageManager;
+    public AnimalSpawnsManager AnimalSpawnsManager;
     public VehicleSpawnsManager VehicleSpawnsManager;
     public VisibilityManager VisibilityManager;
     
@@ -38,7 +39,7 @@ public class EditorHelper : IModuleNexus
         Level.onLevelExited += () => Task.Run(UpdaterCore.Init);
         
         CommandWindow.LogWarning($"Editor helper v{this.GetType().Assembly.GetName().Version}");
-        CommandWindow.Log("<<SSPlugins>>");
+        CommandWindow.Log("<<SPlugins>>");
     }
 
     public static void RegisterCommands()
@@ -49,12 +50,13 @@ public class EditorHelper : IModuleNexus
         Commander.register(new VCommand());
         Commander.register(new ExpCommand());
         Commander.register(new TpCommand());
+        Commander.register(new JumpCommand());
     }
 
     public void shutdown()
     {
         _harmony.UnpatchAll(_harmony.Id);
 
-        CommandWindow.Log("<<SSPlugins>>");
+        CommandWindow.Log("<<SPlugins>>");
     }
 }

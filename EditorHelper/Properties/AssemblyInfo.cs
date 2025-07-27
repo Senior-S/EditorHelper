@@ -7,9 +7,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("EditorHelper")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("SSPlugins")]
+[assembly: AssemblyCompany("SPlugins")]
 [assembly: AssemblyProduct("EditorHelper")]
-[assembly: AssemblyCopyright("Copyright © SSPlugins 2025")]
+[assembly: AssemblyCopyright("Copyright © SPlugins 2025")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

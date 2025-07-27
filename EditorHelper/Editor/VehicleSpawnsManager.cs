@@ -27,7 +27,10 @@ public class VehicleSpawnsManager
 
     private void OnLevelLoaded(int level)
     {
-        UpdateVehicleSpawns();
+        if (Level.isEditor)
+        {
+            UpdateVehicleSpawns();
+        }
     }
 
     public void CustomUpdateUI()
