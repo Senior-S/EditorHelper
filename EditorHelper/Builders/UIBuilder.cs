@@ -1,4 +1,5 @@
-﻿using SDG.Unturned;
+﻿using System;
+using SDG.Unturned;
 using UnityEngine;
 
 namespace EditorHelper.Builders;
@@ -205,6 +206,25 @@ public class UIBuilder
         
         ApplySpacing();
         return stringField;
+    }
+
+    public ISleekInt32Field BuildInt32Field(string tooltipText = "")
+    {
+        ISleekInt32Field int32Field = Glazier.Get().CreateInt32Field();
+        int32Field.PositionOffset_X = _positionOffsetX;
+        int32Field.PositionOffset_Y = _positionOffsetY;
+        int32Field.PositionScale_X = _positionScaleX;
+        int32Field.PositionScale_Y = _positionScaleY;
+        int32Field.SizeOffset_X = _sizeOffsetX;
+        int32Field.SizeOffset_Y = _sizeOffsetY;
+        int32Field.TooltipText = tooltipText;
+        if (_text.Length > 0)
+        {
+            int32Field.AddLabel(_text, ESleekSide.LEFT);
+        }
+        
+        ApplySpacing();
+        return int32Field;
     }
 
     public ISleekBox BuildBox(TextAnchor textAnchor = TextAnchor.MiddleCenter)

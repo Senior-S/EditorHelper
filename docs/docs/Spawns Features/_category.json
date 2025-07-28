@@ -1,0 +1,8 @@
+{
+  "label": "Spawns Features",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "Features of the Spawns tab."
+  }
+}

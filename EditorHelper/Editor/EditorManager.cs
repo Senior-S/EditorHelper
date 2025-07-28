@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using EditorHelper.Builders;
+using SDG.Framework.Utilities;
 using SDG.Unturned;
 using UnityEngine;
 using Action = System.Action;
@@ -31,6 +32,33 @@ public class EditorManager
     /// Action executed after the user answer.
     /// </summary>
     private Action _questionPostAction;
+    
+    // Satellite stuff
+    private readonly SleekButtonIcon _2xResolution;
+    private readonly SleekButtonIcon _4xResolution;
+    private readonly ISleekInt32Field _widthResolution;
+    private readonly ISleekInt32Field _heightResolution;
+
+    public int? Multiplier;
+    public uint? CustomWidth;
+    public uint? CustomHeight;
+    public bool ShouldModifyResolution = false;
+
+    public void ResetCustomResolution()
+    {
+        _widthResolution.Value = 0;
+        _heightResolution.Value = 0;
+        Multiplier = null;
+        CustomWidth = null;
+        CustomHeight = null;
+        
+        _widthResolution.BackgroundColor = SleekColor.BackgroundIfLight(Color.black);
+        _heightResolution.BackgroundColor = SleekColor.BackgroundIfLight(Color.black);
+        _2xResolution.backgroundColor = SleekColor.BackgroundIfLight(Color.black);
+        _4xResolution.backgroundColor = SleekColor.BackgroundIfLight(Color.black);
+        
+        ShouldModifyResolution = false;
+    }
 
     public EditorManager()
     {
@@ -45,12 +73,10 @@ public class EditorManager
 
         Provider.onEnemyConnected += OnEnemyConnected;
         
-        builder
-            .SetPositionOffsetY(-40f)
+        builder.SetPositionOffsetY(-40f)
             .SetText("Back to editor");
         _editorButton = builder.BuildButton("Join to the map spawning a player at your camera position");
         _editorButton.onClickedButton += OnEditorClicked;
-
 
         builder.SetSizeOffsetX(250)
             .SetSizeOffsetY(80f)
@@ -97,15 +123,97 @@ public class EditorManager
         };
 
         builder.SetPositionScaleX(0.5f)
-            .SetPositionOffsetY(0.5f)
+            .SetPositionScaleY(0.5f)
+            .SetOneTimeSpacing(0)
             .SetSizeOffsetX(200f)
             .SetSizeOffsetY(30f)
             .SetPositionOffsetX(-100f)
-            .SetPositionOffsetY(-150f)
+            .SetPositionOffsetY(185f)
             .SetText("Documentation");
         
         _docsButton = builder.BuildButton("Open the documentation website");
         _docsButton.onClickedButton += (_) => Provider.openURL("https://editorhelper.sshost.club/");
+
+        builder.SetOneTimeSpacing(0)
+            .SetPositionOffsetX(-145f)
+            .SetPositionOffsetY(-55f)
+            .SetSizeOffsetX(40f)
+            .SetSizeOffsetY(30f)
+            .SetText("2x");
+        
+        _2xResolution = builder.BuildButton("2x satellite resolution");
+        _2xResolution.onClickedButton += (_) =>
+        {
+            if (Multiplier == 2)
+            {
+                Multiplier = null;
+                _2xResolution.backgroundColor = SleekColor.BackgroundIfLight(Color.black);
+                return;
+            }
+            Multiplier = 2;
+            _2xResolution.backgroundColor = SleekColor.BackgroundIfLight(Color.white);
+            ShouldModifyResolution = true;
+        };
+
+        builder.SetOneTimeSpacing(0)
+            .SetPositionOffsetX(-187.5f)
+            .SetText("4x");
+        
+        _4xResolution = builder.BuildButton("4x satellite resolution");
+        _4xResolution.onClickedButton  += (_) =>
+        {
+            if (Multiplier == 4)
+            {
+                Multiplier = null;
+                _4xResolution.backgroundColor = SleekColor.BackgroundIfLight(Color.black);
+                return;
+            }
+            Multiplier = 4;
+            _4xResolution.backgroundColor = SleekColor.BackgroundIfLight(Color.white);
+            ShouldModifyResolution = true;
+        };
+
+        builder.SetOneTimeSpacing(0)
+            .SetPositionOffsetX(-255f)
+            .SetPositionOffsetY(-70f)
+            .SetSizeOffsetX(65f)
+            .SetText("Width");
+        
+        _widthResolution = builder.BuildInt32Field("Width resolution");
+        _widthResolution.OnValueChanged += (field, value) =>
+        {
+            if (_widthResolution.Value < 1)
+            {
+                CustomWidth = null;
+                _widthResolution.Value = 0;
+                _widthResolution.BackgroundColor = SleekColor.BackgroundIfLight(Color.black);
+                return;
+            }
+            
+            CustomWidth = (uint)value;
+            ShouldModifyResolution = true;
+            _widthResolution.BackgroundColor = SleekColor.BackgroundIfLight(Color.white);
+        };
+        
+        builder.SetOneTimeSpacing(0)
+            .SetPositionOffsetY(-40f)
+            .SetText("Height");
+        
+        _heightResolution = builder.BuildInt32Field("Height resolution");
+        _heightResolution.OnValueChanged += (field, value) =>
+        {
+            if (_heightResolution.Value < 1)
+            {
+                CustomHeight = null;
+                _heightResolution.Value = 0;
+                _heightResolution.BackgroundColor = SleekColor.BackgroundIfLight(Color.black);
+                return;
+            }
+            
+            CustomHeight = (uint)value;
+            ShouldModifyResolution = true;
+            _heightResolution.BackgroundColor = SleekColor.BackgroundIfLight(Color.white);
+        };
         
         _alertBox.IsVisible = false;
         _acceptButton.IsVisible = false;
@@ -122,6 +230,10 @@ public class EditorManager
         
         EditorDashboardUI.container.AddChild(_alertBox);
         EditorPauseUI.container.AddChild(_docsButton);
+        EditorPauseUI.container.AddChild(_2xResolution);
+        EditorPauseUI.container.AddChild(_4xResolution);
+        EditorPauseUI.container.AddChild(_widthResolution);
+        EditorPauseUI.container.AddChild(_heightResolution);
     }
     
     private void OnAcceptButtonClicked(ISleekElement button)
@@ -155,7 +267,7 @@ public class EditorManager
     
     private void OnEnemyConnected(SteamPlayer player)
     {
-        Level.instance.StartCoroutine(TeleportPlayer(player));
+        TimeUtility.singleton.StartCoroutine(TeleportPlayer(player));
     }
 
     private void OnSingleplayerClicked(ISleekElement button)
@@ -165,7 +277,7 @@ public class EditorManager
             {
                 _levelInfo = Level.info;
                 _cameraPosition = MainCamera.instance.transform.parent.position;
-                Level.instance.StartCoroutine(SendToSingleplayer());
+                TimeUtility.singleton.StartCoroutine(SendToSingleplayer());
             });
     }
 
@@ -207,6 +319,6 @@ public class EditorManager
     
     private void OnEditorClicked(ISleekElement button)
     {
-        Level.instance.StartCoroutine(SendToEditor());
+        TimeUtility.singleton.StartCoroutine(SendToEditor());
     }
 }

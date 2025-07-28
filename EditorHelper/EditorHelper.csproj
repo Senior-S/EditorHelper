@@ -317,7 +317,6 @@
         <Compile Include="Models\JsonWithMetadata.cs" />
         <Compile Include="Models\LevelObjectExtension.cs" />
         <Compile Include="Models\PositionModel.cs" />
-        <Compile Include="Models\ReunFoliageResource.cs" />
         <Compile Include="Models\ReunObjectRemoveExtension.cs" />
         <Compile Include="Models\ReunRoadTransform.cs" />
         <Compile Include="Models\RoadSelection.cs" />
@@ -340,6 +339,7 @@
         <Compile Include="Patches\FoliageResourceInfoAssetPatches.cs" />
         <Compile Include="Patches\LevelAnimalPatches.cs" />
         <Compile Include="Patches\LevelObjectsPatches.cs" />
+        <Compile Include="Patches\LevelPatches.cs" />
         <Compile Include="Patches\LevelPlayersPatches.cs" />
         <Compile Include="Patches\LevelRoadsPatches.cs" />
         <Compile Include="Patches\LevelVehiclesPatches.cs" />
