@@ -33,11 +33,13 @@ public class LevelPatches
             if (EditorHelper.Instance.EditorManager != null && EditorHelper.Instance.EditorManager.ShouldModifyResolution)
             {
                 int? multiplier = EditorHelper.Instance.EditorManager.Multiplier;
-                uint? customWidth = EditorHelper.Instance.EditorManager.CustomWidth;
-                uint? customHeight = EditorHelper.Instance.EditorManager.CustomHeight;
+                (uint?, uint?) customResolution = EditorHelper.Instance.EditorManager.CustomResolution;
                 
-                width = multiplier != null ? width * multiplier.Value : (int)customWidth.Value;
-                height = multiplier != null ? height * multiplier.Value : (int)customHeight.Value;
+                int customWidth = (int?)customResolution.Item1 ?? width;
+                int customHeight = (int?)customResolution.Item2 ?? height;
+                
+                width = multiplier != null ? width * multiplier.Value : customWidth;
+                height = multiplier != null ? height * multiplier.Value : customHeight;
                 
                 EditorHelper.Instance.EditorManager.ResetCustomResolution();
             }
@@ -52,11 +54,13 @@ public class LevelPatches
             if (EditorHelper.Instance.EditorManager != null && EditorHelper.Instance.EditorManager.ShouldModifyResolution)
             {
                 int? multiplier = EditorHelper.Instance.EditorManager.Multiplier;
-                uint? customWidth = EditorHelper.Instance.EditorManager.CustomWidth;
-                uint? customHeight = EditorHelper.Instance.EditorManager.CustomHeight;
+                (uint?, uint?) customResolution = EditorHelper.Instance.EditorManager.CustomResolution;
                 
-                width = multiplier != null ? width * multiplier.Value : (int)customWidth.Value;
-                height = multiplier != null ? height * multiplier.Value : (int)customHeight.Value;
+                int customWidth = (int?)customResolution.Item1 ?? width;
+                int customHeight = (int?)customResolution.Item2 ?? height;
+                
+                width = multiplier != null ? width * multiplier.Value : customWidth;
+                height = multiplier != null ? height * multiplier.Value : customHeight;
                 
                 EditorHelper.Instance.EditorManager.ResetCustomResolution();
             }
@@ -176,18 +180,20 @@ public class LevelPatches
 			if (EditorHelper.Instance.EditorManager != null && EditorHelper.Instance.EditorManager.ShouldModifyResolution)
 			{
 				int? multiplier = EditorHelper.Instance.EditorManager.Multiplier;
-				uint? customWidth = EditorHelper.Instance.EditorManager.CustomWidth;
-				uint? customHeight = EditorHelper.Instance.EditorManager.CustomHeight;
+				(uint?, uint?) customResolution = EditorHelper.Instance.EditorManager.CustomResolution;
                 
-				xValue = multiplier != null ? xValue * multiplier.Value : (int)customWidth.Value;
-				zValue = multiplier != null ? zValue * multiplier.Value : (int)customHeight.Value;
-                
+				float customWidth = customResolution.Item1 ?? xValue;
+				float customHeight = customResolution.Item2 ?? zValue;
+				
+				xValue = multiplier != null ? xValue * multiplier.Value : customWidth;
+				zValue = multiplier != null ? zValue * multiplier.Value : customHeight;
+				
 				EditorHelper.Instance.EditorManager.ResetCustomResolution();
 			}
 			imageWidth = Mathf.CeilToInt(xValue);
 			imageHeight = Mathf.CeilToInt(zValue);
-			captureWidth = xValue;
-			captureHeight = zValue;
+			captureWidth = vector.x;
+			captureHeight = vector.z;
 		}
 		else
 		{
@@ -196,11 +202,13 @@ public class LevelPatches
 			if (EditorHelper.Instance.EditorManager != null && EditorHelper.Instance.EditorManager.ShouldModifyResolution)
 			{
 				int? multiplier = EditorHelper.Instance.EditorManager.Multiplier;
-				uint? customWidth = EditorHelper.Instance.EditorManager.CustomWidth;
-				uint? customHeight = EditorHelper.Instance.EditorManager.CustomHeight;
+				(uint?, uint?) customResolution = EditorHelper.Instance.EditorManager.CustomResolution;
                 
-				xValue = multiplier != null ? xValue * multiplier.Value : (int)customWidth.Value;
-				zValue = multiplier != null ? zValue * multiplier.Value : (int)customHeight.Value;
+				float customWidth = customResolution.Item1 ?? xValue;
+				float customHeight = customResolution.Item2 ?? zValue;
+                
+				xValue = multiplier != null ? xValue * multiplier.Value : customWidth;
+				zValue = multiplier != null ? zValue * multiplier.Value : customHeight;
                 
 				EditorHelper.Instance.EditorManager.ResetCustomResolution();
 			}

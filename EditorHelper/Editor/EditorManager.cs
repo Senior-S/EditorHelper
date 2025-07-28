@@ -40,8 +40,7 @@ public class EditorManager
     private readonly ISleekInt32Field _heightResolution;
 
     public int? Multiplier;
-    public uint? CustomWidth;
-    public uint? CustomHeight;
+    public (uint?, uint?) CustomResolution;
     public bool ShouldModifyResolution = false;
 
     public void ResetCustomResolution()
@@ -49,8 +48,7 @@ public class EditorManager
         _widthResolution.Value = 0;
         _heightResolution.Value = 0;
         Multiplier = null;
-        CustomWidth = null;
-        CustomHeight = null;
+        CustomResolution = (null, null);
         
         _widthResolution.BackgroundColor = SleekColor.BackgroundIfLight(Color.black);
         _heightResolution.BackgroundColor = SleekColor.BackgroundIfLight(Color.black);
@@ -184,13 +182,13 @@ public class EditorManager
         {
             if (_widthResolution.Value < 1)
             {
-                CustomWidth = null;
+                CustomResolution.Item1 = null;
                 _widthResolution.Value = 0;
                 _widthResolution.BackgroundColor = SleekColor.BackgroundIfLight(Color.black);
                 return;
             }
             
-            CustomWidth = (uint)value;
+            CustomResolution.Item1 = (uint)value;
             ShouldModifyResolution = true;
             _widthResolution.BackgroundColor = SleekColor.BackgroundIfLight(Color.white);
         };
@@ -204,13 +202,13 @@ public class EditorManager
         {
             if (_heightResolution.Value < 1)
             {
-                CustomHeight = null;
+                CustomResolution.Item2 = null;
                 _heightResolution.Value = 0;
                 _heightResolution.BackgroundColor = SleekColor.BackgroundIfLight(Color.black);
                 return;
             }
             
-            CustomHeight = (uint)value;
+            CustomResolution.Item2 = (uint)value;
             ShouldModifyResolution = true;
             _heightResolution.BackgroundColor = SleekColor.BackgroundIfLight(Color.white);
         };
