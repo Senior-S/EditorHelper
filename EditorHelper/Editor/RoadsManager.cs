@@ -51,8 +51,8 @@ public class RoadsManager
     private Rect _selectionRect;
 
     // Currently selected joints and their associated paths
-    public static List<RoadJointCustom> SelectedJoints = new();
-    public static List<RoadPath> SelectedPaths = new();
+    public static List<RoadJointCustom> SelectedJoints;
+    public static List<RoadPath> SelectedPaths;
 
     private Camera? _sceneCamera;
 
@@ -79,6 +79,9 @@ public class RoadsManager
         _snapRotation = 15f;
         _roadSelection = null;
         _editorDrag = null;
+        _primaryJoint = null;
+        SelectedJoints = [];
+        SelectedPaths = [];
         _step = 0;
         _frame = 0;
 
