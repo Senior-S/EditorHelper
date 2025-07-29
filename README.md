@@ -22,6 +22,6 @@ At the moment the module features are:
 - Instant play. *(Join the world at the position where your camera is)*
 
 # May I have already seen this before but with more features?
-Yes, as far I know Jdance and Sultan have been working on a module called Breakdown that adds some tools to the Unturned editor, but as posts on the Unturned discord relates, this have been a thing since 2023 with no public releases nor promoting that it's even avaliable, so due adding some tools isn't exactly a big deal and the community seems interested in this type of tools, I released a open source, free and public tool that may or may not contain the same tools but made by me.
+Yes, as far I know a module called Breakdown have been in the works before, but as posts on the Unturned discord relates, this have been a thing since 2023 with no public releases nor promoting that it's even avaliable, so due adding some tools isn't exactly a big deal and the community seems interested in this type of tools, I released a open source, free and public tool that may or may not contain the same tools but made by me.
 
 [![](https://dcbadge.limes.pink/api/server/https://discord.gg/Y3jD5K2Q8C)](https://discord.gg/Y3jD5K2Q8C)

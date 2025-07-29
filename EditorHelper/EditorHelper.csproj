@@ -340,6 +340,7 @@
         <Compile Include="Patches\FoliageResourceInfoAssetPatches.cs" />
         <Compile Include="Patches\LevelAnimalPatches.cs" />
         <Compile Include="Patches\LevelObjectsPatches.cs" />
+        <Compile Include="Patches\LevelPatches.cs" />
         <Compile Include="Patches\LevelPlayersPatches.cs" />
         <Compile Include="Patches\LevelRoadsPatches.cs" />
         <Compile Include="Patches\LevelVehiclesPatches.cs" />
