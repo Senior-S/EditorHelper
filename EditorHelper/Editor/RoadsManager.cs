@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using EditorHelper.Builders;
 using EditorHelper.Models;
+using SDG.Framework.Rendering;
+using SDG.Framework.Utilities;
 using SDG.Unturned;
 using UnityEngine;
 
@@ -39,9 +42,31 @@ public class RoadsManager
     private readonly ISleekToggle _depthToggleButton;
     private readonly ISleekFloat32Field _snapTransformField;
     private readonly ISleekToggle _handlePriorizeToggleButton;
+    
+    // Road Selection
+    // State for drag selection rectangle
+    private Vector2 _startScreenPos;
+    private bool _isSelecting;
+    private bool _isAddingToSelection;
+    private Rect _selectionRect;
+
+    // Currently selected joints and their associated paths
+    public static List<RoadJointCustom> SelectedJoints = new();
+    public static List<RoadPath> SelectedPaths = new();
+
+    private Camera? _sceneCamera;
+
+    // Information about the primary joint (the pivot for moving multiple joints)
+    public static RoadJointCustom? _primaryJoint;
+    private Vector3 _primaryLastPosition;
+
+    // Stores relative offsets for multi-joint movement
+    public static readonly Dictionary<RoadJointCustom, Vector3> _otherOffsets = new();
 
     public RoadsManager()
     {
+        _sceneCamera = Camera.main;
+        
         _handles = new TransformHandles();
         _handles.OnPreTransform += OnHandlePreTransform;
         _handles.OnTranslatedAndRotated += OnHandleTranslatedAndRotated;
@@ -196,6 +221,103 @@ public class RoadsManager
         _coordinateButton.IsVisible = buttonVisible;
         _snapTransformField.IsVisible = buttonVisible;
         _handlePriorizeToggleButton.IsVisible = buttonVisible;
+        
+        // Road Selection
+        if (!EditorRoads.isPaving)
+        {
+            if (SelectedJoints.Count > 0)
+                clear();
+            return;
+        }
+        
+        foreach (var road in LevelRoads.roads)
+        {
+            for (int i = 0; i < road.paths.Count; i++)
+            {
+                var path = road.paths[i];
+                var t0 = path.tangents[0];
+                var t1 = path.tangents[1];
+
+                RuntimeGizmos.Get().Cube(path.vertex.position, 1.3f, Color.yellow);
+                RuntimeGizmos.Get().Cube(t0.position, 1.3f, Color.white);
+                RuntimeGizmos.Get().Cube(t1.position, 1.3f, Color.blue);
+
+                RuntimeGizmos.Get().Line(path.vertex.position + Vector3.up * 0.1f, t0.position + Vector3.up * 0.1f, Color.red);
+                RuntimeGizmos.Get().Line(path.vertex.position + Vector3.up * 0.1f, t1.position + Vector3.up * 0.1f, Color.red);
+            }
+        }
+        
+        // While dragging, update the selection rectangle and highlight nodes under it
+        if (_isSelecting)
+        {
+            _selectionRect = GetScreenRect(_startScreenPos, Input.mousePosition);
+            SelectObjectsInRect();
+        }
+        
+        // Ensure all selected paths are highlighted
+            foreach (var path in SelectedPaths)
+                path.highlightVertex();
+
+            // Start a new selection rectangle with middle mouse button
+            if (Input.GetMouseButtonDown(2) && !_isSelecting)
+            {
+                _startScreenPos = Input.mousePosition;
+                _isAddingToSelection = Input.GetKey(KeyCode.LeftShift);
+                _isSelecting = true;
+            }
+
+            // End selection rectangle on mouse release
+            if (Input.GetMouseButtonUp(2))
+            {
+                _isSelecting = false;
+                _isAddingToSelection = false;
+            }
+
+            // Handle deletion of selected joints when pressing Delete
+            if (SelectedJoints.Count > 0 && Input.GetKeyDown(KeyCode.Delete))
+            {
+                // Group joints by road so we can delete them in batches
+                var jointsByRoad = new Dictionary<Road, List<RoadJointCustom>>();
+                foreach (var joint in SelectedJoints)
+                {
+                    if (!jointsByRoad.ContainsKey(joint.road))
+                        jointsByRoad[joint.road] = new List<RoadJointCustom>();
+                    jointsByRoad[joint.road].Add(joint);
+                }
+
+                // Remove vertices in reverse index order to avoid shifting indices, because when removing indexes, the rest shifts down.
+                foreach (var kvp in jointsByRoad)
+                {
+                    var joints = kvp.Value;
+                    joints.Sort((a, b) => b.index.CompareTo(a.index));
+
+                    foreach (var joint in joints)
+                        if (joint.index >= 0 && joint.index < joint.road.joints.Count)
+                            joint.road.removeVertex(joint.index);
+                }
+
+                clear();
+            }
+
+            // Handle dragging/moving multiple selected joints
+            if (_primaryJoint.HasValue)
+            {
+                var joint = _primaryJoint.Value;
+                Vector3 current = joint.road.joints[joint.index].vertex;
+
+                if (current != _primaryLastPosition)
+                {
+                    foreach (var kvp in _otherOffsets)
+                    {
+                        var targetJoint = kvp.Key;
+                        Vector3 offset = kvp.Value;
+                        Vector3 newPosition = current + offset;
+                        targetJoint.road.moveVertex(targetJoint.index, newPosition);
+                    }
+
+                    _primaryLastPosition = current;
+                }
+            }
         
         if (!EditorRoads.isPaving || EditorInteract.isFlying || !Glazier.Get().ShouldGameProcessInput)
         {
@@ -482,6 +604,155 @@ public class RoadsManager
         }
 
         #endregion
+    }
+    
+    // This is kind of taken from the vanilla SelectionTool
+    private void OnRenderObject()
+    {
+        if (!_isSelecting || _sceneCamera == null)
+            return;
+
+        GLUtility.LINE_FLAT_COLOR.SetPass(0);
+        GLUtility.matrix = MathUtility.IDENTITY_MATRIX;
+
+        GL.Begin(GL.LINES);
+        GL.Color(Color.yellow);
+
+        Vector3 startViewport = _sceneCamera.ScreenToViewportPoint(_startScreenPos);
+        Vector3 endViewport = _sceneCamera.ScreenToViewportPoint(Input.mousePosition);
+
+        startViewport.z = 16f;
+        endViewport.z = 16f;
+
+        Vector3 min = new Vector3(Mathf.Min(startViewport.x, endViewport.x), Mathf.Min(startViewport.y, endViewport.y), 16f);
+        Vector3 max = new Vector3(Mathf.Max(startViewport.x, endViewport.x), Mathf.Max(startViewport.y, endViewport.y), 16f);
+
+        Vector3 v0 = _sceneCamera.ViewportToWorldPoint(new Vector3(min.x, min.y, min.z));
+        Vector3 v1 = _sceneCamera.ViewportToWorldPoint(new Vector3(max.x, min.y, min.z));
+        Vector3 v2 = _sceneCamera.ViewportToWorldPoint(new Vector3(max.x, max.y, max.z));
+        Vector3 v3 = _sceneCamera.ViewportToWorldPoint(new Vector3(min.x, max.y, max.z));
+
+        GL.Vertex(v0); GL.Vertex(v1);
+        GL.Vertex(v1); GL.Vertex(v2);
+        GL.Vertex(v2); GL.Vertex(v3);
+        GL.Vertex(v3); GL.Vertex(v0);
+
+        GL.End();
+    }
+
+    /// <summary>
+    /// Selects road joints that fall within the current selection rectangle.
+    /// </summary>
+    private void SelectObjectsInRect()
+    {
+        // If not holding Shift, clear previous selection.
+        // I am too lazy to implement real-time clearing for shift-select.
+        if (!_isAddingToSelection)
+            clear();
+
+        Transform? currentSelection = EditorRoads.selection;
+        RoadJointCustom? selectedJoint = null;
+
+        var newJoints = new List<RoadJointCustom>();
+        var newPaths = new List<RoadPath>();
+
+        foreach (var road in LevelRoads.roads)
+        {
+            for (int index = 0; index < road.joints.Count; index++)
+            {
+                var joint = road.joints[index];
+                Vector3 screenPoint = _sceneCamera!.WorldToScreenPoint(joint.vertex);
+
+                if (screenPoint.z <= 0f)
+                    continue;
+
+                Vector2 screen2D = new(screenPoint.x, Screen.height - screenPoint.y);
+
+                if (_selectionRect.Contains(screen2D))
+                {
+                    var roadJoint = new RoadJointCustom()
+                    {
+                        road = road,
+                        index = index,
+                        vertex = joint.vertex
+                    };
+
+                    // Skip if already selected
+                    if (SelectedJoints.Exists(j => j.road == roadJoint.road && j.index == roadJoint.index))
+                        continue;
+
+                    newJoints.Add(roadJoint);
+                    newPaths.Add(road.paths[index]);
+
+                    if (currentSelection != null && road.paths[index].vertex == currentSelection)
+                        selectedJoint = roadJoint;
+                }
+            }
+        }
+
+        // Add any newly selected nodes
+        SelectedJoints.AddRange(newJoints);
+        SelectedPaths.AddRange(newPaths);
+
+        if (SelectedJoints.Count > 0)
+        {
+            // Determine which joint is primary for movement
+            if (_primaryJoint.HasValue && _isAddingToSelection)
+                selectedJoint = _primaryJoint;
+            
+            else if (selectedJoint.HasValue)
+                _primaryJoint = selectedJoint.Value;
+            
+            else
+            {
+                _primaryJoint = SelectedJoints[0];
+                var vertex = _primaryJoint.Value.road.paths[_primaryJoint.Value.index].vertex;
+                EditorRoads.deselect();
+                EditorRoads.select(vertex);
+            }
+
+            _primaryLastPosition = _primaryJoint.Value.vertex;
+
+            // Compute offsets for moving other joints relative to the primary
+            _otherOffsets.Clear();
+            foreach (var joint in SelectedJoints)
+                if (joint.road != _primaryJoint.Value.road || joint.index != _primaryJoint.Value.index)
+                    _otherOffsets[joint] = joint.vertex - _primaryLastPosition;
+        }
+        else
+            // If nothing is selected now, clear any active selection in EditorRoads
+            if (_primaryJoint.HasValue)
+                EditorRoads.deselect();
+    }
+    
+    /// <summary>
+    /// Creates a Rect from two screen points, adjusting for Unity's flipped Y coordinates in GUI.
+    /// </summary>
+    private Rect GetScreenRect(Vector2 start, Vector2 end)
+    {
+        start.y = Screen.height - start.y;
+        end.y = Screen.height - end.y;
+
+        return new Rect(
+            Mathf.Min(start.x, end.x),
+            Mathf.Min(start.y, end.y),
+            Mathf.Abs(start.x - end.x),
+            Mathf.Abs(start.y - end.y)
+        );
+    }
+        
+    private void clear()
+    {
+        foreach (var road in LevelRoads.roads)
+        foreach (var path in road.paths)
+            path.unhighlightVertex(); 
+
+        SelectedJoints.Clear();
+        SelectedPaths.Clear();
+        _primaryJoint = null;
+        _otherOffsets.Clear();
+
+        EditorRoads.deselect();
     }
 
     public void ClearSelection()
