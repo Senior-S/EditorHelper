@@ -226,13 +226,14 @@ public class RoadsManager
         {
             _handles.Render(EditorInteract.ray);
             RoadMaterial roadMaterial = LevelRoads.materials[EditorRoads.road.material];
-            Quaternion rotation = EditorRoads.selection.rotation;
-
-            float radius = roadMaterial.width;
+            
+            float radius = EditorRoads.road.RoadAssetRef != null ? EditorRoads.road._roadAsset.Width / 2 : roadMaterial.width;
             if (_depthToggleButton.Value)
             {
-                radius += roadMaterial.depth;
+                radius += EditorRoads.road.RoadAssetRef != null ? EditorRoads.road._roadAsset.Depth / 2 : roadMaterial.depth;
             }
+            
+            Quaternion rotation = EditorRoads.selection.rotation;
             DrawRotationCircle(rotation * Vector3.up, rotation * Vector3.forward, radius, new Color(1f, 0, 0, 0.4f));
             DrawRotationCircle(rotation * Vector3.right, rotation * Vector3.forward, radius, new Color(0, 1f, 0, 0.4f));
             DrawRotationCircle(rotation * Vector3.right, rotation * Vector3.up, radius, new Color(0, 0, 1f, 0.4f));
