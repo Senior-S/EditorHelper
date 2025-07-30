@@ -225,12 +225,27 @@ public class RoadsManager
         if (EditorRoads.selection && EditorRoads.road != null)
         {
             _handles.Render(EditorInteract.ray);
-            RoadMaterial roadMaterial = LevelRoads.materials[EditorRoads.road.material];
+
+            float radius = 0f;
+            if (EditorRoads.road._roadAssetRef.IsAssigned)
+            {
+                radius = EditorRoads.road._roadAsset.Width / 2;
+            }
+            else if (EditorRoads.road.material < LevelRoads.materials.Length)
+            {
+                radius = LevelRoads.materials[EditorRoads.road.material].width;
+            }
             
-            float radius = EditorRoads.road.RoadAssetRef != null ? EditorRoads.road._roadAsset.Width / 2 : roadMaterial.width;
             if (_depthToggleButton.Value)
             {
-                radius += EditorRoads.road.RoadAssetRef != null ? EditorRoads.road._roadAsset.Depth / 2 : roadMaterial.depth;
+                if (EditorRoads.road._roadAssetRef.IsAssigned)
+                {
+                    radius = EditorRoads.road._roadAsset.Depth / 2;
+                }
+                else if (EditorRoads.road.material < LevelRoads.materials.Length)
+                {
+                    radius = LevelRoads.materials[EditorRoads.road.material].depth;
+                }
             }
             
             Quaternion rotation = EditorRoads.selection.rotation;
@@ -366,7 +381,6 @@ public class RoadsManager
                             EditorRoads.road.moveVertex(EditorRoads.vertexIndex, _copyPosition);
                         }
                     }
-                    
                     
                     CalculateHandleOffsets();
                 }
