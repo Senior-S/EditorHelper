@@ -16,8 +16,8 @@ public class CollectionManager
         builder.SetPositionOffsetX(0f)
             .SetPositionScaleY(1f)
             .SetPositionOffsetX(10f)
-            .SetPositionOffsetY(-390f)
-            .SetSizeOffsetX(630f)
+            .SetPositionOffsetY(-100f)
+            .SetSizeOffsetX(50f)
             .SetSizeOffsetY(-10f);
 
         _assetScrollView = builder.BuildScrollBox<ISleekButton>(20, 5);

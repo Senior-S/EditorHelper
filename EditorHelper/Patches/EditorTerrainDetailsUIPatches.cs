@@ -17,14 +17,11 @@ public class EditorTerrainDetailsUIPatches
         EditorHelper.Instance.CollectionManager.Initialize(ref __instance);
     }
     
-    [HarmonyPatch(typeof(EditorTerrainDetailsUI), "update")]
-    [HarmonyPrefix]
+    [HarmonyPatch(typeof(EditorTerrainDetailsUI), "UpdateOffsets")]
+    [HarmonyPostfix]
     [UsedImplicitly]
-    static bool Update(EditorTerrainDetailsUI __instance)
+    static void Update(EditorTerrainDetailsUI __instance)
     {
-        if (EditorHelper.Instance.CollectionManager == null) return true;
-        
         EditorHelper.Instance.CollectionManager.CustomUpdate(__instance);
-        return false;
     }
 }
