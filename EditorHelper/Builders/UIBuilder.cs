@@ -22,7 +22,7 @@ public class UIBuilder
     private float _spacing;
     
     // Almost all elements require a text of some sort
-    private string _text = "Button";
+    private string _text = string.Empty;
 
     public UIBuilder(float sizeOffsetX = 200f, float sizeOffsetY = 30f, float positionScaleX = 0f, float positionScaleY = 1f)
     {

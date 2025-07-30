@@ -22,6 +22,8 @@ public class EditorTerrainDetailsUIPatches
     [UsedImplicitly]
     static void Update(EditorTerrainDetailsUI __instance)
     {
+        if (EditorHelper.Instance.CollectionManager == null) return;
+        
         EditorHelper.Instance.CollectionManager.CustomUpdate(__instance);
     }
 }
