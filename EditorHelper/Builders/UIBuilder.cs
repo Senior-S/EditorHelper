@@ -276,4 +276,15 @@ public class UIBuilder
 
         return button;
     }
+
+    public ISleekBox CreateSimpleBox(TextAnchor textAnchor = TextAnchor.MiddleCenter)
+    {
+        ISleekBox box = Glazier.Get().CreateBox();
+        if (_text.Length > 0)
+        {
+            box.TextAlignment = textAnchor;
+            box.Text = _text;
+        } 
+        return box;
+    }
 }

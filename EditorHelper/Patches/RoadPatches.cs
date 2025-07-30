@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using EditorHelper.Editor;
 using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.Unturned;
@@ -28,6 +29,17 @@ public class RoadPatches
             EditorHelper.Instance.EditorManager.DisplayAlert($"You can't place more road joints.{Environment.NewLine}You have exceeded the max amount of joints per road ({ushort.MaxValue}).");
             return false;
         }
+        
+        foreach (var road in LevelRoads.roads)
+        foreach (var path in road.paths)
+            path.unhighlightVertex(); 
+
+        RoadsManager.SelectedJoints.Clear();
+        RoadsManager.SelectedPaths.Clear();
+        RoadsManager._primaryJoint = null;
+        RoadsManager._otherOffsets.Clear();
+
+        EditorRoads.deselect();
         
         return true;
     }
