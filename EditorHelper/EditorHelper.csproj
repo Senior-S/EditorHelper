@@ -319,6 +319,7 @@
         <Compile Include="Models\PositionModel.cs" />
         <Compile Include="Models\ReunObjectRemoveExtension.cs" />
         <Compile Include="Models\ReunRoadTransform.cs" />
+        <Compile Include="Models\RoadJointCustom.cs" />
         <Compile Include="Models\RoadSelection.cs" />
         <Compile Include="Models\RotationModel.cs" />
         <Compile Include="Models\SchematicModel.cs" />
