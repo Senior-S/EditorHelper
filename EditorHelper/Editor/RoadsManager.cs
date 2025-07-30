@@ -131,6 +131,8 @@ public class RoadsManager
         _snapTransformField.Value = _snapTransform;
         EditorUI.window.AddChild(_snapTransformField);
         EditorUI.window.AddChild(_handlePriorizeToggleButton);
+        
+        Camera.onPostRender += this.OnPostRender;
     }
     
     private void OnSnapTransformFieldValueChanged(ISleekFloat32Field field, float value)
@@ -610,7 +612,7 @@ public class RoadsManager
     }
     
     // This is kind of taken from the vanilla SelectionTool
-    private void OnRenderObject()
+    private void OnPostRender(Camera cam)
     {
         if (!_isSelecting || _sceneCamera == null)
             return;
