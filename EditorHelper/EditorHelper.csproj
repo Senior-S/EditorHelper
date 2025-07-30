@@ -296,6 +296,7 @@
         <Compile Include="Commands\TpCommand.cs" />
         <Compile Include="Commands\VCommand.cs" />
         <Compile Include="Editor\AnimalSpawnsManager.cs" />
+        <Compile Include="Editor\CollectionManager.cs" />
         <Compile Include="Editor\EditorManager.cs" />
         <Compile Include="Editor\FoliageManager.cs" />
         <Compile Include="Editor\NodesManager.cs" />
@@ -335,6 +336,7 @@
         <Compile Include="Patches\EditorObjectsPatches.cs" />
         <Compile Include="Patches\EditorSpawnsPatches.cs" />
         <Compile Include="Patches\EditorSpawnsVehiclesUIPatches.cs" />
+        <Compile Include="Patches\EditorTerrainDetailsUIPatches.cs" />
         <Compile Include="Patches\FoliageEditorPatches.cs" />
         <Compile Include="Patches\FoliageResourceInfoAssetPatches.cs" />
         <Compile Include="Patches\LevelAnimalPatches.cs" />
