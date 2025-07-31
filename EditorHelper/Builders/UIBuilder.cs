@@ -246,6 +246,27 @@ public class UIBuilder
         ApplySpacing();
         return box;
     }
+    
+    public ISleekBox BuildAlphaBox(TextAnchor textAnchor = TextAnchor.MiddleCenter)
+    {
+        ISleekBox box = Glazier.Get().CreateBox();
+        box.PositionOffset_X = _positionOffsetX;
+        box.PositionOffset_Y = _positionOffsetY;
+        box.PositionScale_X = _positionScaleX;
+        box.PositionScale_Y = _positionScaleY;
+        box.SizeOffset_X = _sizeOffsetX;
+        box.SizeOffset_Y = _sizeOffsetY;
+        box.BackgroundColor = new SleekColor(ESleekTint.NONE, 0f);
+        if (_text.Length > 0)
+        {
+            box.Text = _text;
+            box.TextAlignment = textAnchor;
+            box.AllowRichText = true;
+        }
+        
+        ApplySpacing();
+        return box;
+    }
 
     public SleekList<T> BuildScrollBox<T>(int itemHeight, int itemPadding) where T : class
     {
@@ -280,6 +301,18 @@ public class UIBuilder
     public ISleekBox CreateSimpleBox(TextAnchor textAnchor = TextAnchor.MiddleCenter)
     {
         ISleekBox box = Glazier.Get().CreateBox();
+        if (_text.Length > 0)
+        {
+            box.TextAlignment = textAnchor;
+            box.Text = _text;
+        } 
+        return box;
+    }
+    
+    public ISleekBox CreateAlphaBox(TextAnchor textAnchor = TextAnchor.MiddleCenter)
+    {
+        ISleekBox box = Glazier.Get().CreateBox();
+        box.BackgroundColor = new SleekColor(ESleekTint.NONE, 0f);
         if (_text.Length > 0)
         {
             box.TextAlignment = textAnchor;

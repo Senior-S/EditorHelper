@@ -13,8 +13,11 @@ public class EditorTerrainDetailsUIPatches
     [UsedImplicitly]
     private static void Constructor(EditorTerrainDetailsUI __instance)
     {
-        EditorHelper.Instance.CollectionManager = new CollectionManager();
-        EditorHelper.Instance.CollectionManager.Initialize(ref __instance);
+        EditorHelper.Instance.FoliageCollectionManager = new FoliageCollectionManager();
+        EditorHelper.Instance.FoliageCollectionManager.Initialize(ref __instance);
+        
+        EditorHelper.Instance.FoliageAssetManager = new FoliageAssetManager();
+        EditorHelper.Instance.FoliageAssetManager.Initialize(ref __instance);
     }
     
     [HarmonyPatch(typeof(EditorTerrainDetailsUI), "UpdateOffsets")]
@@ -22,8 +25,10 @@ public class EditorTerrainDetailsUIPatches
     [UsedImplicitly]
     static void Update(EditorTerrainDetailsUI __instance)
     {
-        if (EditorHelper.Instance.CollectionManager == null) return;
+        if (EditorHelper.Instance.FoliageCollectionManager == null) return;
+        if (EditorHelper.Instance.FoliageAssetManager == null) return;
         
-        EditorHelper.Instance.CollectionManager.CustomUpdate(__instance);
+        EditorHelper.Instance.FoliageCollectionManager.CustomUpdate(__instance);
+        EditorHelper.Instance.FoliageAssetManager.CustomUpdate(__instance);
     }
 }

@@ -18,7 +18,8 @@ public class EditorHelper : IModuleNexus
     public NodesManager NodesManager;
     public EditorManager EditorManager;
     public FoliageManager FoliageManager;
-    public CollectionManager CollectionManager;
+    public FoliageCollectionManager FoliageCollectionManager;
+    public FoliageAssetManager FoliageAssetManager;
     public AnimalSpawnsManager AnimalSpawnsManager;
     public VehicleSpawnsManager VehicleSpawnsManager;
     public VisibilityManager VisibilityManager;
