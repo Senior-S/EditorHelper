@@ -2,7 +2,7 @@
 using SDG.Unturned;
 using UnityEngine;
 
-namespace EditorHelper.Editor;
+namespace EditorHelper.Editor.Managers;
 
 public class NodesManager
 {

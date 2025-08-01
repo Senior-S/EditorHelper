@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Security.AccessControl;
-using EditorHelper.Editor;
 using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.Unturned;
 using UnityEngine;
 
-namespace EditorHelper.Patches;
+namespace EditorHelper.Patches.Editor;
 
 [HarmonyPatch]
 public class EditorObjectsPatches

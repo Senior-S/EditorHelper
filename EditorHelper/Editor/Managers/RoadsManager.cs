@@ -8,7 +8,7 @@ using SDG.Framework.Utilities;
 using SDG.Unturned;
 using UnityEngine;
 
-namespace EditorHelper.Editor;
+namespace EditorHelper.Editor.Managers;
 
 public class RoadsManager
 {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using EditorHelper.Editor;
 using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.Framework.Water;
@@ -9,13 +8,13 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using GraphicsSettings = SDG.Unturned.GraphicsSettings;
 
-namespace EditorHelper.Patches;
+namespace EditorHelper.Patches.Level;
 
 // Credits to GamingToday093 for the idea.
 [HarmonyPatch]
 public class LevelPatches
 {
-    [HarmonyPatch(typeof(Level), "CaptureSatelliteImage")]
+    [HarmonyPatch(typeof(SDG.Unturned.Level), "CaptureSatelliteImage")]
     [HarmonyPrefix]
     [UsedImplicitly]
     private static bool CaptureSatelliteImage()
@@ -26,7 +25,7 @@ public class LevelPatches
         if (mainVolume != null)
         {
             mainVolume.GetSatelliteCaptureTransform(out Vector3 position, out Quaternion rotation);
-            Level.satelliteCaptureTransform.SetPositionAndRotation(position, rotation);
+            SDG.Unturned.Level.satelliteCaptureTransform.SetPositionAndRotation(position, rotation);
             Vector3 vector = mainVolume.CalculateLocalBounds().size;
             width = Mathf.CeilToInt(vector.x);
             height = Mathf.CeilToInt(vector.z);
@@ -44,13 +43,13 @@ public class LevelPatches
                 EditorHelper.Instance.EditorManager.ResetCustomResolution();
             }
             
-            Level.satelliteCaptureCamera.aspect = vector.x / vector.z;
-            Level.satelliteCaptureCamera.orthographicSize = vector.z * 0.5f;
+            SDG.Unturned.Level.satelliteCaptureCamera.aspect = vector.x / vector.z;
+            SDG.Unturned.Level.satelliteCaptureCamera.orthographicSize = vector.z * 0.5f;
         }
         else
         {
-            width = Level.size;
-            height = Level.size;
+            width = SDG.Unturned.Level.size;
+            height = SDG.Unturned.Level.size;
             if (EditorHelper.Instance.EditorManager != null && EditorHelper.Instance.EditorManager.ShouldModifyResolution)
             {
                 int? multiplier = EditorHelper.Instance.EditorManager.Multiplier;
@@ -65,16 +64,16 @@ public class LevelPatches
                 EditorHelper.Instance.EditorManager.ResetCustomResolution();
             }
             
-            Level.satelliteCaptureTransform.position = new Vector3(0f, 1028f, 0f);
-            Level.satelliteCaptureTransform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            Level.satelliteCaptureCamera.orthographicSize = Level.size / 2 - Level.border;
-            Level.satelliteCaptureCamera.aspect = 1f;
+            SDG.Unturned.Level.satelliteCaptureTransform.position = new Vector3(0f, 1028f, 0f);
+            SDG.Unturned.Level.satelliteCaptureTransform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            SDG.Unturned.Level.satelliteCaptureCamera.orthographicSize = SDG.Unturned.Level.size / 2 - SDG.Unturned.Level.border;
+            SDG.Unturned.Level.satelliteCaptureCamera.aspect = 1f;
         }
 
         RenderTexture temporary = RenderTexture.GetTemporary(width * 2, height * 2, 32);
         temporary.name = "Satellite";
         temporary.filterMode = FilterMode.Bilinear;
-        Level.satelliteCaptureCamera.targetTexture = temporary;
+        SDG.Unturned.Level.satelliteCaptureCamera.targetTexture = temporary;
         bool fog = RenderSettings.fog;
         AmbientMode ambientMode = RenderSettings.ambientMode;
         Color ambientSkyColor = RenderSettings.ambientSkyColor;
@@ -94,13 +93,13 @@ public class LevelPatches
         LevelLighting.setSeaFloat("_Shininess", 500f);
         LevelLighting.setSeaColor("_SpecularColor", Color.black);
         QualitySettings.lodBias = float.MaxValue;
-        Level.SetAllObjectsAndTreesActiveForSatelliteCapture();
+        SDG.Unturned.Level.SetAllObjectsAndTreesActiveForSatelliteCapture();
         //Level.onSatellitePreCapture?.Invoke();
-        InvokeStaticEvent(typeof(Level), "onSatellitePreCapture");
-        Level.satelliteCaptureCamera.Render();
+        InvokeStaticEvent(typeof(SDG.Unturned.Level), "onSatellitePreCapture");
+        SDG.Unturned.Level.satelliteCaptureCamera.Render();
         //Level.onSatellitePostCapture?.Invoke();
-        InvokeStaticEvent(typeof(Level), "onSatellitePostCapture");
-        Level.RestorePreCaptureState();
+        InvokeStaticEvent(typeof(SDG.Unturned.Level), "onSatellitePostCapture");
+        SDG.Unturned.Level.RestorePreCaptureState();
         GraphicsSettings.renderMode = renderMode;
         GraphicsSettings.apply("finished capturing satellite");
         RenderSettings.fog = fog;
@@ -135,18 +134,18 @@ public class LevelPatches
 
         texture2D.Apply();
         byte[] bytes = texture2D.EncodeToPNG();
-        ReadWrite.writeBytes(Level.info.path + "/Map.png", useCloud: false, usePath: false, bytes);
+        ReadWrite.writeBytes(SDG.Unturned.Level.info.path + "/Map.png", useCloud: false, usePath: false, bytes);
         UnityEngine.Object.DestroyImmediate(texture2D);
 
         return false;
     }
 
-    [HarmonyPatch(typeof(Level), "CaptureChartImage")]
+    [HarmonyPatch(typeof(SDG.Unturned.Level), "CaptureChartImage")]
     [HarmonyPrefix]
     [UsedImplicitly]
     private static bool CaptureChartImage()
     {
-        Bundle bundle = Bundles.getBundle(Level.info.path + "/Charts.unity3d", prependRoot: false);
+        Bundle bundle = Bundles.getBundle(SDG.Unturned.Level.info.path + "/Charts.unity3d", prependRoot: false);
 		if (bundle == null)
 		{
 			UnturnedLog.error("Unable to load chart colors");
@@ -170,7 +169,7 @@ public class LevelPatches
 		if (mainVolume != null)
 		{
 			mainVolume.GetSatelliteCaptureTransform(out var position, out var rotation);
-			Level.satelliteCaptureTransform.SetPositionAndRotation(position, rotation);
+			SDG.Unturned.Level.satelliteCaptureTransform.SetPositionAndRotation(position, rotation);
 			Bounds bounds = mainVolume.CalculateWorldBounds();
 			terrainMinHeight = bounds.min.y;
 			terrainMaxHeight = bounds.max.y;
@@ -197,8 +196,8 @@ public class LevelPatches
 		}
 		else
 		{
-			float xValue = Level.size;
-			float zValue = Level.size;
+			float xValue = SDG.Unturned.Level.size;
+			float zValue = SDG.Unturned.Level.size;
 			if (EditorHelper.Instance.EditorManager != null && EditorHelper.Instance.EditorManager.ShouldModifyResolution)
 			{
 				int? multiplier = EditorHelper.Instance.EditorManager.Multiplier;
@@ -215,17 +214,17 @@ public class LevelPatches
 			
 			imageWidth = Mathf.CeilToInt(xValue);
 			imageHeight = Mathf.CeilToInt(zValue);
-			captureWidth = Level.size - Level.border * 2f;
-			captureHeight = Level.size - Level.border * 2f;
-			Level.satelliteCaptureTransform.position = new Vector3(0f, 1028f, 0f);
-			Level.satelliteCaptureTransform.rotation = Quaternion.Euler(90f, 0f, 0f);
+			captureWidth = SDG.Unturned.Level.size - SDG.Unturned.Level.border * 2f;
+			captureHeight = SDG.Unturned.Level.size - SDG.Unturned.Level.border * 2f;
+			SDG.Unturned.Level.satelliteCaptureTransform.position = new Vector3(0f, 1028f, 0f);
+			SDG.Unturned.Level.satelliteCaptureTransform.rotation = Quaternion.Euler(90f, 0f, 0f);
 			terrainMinHeight = WaterVolumeManager.worldSeaLevel;
-			terrainMaxHeight = Level.TERRAIN;
+			terrainMaxHeight = SDG.Unturned.Level.TERRAIN;
 		}
 		Texture2D texture2D = new Texture2D(imageWidth, imageHeight);
 		texture2D.name = "Chart";
 		texture2D.hideFlags = HideFlags.HideAndDontSave;
-		Level.SetAllObjectsAndTreesActiveForSatelliteCapture();
+		SDG.Unturned.Level.SetAllObjectsAndTreesActiveForSatelliteCapture();
 		GameObject terrainGO = new GameObject();
 		terrainGO.layer = 20;
 		for (int i = 0; i < imageWidth; i++)
@@ -238,17 +237,17 @@ public class LevelPatches
 			}
 		}
 		texture2D.Apply();
-		Level.RestorePreCaptureState();
+		SDG.Unturned.Level.RestorePreCaptureState();
 		byte[] bytes = texture2D.EncodeToPNG();
-		ReadWrite.writeBytes(Level.info.path + "/Chart.png", useCloud: false, usePath: false, bytes);
+		ReadWrite.writeBytes(SDG.Unturned.Level.info.path + "/Chart.png", useCloud: false, usePath: false, bytes);
 		UnityEngine.Object.DestroyImmediate(texture2D);
 		Color GetColor(float x, float y)
 		{
 			float num = x / (float)imageWidth;
 			float num2 = y / (float)imageHeight;
 			Vector3 position2 = new Vector3((num - 0.5f) * captureWidth, (num2 - 0.5f) * captureHeight, 0f);
-			Vector3 vector2 = Level.satelliteCaptureTransform.TransformPoint(position2);
-			Level.FindChartHit(vector2, out var chart, out var hit);
+			Vector3 vector2 = SDG.Unturned.Level.satelliteCaptureTransform.TransformPoint(position2);
+			SDG.Unturned.Level.FindChartHit(vector2, out var chart, out var hit);
 			Transform transform = hit.transform;
 			Vector3 point = hit.point;
 			if (transform == null)

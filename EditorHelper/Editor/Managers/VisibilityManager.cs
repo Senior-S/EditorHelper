@@ -1,13 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using EditorHelper.Builders;
 using EditorHelper.Models;
-using SDG.Framework.Utilities;
 using SDG.Unturned;
-using UnityEngine;
 
-namespace EditorHelper.Editor;
+namespace EditorHelper.Editor.Managers;
 
 public class VisibilityManager
 {

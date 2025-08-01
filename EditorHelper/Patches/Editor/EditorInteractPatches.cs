@@ -4,7 +4,7 @@ using SDG.Framework.Devkit.Transactions;
 using SDG.Unturned;
 using UnityEngine;
 
-namespace EditorHelper.Patches;
+namespace EditorHelper.Patches.Editor;
 
 [HarmonyPatch]
 public class EditorInteractPatches
@@ -34,7 +34,7 @@ public class EditorInteractPatches
         Physics.Raycast(EditorInteract.ray, out EditorInteract._logicHit, 2048f, RayMasks.EDITOR_LOGIC);
         if (InputEx.GetKeyDown(KeyCode.S) && InputEx.GetKey(KeyCode.LeftControl))
         {
-            Level.save();
+            SDG.Unturned.Level.save();
         }
 
         if (InputEx.GetKeyDown(KeyCode.F1))

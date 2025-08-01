@@ -1,13 +1,10 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using EditorHelper.Models;
 using HarmonyLib;
 using JetBrains.Annotations;
-using Newtonsoft.Json;
 using SDG.Unturned;
 
-namespace EditorHelper.Patches;
+namespace EditorHelper.Patches.Level;
 
 [HarmonyPatch]
 public class LevelObjectsPatches

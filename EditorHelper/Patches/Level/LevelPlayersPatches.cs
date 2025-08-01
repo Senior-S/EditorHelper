@@ -2,7 +2,7 @@
 using JetBrains.Annotations;
 using SDG.Unturned;
 
-namespace EditorHelper.Patches;
+namespace EditorHelper.Patches.Level;
 
 [HarmonyPatch]
 public class LevelPlayersPatches

@@ -1,10 +1,9 @@
-﻿using EditorHelper.Editor;
+﻿using EditorHelper.Editor.Managers;
 using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.Unturned;
-using UnityEngine;
 
-namespace EditorHelper.Patches;
+namespace EditorHelper.Patches.Editor.UI;
 
 [HarmonyPatch]
 public class EditorRoadsUIPatches

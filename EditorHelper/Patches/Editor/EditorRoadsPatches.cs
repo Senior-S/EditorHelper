@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 using SDG.Unturned;
 using UnityEngine;
 
-namespace EditorHelper.Patches;
+namespace EditorHelper.Patches.Editor;
 
 [HarmonyPatch]
 public class EditorRoadsPatches

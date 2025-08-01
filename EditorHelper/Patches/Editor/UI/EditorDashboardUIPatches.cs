@@ -1,9 +1,9 @@
-﻿using EditorHelper.Editor;
+﻿using EditorHelper.Editor.Managers;
 using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.Unturned;
 
-namespace EditorHelper.Patches;
+namespace EditorHelper.Patches.Editor.UI;
 
 [HarmonyPatch]
 public class EditorDashboardUIPatches

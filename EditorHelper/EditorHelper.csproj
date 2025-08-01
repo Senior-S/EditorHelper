@@ -344,7 +344,6 @@
         <Compile Include="Patches\Editor\UI\EditorSpawnsVehiclesUIPatches.cs" />
         <Compile Include="Patches\Editor\UI\EditorTerrainDetailsUIPatches.cs" />
         <Compile Include="Patches\Foliage\FoliageEditorPatches.cs" />
-        <Compile Include="Patches\Foliage\FoliageResourceInfoAssetPatches.cs" />
         <Compile Include="Patches\Level\LevelAnimalPatches.cs" />
         <Compile Include="Patches\Level\LevelObjectsPatches.cs" />
         <Compile Include="Patches\Level\LevelPatches.cs" />

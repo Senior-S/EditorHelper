@@ -1,8 +1,8 @@
-﻿using EditorHelper.Editor;
+﻿using EditorHelper.Editor.Managers;
 using HarmonyLib;
 using SDG.Unturned;
 
-namespace EditorHelper.Patches;
+namespace EditorHelper.Patches.Editor.UI;
 
 [HarmonyPatch]
 public class EditorLevelVisibilityUIPatches
@@ -12,7 +12,7 @@ public class EditorLevelVisibilityUIPatches
     static void openPostfix()
     {
         if (EditorHelper.Instance.VisibilityManager == null || 
-            EditorHelper.Instance.VisibilityManager.LastMapPath != Level.info.path)
+            EditorHelper.Instance.VisibilityManager.LastMapPath != SDG.Unturned.Level.info.path)
         {
             EditorHelper.Instance.VisibilityManager = new VisibilityManager();
         }

@@ -3,17 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.Remoting.Messaging;
 using EditorHelper.Builders;
 using EditorHelper.Models;
 using HighlightingSystem;
 using Newtonsoft.Json;
-using SDG.Provider;
 using SDG.Unturned;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace EditorHelper.Editor;
+namespace EditorHelper.Editor.Managers;
 
 // TODO: Add "tabs" or so for buttons to avoid flooding the user screen
 public class ObjectsManager

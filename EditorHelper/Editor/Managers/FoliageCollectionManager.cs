@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using EditorHelper.Builders;
 using EditorHelper.Writers;
 using SDG.Framework.Foliage;
 using SDG.Unturned;
 
-namespace EditorHelper.Editor
+namespace EditorHelper.Editor.Managers
 {
     public class FoliageCollectionManager
     {

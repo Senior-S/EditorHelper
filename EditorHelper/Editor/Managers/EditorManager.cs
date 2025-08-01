@@ -5,7 +5,7 @@ using SDG.Unturned;
 using UnityEngine;
 using Action = System.Action;
 
-namespace EditorHelper.Editor;
+namespace EditorHelper.Editor.Managers;
 
 public class EditorManager
 {

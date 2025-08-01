@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using EditorHelper.Commands;
 using EditorHelper.Editor;
+using EditorHelper.Editor.Managers;
 using EditorHelper.Extras;
 using EditorHelper.Schematics;
 using HarmonyLib;

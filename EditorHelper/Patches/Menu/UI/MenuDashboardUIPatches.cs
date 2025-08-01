@@ -9,9 +9,8 @@ using SDG.NetTransport;
 using SDG.Unturned;
 using Steamworks;
 using UnityEngine;
-using UnityEngine.PlayerLoop;
 
-namespace EditorHelper.Patches;
+namespace EditorHelper.Patches.Menu.UI;
 
 [HarmonyPatch]
 public class MenuDashboardUIPatches

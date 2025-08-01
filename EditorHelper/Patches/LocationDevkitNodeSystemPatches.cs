@@ -13,7 +13,7 @@ public class LocationDevkitNodeSystemPatches
     [UsedImplicitly]
     static bool OnUpdateGizmos(LocationDevkitNodeSystem __instance)
     {
-        if (!SpawnpointSystemV2.Get().IsVisible || !Level.isEditor || EditorHelper.Instance.NodesManager == null)
+        if (!SpawnpointSystemV2.Get().IsVisible || !SDG.Unturned.Level.isEditor || EditorHelper.Instance.NodesManager == null)
         {
             return true;
         }
