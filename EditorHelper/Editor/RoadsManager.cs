@@ -21,28 +21,33 @@ public class RoadsManager
     private Vector2 _dragEndViewportPoint;
     private Vector2 _dragEndScreenPoint;
     private bool _hasDragStart;
+
     private bool _isDragging;
+
     // TODO: Save this stuff to a file, same as EditorObjects do
     private float _snapTransform;
+
     // Not used but kept for consistency with the EditorObjects
     private readonly float _snapRotation;
+
     // Used for Ctrl+Z
     private int _step;
     private IReun[] _reun = [];
+
     private int _frame;
     //private Vector3 _fromPosition = Vector3.zero;
     //private Vector3 _toPosition = Vector3.zero;
 
     private RoadSelection _roadSelection;
     private EditorDrag _editorDrag;
-    
+
     private Vector3 _copyPosition = Vector3.zero;
 
     private readonly SleekButtonState _coordinateButton;
     private readonly ISleekToggle _depthToggleButton;
     private readonly ISleekFloat32Field _snapTransformField;
     private readonly ISleekToggle _handlePriorizeToggleButton;
-    
+
     // Road Selection
     // State for drag selection rectangle
     private Vector2 _startScreenPos;
@@ -66,7 +71,7 @@ public class RoadsManager
     public RoadsManager()
     {
         _sceneCamera = Camera.main;
-        
+
         _handles = new TransformHandles();
         _handles.OnPreTransform += OnHandlePreTransform;
         _handles.OnTranslatedAndRotated += OnHandleTranslatedAndRotated;
@@ -96,7 +101,7 @@ public class RoadsManager
         builder.SetOneTimeSpacing(30f);
         builder.SetSizeOffsetX(200f)
             .SetSizeOffsetY(30f);
-        
+
         Local local = Localization.read("/Editor/EditorLevelObjects.dat"); // Just to keep consistency in case client have a translations mod.
         Bundle bundle = Bundles.getBundle("/Bundles/Textures/Edit/Icons/EditorLevelObjects/EditorLevelObjects.unity3d");
         builder.SetText(local.format("CoordinateButtonTooltip"));
@@ -114,7 +119,7 @@ public class RoadsManager
             .SetSizeOffsetY(40f);
         _handlePriorizeToggleButton = builder.BuildToggle("When clicking should the click prioritize the arrows?");
         _handlePriorizeToggleButton.Value = true;
-        
+
         bundle.unload();
         if (Level.isEditor)
         {
@@ -123,7 +128,7 @@ public class RoadsManager
             _frame = 0;
         }
     }
-    
+
     public void Initialize()
     {
         EditorUI.window.AddChild(_depthToggleButton);
@@ -131,10 +136,10 @@ public class RoadsManager
         _snapTransformField.Value = _snapTransform;
         EditorUI.window.AddChild(_snapTransformField);
         EditorUI.window.AddChild(_handlePriorizeToggleButton);
-        
+
         Camera.onPostRender += this.OnPostRender;
     }
-    
+
     private void OnSnapTransformFieldValueChanged(ISleekFloat32Field field, float value)
     {
         _snapTransform = value;
@@ -154,10 +159,17 @@ public class RoadsManager
             return;
         }
 
-        _roadSelection = new RoadSelection(EditorRoads.selection);
+        RoadJoint joint = EditorRoads.joint;
+        Vector3[] tangents = [Vector3.zero, Vector3.zero];
+        if (joint != null)
+        {
+            tangents = [joint.getTangent(0), joint.getTangent(1)];
+        }
+        
+        _roadSelection = new RoadSelection(EditorRoads.selection, tangents);
         CalculateHandleOffsets();
     }
-    
+
     private void Undo()
     {
         while (_frame <= _reun.Length - 1)
@@ -166,6 +178,7 @@ public class RoadsManager
             {
                 _reun[_frame].undo();
             }
+
             if (_frame < _reun.Length - 1 && _reun[_frame + 1] != null)
             {
                 _frame++;
@@ -174,10 +187,13 @@ public class RoadsManager
                     _step--;
                     break;
                 }
+
                 continue;
             }
+
             break;
         }
+
         CalculateHandleOffsets();
     }
 
@@ -189,6 +205,7 @@ public class RoadsManager
             {
                 _reun[_frame].redo();
             }
+
             if (_frame > 0 && _reun[_frame - 1] != null)
             {
                 _frame--;
@@ -197,13 +214,16 @@ public class RoadsManager
                     _step++;
                     break;
                 }
+
                 continue;
             }
+
             break;
         }
+
         CalculateHandleOffsets();
     }
-    
+
     private void Register(IReun newReun)
     {
         if (_frame > 0)
@@ -211,10 +231,12 @@ public class RoadsManager
             _reun = new IReun[_reun.Length];
             _frame = 0;
         }
+
         for (int num = _reun.Length - 1; num > 0; num--)
         {
             _reun[num] = _reun[num - 1];
         }
+
         _reun[0] = newReun;
     }
 
@@ -226,31 +248,8 @@ public class RoadsManager
         _coordinateButton.IsVisible = buttonVisible;
         _snapTransformField.IsVisible = buttonVisible;
         _handlePriorizeToggleButton.IsVisible = buttonVisible;
-        
-        // Road Selection
-        if (!EditorRoads.isPaving)
-        {
-            if (SelectedJoints.Count > 0)
-                clear();
-            return;
-        }
-        
-        foreach (var road in LevelRoads.roads)
-        {
-            for (int i = 0; i < road.paths.Count; i++)
-            {
-                var path = road.paths[i];
-                var t0 = path.tangents[0];
-                var t1 = path.tangents[1];
 
-                RuntimeGizmos.Get().Cube(path.vertex.position, 1.3f, Color.yellow);
-                RuntimeGizmos.Get().Cube(t0.position, 1.3f, Color.white);
-                RuntimeGizmos.Get().Cube(t1.position, 1.3f, Color.blue);
-
-                RuntimeGizmos.Get().Line(path.vertex.position + Vector3.up * 0.1f, t0.position + Vector3.up * 0.1f, Color.red);
-                RuntimeGizmos.Get().Line(path.vertex.position + Vector3.up * 0.1f, t1.position + Vector3.up * 0.1f, Color.red);
-            }
-        }
+        DrawNodeBoxes();
         
         // While dragging, update the selection rectangle and highlight nodes under it
         if (_isSelecting)
@@ -258,71 +257,6 @@ public class RoadsManager
             _selectionRect = GetScreenRect(_startScreenPos, Input.mousePosition);
             SelectObjectsInRect();
         }
-        
-        // Ensure all selected paths are highlighted
-            foreach (var path in SelectedPaths)
-                path.highlightVertex();
-
-            // Start a new selection rectangle with middle mouse button
-            if (Input.GetMouseButtonDown(2) && !_isSelecting)
-            {
-                _startScreenPos = Input.mousePosition;
-                _isAddingToSelection = Input.GetKey(KeyCode.LeftShift);
-                _isSelecting = true;
-            }
-
-            // End selection rectangle on mouse release
-            if (Input.GetMouseButtonUp(2))
-            {
-                _isSelecting = false;
-                _isAddingToSelection = false;
-            }
-
-            // Handle deletion of selected joints when pressing Delete
-            if (SelectedJoints.Count > 0 && Input.GetKeyDown(KeyCode.Delete))
-            {
-                // Group joints by road so we can delete them in batches
-                var jointsByRoad = new Dictionary<Road, List<RoadJointCustom>>();
-                foreach (var joint in SelectedJoints)
-                {
-                    if (!jointsByRoad.ContainsKey(joint.road))
-                        jointsByRoad[joint.road] = new List<RoadJointCustom>();
-                    jointsByRoad[joint.road].Add(joint);
-                }
-
-                // Remove vertices in reverse index order to avoid shifting indices, because when removing indexes, the rest shifts down.
-                foreach (var kvp in jointsByRoad)
-                {
-                    var joints = kvp.Value;
-                    joints.Sort((a, b) => b.index.CompareTo(a.index));
-
-                    foreach (var joint in joints)
-                        if (joint.index >= 0 && joint.index < joint.road.joints.Count)
-                            joint.road.removeVertex(joint.index);
-                }
-
-                clear();
-            }
-
-            // Handle dragging/moving multiple selected joints
-            if (_primaryJoint.HasValue)
-            {
-                var joint = _primaryJoint.Value;
-                Vector3 current = joint.road.joints[joint.index].vertex;
-
-                if (current != _primaryLastPosition)
-                {
-                    foreach (var kvp in _otherOffsets)
-                    {
-                        var targetJoint = kvp.Key;
-                        Vector3 offset = kvp.Value;
-                        Vector3 newPosition = current + offset;
-                        targetJoint.road.moveVertex(targetJoint.index, newPosition);
-                    }
-
-                    _primaryLastPosition = current;
-                }
-            }
         
         if (!EditorRoads.isPaving || EditorInteract.isFlying || !Glazier.Get().ShouldGameProcessInput)
         {
@@ -337,8 +271,56 @@ public class RoadsManager
                 StopDragging();
                 ClearSelection();
             }
+            
+            if (SelectedJoints.Count > 0)
+                clear();
 
             return;
+        }
+
+        // Ensure all selected paths are highlighted
+        foreach (RoadPath? path in SelectedPaths)
+            path.highlightVertex();
+
+        // Start a new selection rectangle with middle mouse button
+        if (Input.GetMouseButtonDown(2) && !_isSelecting)
+        {
+            _startScreenPos = Input.mousePosition;
+            _isAddingToSelection = Input.GetKey(KeyCode.LeftShift);
+            _isSelecting = true;
+        }
+
+        // End selection rectangle on mouse release
+        if (Input.GetMouseButtonUp(2))
+        {
+            _isSelecting = false;
+            _isAddingToSelection = false;
+        }
+
+        // Handle deletion of selected joints when pressing Delete
+        if (SelectedJoints.Count > 0 && Input.GetKeyDown(KeyCode.Delete))
+        {
+            // Group joints by road so we can delete them in batches
+            Dictionary<Road, List<RoadJointCustom>> jointsByRoad = new();
+            foreach (RoadJointCustom joint in SelectedJoints)
+            {
+                if (!jointsByRoad.ContainsKey(joint.Road))
+                    jointsByRoad[joint.Road] = [];
+                jointsByRoad[joint.Road].Add(joint);
+            }
+
+            // Remove vertices in reverse index order to avoid shifting indices, because when removing indexes, the rest shifts down.
+            foreach (KeyValuePair<Road, List<RoadJointCustom>> kvp in jointsByRoad)
+            {
+                List<RoadJointCustom>? joints = kvp.Value;
+                joints.Sort((a, b) => b.Index.CompareTo(a.Index));
+
+                foreach (RoadJointCustom joint in joints)
+                    if (joint.Index >= 0 && joint.Index < joint.Road.joints.Count)
+                        joint.Road.removeVertex(joint.Index);
+            }
+
+            clear();
         }
 
         _handles.snapPositionInterval = _snapTransform;
@@ -347,40 +329,45 @@ public class RoadsManager
         {
             _handles.SetPreferredMode(TransformHandles.EMode.Position);
         }
+        if (_dragMode == EDragMode.ROTATE)
+        {
+            _handles.SetPreferredMode(TransformHandles.EMode.Rotation);
+        }
 
         bool selectingHandle = EditorRoads.selection && _handles.Raycast(EditorInteract.ray);
-        if (EditorRoads.selection && EditorRoads.road != null)
+        if (_roadSelection != null && EditorRoads.road != null)
         {
             _handles.Render(EditorInteract.ray);
-
-            float radius = 0f;
-            if (EditorRoads.road._roadAssetRef.IsAssigned)
-            {
-                radius = EditorRoads.road._roadAsset.Width / 2;
-            }
-            else if (EditorRoads.road.material < LevelRoads.materials.Length)
-            {
-                radius = LevelRoads.materials[EditorRoads.road.material].width;
-            }
+            Road road = EditorRoads.road;
             
+            float radius = 0f;
+            if (road._roadAssetRef.IsAssigned)
+            {
+                radius = road._roadAsset.Width / 2;
+            }
+            else if (road.material < LevelRoads.materials.Length)
+            {
+                radius = LevelRoads.materials[road.material].width;
+            }
+
             if (_depthToggleButton.Value)
             {
-                if (EditorRoads.road._roadAssetRef.IsAssigned)
+                if (road._roadAssetRef.IsAssigned)
                 {
-                    radius = EditorRoads.road._roadAsset.Depth / 2;
+                    radius += road._roadAsset.Depth / 2;
                 }
-                else if (EditorRoads.road.material < LevelRoads.materials.Length)
+                else if (road.material < LevelRoads.materials.Length)
                 {
-                    radius = LevelRoads.materials[EditorRoads.road.material].depth;
+                    radius += LevelRoads.materials[road.material].depth;
                 }
             }
-            
-            Quaternion rotation = EditorRoads.selection.rotation;
+
+            Quaternion rotation = _roadSelection.transform.rotation;
             DrawRotationCircle(rotation * Vector3.up, rotation * Vector3.forward, radius, new Color(1f, 0, 0, 0.4f));
             DrawRotationCircle(rotation * Vector3.right, rotation * Vector3.forward, radius, new Color(0, 1f, 0, 0.4f));
             DrawRotationCircle(rotation * Vector3.right, rotation * Vector3.up, radius, new Color(0, 0, 1f, 0.4f));
         }
-
+        
         if (_isUsingHandle)
         {
             if (!InputEx.GetKey(ControlsSettings.primary))
@@ -388,7 +375,7 @@ public class RoadsManager
                 ReleaseHandle();
                 return;
             }
-            
+
             _handles.wantsToSnap = InputEx.GetKey(ControlsSettings.snap);
             _handles.MouseMove(EditorInteract.ray);
             return;
@@ -398,14 +385,22 @@ public class RoadsManager
         {
             _dragMode = EDragMode.TRANSFORM;
         }
+
+        if (InputEx.GetKeyDown(ControlsSettings.tool_1) && _dragMode != EDragMode.ROTATE)
+        {
+            _dragMode = EDragMode.ROTATE;
+        }
+
         if (InputEx.GetKeyDown(KeyCode.Z) && InputEx.GetKey(KeyCode.LeftControl))
         {
             Undo();
         }
+
         if (InputEx.GetKeyDown(KeyCode.X) && InputEx.GetKey(KeyCode.LeftControl))
         {
             Redo();
         }
+
         if (InputEx.GetKeyDown(KeyCode.R) && InputEx.GetKeyDown(KeyCode.LeftControl))
         {
             LevelRoads.bakeRoads();
@@ -428,7 +423,6 @@ public class RoadsManager
                         _hasDragStart = true;
                         _dragStartViewportPoint = InputEx.NormalizedMousePosition;
                         _dragStartScreenPoint = Input.mousePosition;
-                        
                     }
 
                     if (!InputEx.GetKey(ControlsSettings.modify))
@@ -455,18 +449,19 @@ public class RoadsManager
                     {
                         (max.y, min.y) = (min.y, max.y);
                     }
-                    
+
                     if (!_isDragging)
                     {
                         _isDragging = true;
                         _editorDrag = null;
-                        
+
                         Vector3 newScreen = MainCamera.instance.WorldToViewportPoint(EditorRoads.selection.position);
                         if (!(newScreen.z < 0f))
                         {
                             _editorDrag = new EditorDrag(EditorRoads.selection, newScreen);
                         }
                     }
+
                     if (!InputEx.GetKey(ControlsSettings.modify))
                     {
                         Vector3 vector = MainCamera.instance.WorldToViewportPoint(EditorRoads.selection.transform.position);
@@ -489,12 +484,14 @@ public class RoadsManager
                     return;
                 }
             }
+
             if (EditorRoads.selection != null)
             {
                 if (InputEx.GetKeyDown(KeyCode.B) && InputEx.GetKey(KeyCode.LeftControl))
                 {
                     _copyPosition = _handles.GetPivotPosition();
                 }
+
                 if (InputEx.GetKeyDown(KeyCode.N) && _copyPosition != Vector3.zero && InputEx.GetKey(KeyCode.LeftControl))
                 {
                     if (EditorRoads.road != null)
@@ -508,10 +505,10 @@ public class RoadsManager
                             EditorRoads.road.moveVertex(EditorRoads.vertexIndex, _copyPosition);
                         }
                     }
-                    
+
                     CalculateHandleOffsets();
                 }
-                
+
                 if (InputEx.GetKeyDown(ControlsSettings.tool_2) && EditorInteract.worldHit.transform != null)
                 {
                     Select();
@@ -520,9 +517,11 @@ public class RoadsManager
                     {
                         point += EditorInteract.worldHit.normal * _snapTransform;
                     }
+
                     Quaternion pivotRotation = _handles.GetPivotRotation();
                     _handles.ExternallyTransformPivot(point, pivotRotation, modifyRotation: false);
                 }
+
                 if (InputEx.GetKeyDown(ControlsSettings.focus))
                 {
                     MainCamera.instance.transform.parent.position = _handles.GetPivotPosition() - 15f * MainCamera.instance.transform.forward;
@@ -531,6 +530,7 @@ public class RoadsManager
         }
 
         #region Original Update Code
+
         if (EditorInteract.worldHit.transform != null)
         {
             EditorRoads.highlighter.gameObject.SetActive(!_isDragging && !_isUsingHandle);
@@ -587,7 +587,7 @@ public class RoadsManager
             {
                 return;
             }
-            
+
             Vector3 point2 = EditorInteract.worldHit.point;
             if (EditorRoads.road != null)
             {
@@ -613,7 +613,7 @@ public class RoadsManager
                 EditorRoads.select(LevelRoads.addRoad(point2));
             }
         }
-        
+
         if (InputEx.GetKeyUp(ControlsSettings.primary))
         {
             _hasDragStart = false;
@@ -625,8 +625,36 @@ public class RoadsManager
 
         #endregion
     }
-    
+
+    private void DrawNodeBoxes()
+    {
+        foreach (Road? road in LevelRoads.roads)
+        {
+            for (int i = 0; i < road.paths.Count; i++)
+            {
+                RoadPath? path = road.paths[i];
+                Transform? t0 = path.tangents[0];
+                Transform? t1 = path.tangents[1];
+
+                RuntimeGizmos.Get().Cube(path.vertex.position, 1.3f, Color.white);
+                if (road.isLoop || i > 0)
+                {
+                    RuntimeGizmos.Get().Cube(t0.position, 1.3f, Color.yellow);
+                }
+
+                if (road.isLoop || i < road.paths.Count - 1)
+                {
+                    RuntimeGizmos.Get().Cube(t1.position, 1.3f, Color.blue);
+                }
+
+                RuntimeGizmos.Get().Line(path.vertex.position + Vector3.up * 0.1f, t0.position + Vector3.up * 0.1f, Color.red);
+                RuntimeGizmos.Get().Line(path.vertex.position + Vector3.up * 0.1f, t1.position + Vector3.up * 0.1f, Color.red);
+            }
+        }
+    }
+
     // This is kind of taken from the vanilla SelectionTool
+    // Drag box display
     private void OnPostRender(Camera cam)
     {
         if (!_isSelecting || _sceneCamera == null)
@@ -652,10 +680,14 @@ public class RoadsManager
         Vector3 v2 = _sceneCamera.ViewportToWorldPoint(new Vector3(max.x, max.y, max.z));
         Vector3 v3 = _sceneCamera.ViewportToWorldPoint(new Vector3(min.x, max.y, max.z));
 
-        GL.Vertex(v0); GL.Vertex(v1);
-        GL.Vertex(v1); GL.Vertex(v2);
-        GL.Vertex(v2); GL.Vertex(v3);
-        GL.Vertex(v3); GL.Vertex(v0);
+        GL.Vertex(v0);
+        GL.Vertex(v1);
+        GL.Vertex(v1);
+        GL.Vertex(v2);
+        GL.Vertex(v2);
+        GL.Vertex(v3);
+        GL.Vertex(v3);
+        GL.Vertex(v0);
 
         GL.End();
     }
@@ -673,14 +705,14 @@ public class RoadsManager
         Transform? currentSelection = EditorRoads.selection;
         RoadJointCustom? selectedJoint = null;
 
-        var newJoints = new List<RoadJointCustom>();
-        var newPaths = new List<RoadPath>();
+        List<RoadJointCustom> newJoints = new List<RoadJointCustom>();
+        List<RoadPath> newPaths = new List<RoadPath>();
 
-        foreach (var road in LevelRoads.roads)
+        foreach (Road? road in LevelRoads.roads)
         {
             for (int index = 0; index < road.joints.Count; index++)
             {
-                var joint = road.joints[index];
+                RoadJoint? joint = road.joints[index];
                 Vector3 screenPoint = _sceneCamera!.WorldToScreenPoint(joint.vertex);
 
                 if (screenPoint.z <= 0f)
@@ -690,15 +722,16 @@ public class RoadsManager
 
                 if (_selectionRect.Contains(screen2D))
                 {
-                    var roadJoint = new RoadJointCustom()
+                    RoadJointCustom roadJoint = new()
                     {
-                        road = road,
-                        index = index,
-                        vertex = joint.vertex
+                        Road = road,
+                        Index = index,
+                        Vertex = joint.vertex,
+                        TangentPositions = [joint.getTangent(0), joint.getTangent(1)]
                     };
 
                     // Skip if already selected
-                    if (SelectedJoints.Exists(j => j.road == roadJoint.road && j.index == roadJoint.index))
+                    if (SelectedJoints.Exists(j => j.Road == roadJoint.Road && j.Index == roadJoint.Index))
                         continue;
 
                     newJoints.Add(roadJoint);
@@ -719,32 +752,32 @@ public class RoadsManager
             // Determine which joint is primary for movement
             if (_primaryJoint.HasValue && _isAddingToSelection)
                 selectedJoint = _primaryJoint;
-            
+
             else if (selectedJoint.HasValue)
                 _primaryJoint = selectedJoint.Value;
-            
+
             else
             {
                 _primaryJoint = SelectedJoints[0];
-                var vertex = _primaryJoint.Value.road.paths[_primaryJoint.Value.index].vertex;
+                Transform? vertex = _primaryJoint.Value.Road.paths[_primaryJoint.Value.Index].vertex;
                 EditorRoads.deselect();
                 EditorRoads.select(vertex);
             }
 
-            _primaryLastPosition = _primaryJoint.Value.vertex;
+            _primaryLastPosition = _primaryJoint.Value.Vertex;
 
             // Compute offsets for moving other joints relative to the primary
             _otherOffsets.Clear();
-            foreach (var joint in SelectedJoints)
-                if (joint.road != _primaryJoint.Value.road || joint.index != _primaryJoint.Value.index)
-                    _otherOffsets[joint] = joint.vertex - _primaryLastPosition;
+            foreach (RoadJointCustom joint in SelectedJoints)
+                if (joint.Road != _primaryJoint.Value.Road || joint.Index != _primaryJoint.Value.Index)
+                    _otherOffsets[joint] = joint.Vertex - _primaryLastPosition;
         }
         else
             // If nothing is selected now, clear any active selection in EditorRoads
-            if (_primaryJoint.HasValue)
-                EditorRoads.deselect();
+        if (_primaryJoint.HasValue)
+            EditorRoads.deselect();
     }
-    
+
     /// <summary>
     /// Creates a Rect from two screen points, adjusting for Unity's flipped Y coordinates in GUI.
     /// </summary>
@@ -760,12 +793,12 @@ public class RoadsManager
             Mathf.Abs(start.y - end.y)
         );
     }
-        
+
     private void clear()
     {
-        foreach (var road in LevelRoads.roads)
-        foreach (var path in road.paths)
-            path.unhighlightVertex(); 
+        foreach (Road? road in LevelRoads.roads)
+        foreach (RoadPath? path in road.paths)
+            path.unhighlightVertex();
 
         SelectedJoints.Clear();
         SelectedPaths.Clear();
@@ -783,15 +816,14 @@ public class RoadsManager
 
     private void DrawRotationCircle(Vector3 axis0, Vector3 axis1, float radius, Color color)
     {
-        RuntimeGizmos.Get().Circle(EditorRoads.selection.position, axis0, axis1, radius, color, 0f, 12, EGizmoLayer.Foreground);
+        RuntimeGizmos.Get().Circle(_roadSelection.transform.position, axis0, axis1, radius, color, 0f, 12, EGizmoLayer.Foreground);
     }
-    
+
     private void OnHandlePreTransform(Matrix4x4 worldToPivot)
     {
-        _roadSelection ??= new RoadSelection(EditorRoads.selection);
+        if (_roadSelection == null) return;
         
         _roadSelection.fromPosition = _roadSelection.transform.position;
-        _roadSelection.fromRotation = _roadSelection.transform.rotation;
         _roadSelection.relativeToPivot = worldToPivot * _roadSelection.transform.localToWorldMatrix;
     }
 
@@ -803,7 +835,7 @@ public class RoadsManager
         {
             point = pivotPosition + worldRotationDelta * vector + worldPositionDelta;
         }
-        
+
         if (EditorRoads.road != null)
         {
             if (EditorRoads.tangentIndex > -1)
@@ -818,7 +850,67 @@ public class RoadsManager
 
         if (modifyRotation)
         {
-            _roadSelection.transform.rotation = worldRotationDelta * _roadSelection.fromRotation;
+            if (_primaryJoint.HasValue)
+            {
+                foreach (KeyValuePair<RoadJointCustom, Vector3> kvp in _otherOffsets)
+                {
+                    RoadJointCustom targetJoint = kvp.Key;
+                    Vector3 originalOffset = kvp.Value;
+
+                    Vector3 originalPosition = _roadSelection.fromPosition + originalOffset;
+                    Vector3 pivotToOriginal = originalPosition - pivotPosition;
+                    Vector3 rotatedOffset = worldRotationDelta * pivotToOriginal;
+                    Vector3 newPosition = pivotPosition + rotatedOffset + worldPositionDelta;
+
+                    targetJoint.Road.moveVertex(targetJoint.Index, newPosition);
+                    
+                    if (targetJoint.TangentPositions[0] != Vector3.zero)
+                    {
+                        Vector3 rotatedPosition = worldRotationDelta * targetJoint.TangentPositions[0];
+                        targetJoint.Road.moveTangent(targetJoint.Index, 0, rotatedPosition);
+                    }
+
+                    if (targetJoint.TangentPositions[1] != Vector3.zero)
+                    {
+                        Vector3 rotatedPosition = worldRotationDelta * targetJoint.TangentPositions[1];
+                        targetJoint.Road.moveTangent(targetJoint.Index, 1, rotatedPosition);
+                    }
+                }
+            }
+
+            RoadJoint? primaryJoint = EditorRoads.joint;
+            if (EditorRoads.road != null && primaryJoint != null)
+            {
+                if (primaryJoint.getTangent(0) != Vector3.zero)
+                {
+                    Vector3 rotatedPosition = worldRotationDelta * _roadSelection.tangents[0];
+                    EditorRoads.road.moveTangent(EditorRoads.vertexIndex, 0, rotatedPosition);
+                }
+
+                if (primaryJoint.getTangent(1) != Vector3.zero)
+                {
+                    Vector3 rotatedPosition = worldRotationDelta * _roadSelection.tangents[1];
+                    EditorRoads.road.moveTangent(EditorRoads.vertexIndex, 1, rotatedPosition);
+                }
+            }
+        }
+        else if (_primaryJoint.HasValue)
+        {
+            RoadJointCustom joint = _primaryJoint.Value;
+            Vector3 current = joint.Road.joints[joint.Index].vertex;
+
+            if (current != _primaryLastPosition)
+            {
+                foreach (KeyValuePair<RoadJointCustom, Vector3> kvp in _otherOffsets)
+                {
+                    RoadJointCustom targetJoint = kvp.Key;
+                    Vector3 offset = kvp.Value;
+                    Vector3 newPosition = current + offset;
+                    targetJoint.Road.moveVertex(targetJoint.Index, newPosition);
+                }
+
+                _primaryLastPosition = current;
+            }
         }
 
         CalculateHandleOffsets();
@@ -827,7 +919,7 @@ public class RoadsManager
     private void OnHandleTransformed(Matrix4x4 pivotToWorld)
     {
         Matrix4x4 matrix = pivotToWorld * _roadSelection.relativeToPivot;
-        
+
         Vector3 point = matrix.GetPosition();
         float oldY = _roadSelection.transform.position.y;
         if (EditorRoads.road != null)
@@ -840,6 +932,28 @@ public class RoadsManager
             {
                 EditorRoads.road.moveVertex(EditorRoads.vertexIndex, point);
             }
+            
+            Dictionary<RoadJointCustom, Vector3> updatedPositions = new();
+            foreach (KeyValuePair<RoadJointCustom, Vector3> kvp in _otherOffsets)
+            {
+                RoadJointCustom targetJoint = kvp.Key;
+                RoadJoint? joint = targetJoint.Road.joints[targetJoint.Index];
+                if (joint == null) continue;
+
+                targetJoint.TangentPositions = [joint.getTangent(0), joint.getTangent(1)]; 
+                
+                updatedPositions[targetJoint] = joint.vertex - _primaryLastPosition;
+            }
+
+            _otherOffsets.Clear();
+            foreach (KeyValuePair<RoadJointCustom, Vector3> keyValuePair in updatedPositions)
+            {
+                _otherOffsets.Add(keyValuePair.Key, keyValuePair.Value);
+            }
+            updatedPositions.Clear();
+
+            _roadSelection.tangents[0] = EditorRoads.joint.getTangent(0);
+            _roadSelection.tangents[1] = EditorRoads.joint.getTangent(1);
 
             if (!Mathf.Approximately(oldY, point.y))
             {
@@ -847,7 +961,7 @@ public class RoadsManager
 
                 EditorRoads.joint.offset = offset;
                 EditorRoads.road.updatePoints();
-                
+
                 EditorEnvironmentRoadsUI.offsetField.Value = offset;
             }
         }
@@ -860,7 +974,7 @@ public class RoadsManager
         _isUsingHandle = false;
         _handles.MouseUp();
         _step++;
-        
+
         Vector3 toPosition = Vector3.zero;
         if (EditorRoads.tangentIndex > -1)
         {
@@ -870,7 +984,7 @@ public class RoadsManager
         {
             toPosition = EditorRoads.road.joints[EditorRoads.vertexIndex].vertex;
         }
-        
+
         Register(new ReunRoadTransform(_step, _roadSelection.fromPosition, toPosition, EditorRoads.vertexIndex, EditorRoads.tangentIndex));
     }
 
@@ -902,7 +1016,7 @@ public class RoadsManager
             _handles.SetPreferredPivot(EditorRoads.selection.position, CalculateLocalPoint(road, EditorRoads.path));
         }
     }
-    
+
     // Cubic bezier formula
     private Vector3 GetBezierPoint(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
     {
@@ -915,7 +1029,7 @@ public class RoadsManager
         Vector3 point = uuu * p0; // (1 - t)^3 * p0
         point += 3 * uu * t * p1; // 3(1 - t)^2 * t * p1
         point += 3 * u * tt * p2; // 3(1 - t) * t^2 * p2
-        point += ttt * p3;        // t^3 * p3
+        point += ttt * p3; // t^3 * p3
 
         return point;
     }
@@ -923,7 +1037,7 @@ public class RoadsManager
     private Quaternion CalculateLocalPoint(Road road, RoadPath actualPath)
     {
         if (road.paths.Count < 2) return actualPath.vertex.rotation;
-        
+
         int actualIndex = road.paths.IndexOf(actualPath);
         int nextPathIndex = actualIndex;
         if (nextPathIndex >= 0 && nextPathIndex < road.paths.Count() - 1)
@@ -934,10 +1048,11 @@ public class RoadsManager
         {
             nextPathIndex -= 1;
         }
-        
-        Vector3 position = GetBezierPoint(road.paths[nextPathIndex].vertex.position, road.paths[nextPathIndex].tangents[nextPathIndex > actualIndex ? 0 : 1].position,
+
+        Vector3 position = GetBezierPoint(road.paths[nextPathIndex].vertex.position,
+            road.paths[nextPathIndex].tangents[nextPathIndex > actualIndex ? 0 : 1].position,
             actualPath.vertex.position, actualPath.tangents[nextPathIndex > actualIndex ? 1 : 0].position, 0.75f);
-        return nextPathIndex > actualIndex 
+        return nextPathIndex > actualIndex
             ? Quaternion.LookRotation(actualPath.vertex.position - position)
             : Quaternion.LookRotation(position - actualPath.vertex.position);
     }

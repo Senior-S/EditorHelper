@@ -7,17 +7,17 @@ public class RoadSelection
     private Transform _transform;
 
     public Vector3 fromPosition;
-
-    public Quaternion fromRotation;
-
+    
     public Matrix4x4 relativeToPivot;
+
+    public Vector3[] tangents;
 
     public Transform transform => _transform;
 
-    public RoadSelection(Transform roadTransform)
+    public RoadSelection(Transform roadTransform, Vector3[] tangents)
     {
         _transform = roadTransform;
         fromPosition = roadTransform.position;
-        fromRotation = roadTransform.rotation;
+        this.tangents = tangents;
     }
 }
