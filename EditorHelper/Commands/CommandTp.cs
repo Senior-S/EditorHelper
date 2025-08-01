@@ -6,7 +6,7 @@ using UnityEngine;
 namespace EditorHelper.Commands;
 
 // This is a 1:1 of the vanilla teleport command, atm is only an alias command.
-public class TpCommand : Command
+public class CommandTp : Command
 {
     protected override void execute(CSteamID executorID, string parameter)
     {
@@ -133,7 +133,7 @@ public class TpCommand : Command
 	    }
     }
 
-    public TpCommand()
+    public CommandTp()
     {
         _command = "Tp";
         _help = "/tp <location>";

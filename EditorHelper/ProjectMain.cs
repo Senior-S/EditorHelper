@@ -46,13 +46,16 @@ public class EditorHelper : IModuleNexus
 
     public static void RegisterCommands()
     {
-        Commander.register(new HealCommand());
-        Commander.register(new MaxSkillsCommand());
+        Commander.register(new CommandHeal());
+        Commander.register(new CommandMaxSkills());
+        Commander.register(new CommandResetSkills());
         Commander.register(new ICommand());
-        Commander.register(new VCommand());
-        Commander.register(new ExpCommand());
-        Commander.register(new TpCommand());
-        Commander.register(new JumpCommand());
+        Commander.register(new CommandV());
+        Commander.register(new CommandExp());
+        Commander.register(new CommandTp());
+        Commander.register(new CommandJump());
+        Commander.register(new CommandFly());
+        Commander.register(new CommandAmmo());
     }
 
     public void shutdown()

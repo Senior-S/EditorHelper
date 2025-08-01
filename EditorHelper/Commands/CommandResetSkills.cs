@@ -1,10 +1,9 @@
 ﻿using SDG.Unturned;
 using Steamworks;
-using UnityEngine;
 
 namespace EditorHelper.Commands;
 
-public class ExpCommand : Command
+public class CommandResetSkills : Command
 {
     protected override void execute(CSteamID executorID, string parameter)
     {
@@ -15,20 +14,22 @@ public class ExpCommand : Command
             return;
         }
 
-        if (!int.TryParse(parameter, out int exp))
+        foreach (Skill[]? skills in player.skills.skills)
         {
-            ChatManager.say(player.channel.owner.playerID.steamID, "Error! Usage: " +_info, Color.red, true);
-            return;
+            foreach (Skill skill in skills)
+            {
+                skill.level = 0;
+            }
         }
         
-        player.skills.ServerModifyExperience(exp);
+        player.ServerShowHint("Your skills have been reset.", 2);
     }
 
-    public ExpCommand()
+    public CommandResetSkills()
     {
-        _command = "Exp";
-        _help = "/exp <amount>";
-        _info = "Give experience to the player";
+        _command = "ResetSkills";
+        _help = "/resetskills";
+        _info = "Resets your skills";
         CommandWindow.Log($"{_command} command registered correctly!");
     }
 }

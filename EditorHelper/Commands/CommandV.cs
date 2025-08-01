@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace EditorHelper.Commands;
 
-public class VCommand : Command
+public class CommandV : Command
 {
     protected override void execute(CSteamID executorID, string parameter)
     {
@@ -104,7 +104,7 @@ public class VCommand : Command
         return null;
     }
 
-    public VCommand()
+    public CommandV()
     {
         _command = "V";
         _help = "/v <id/guid/name>";
