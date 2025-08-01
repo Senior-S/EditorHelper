@@ -3,7 +3,7 @@ using Steamworks;
 
 namespace EditorHelper.Commands;
 
-public class MaxSkillsCommand : Command
+public class CommandMaxSkills : Command
 {
     protected override void execute(CSteamID executorID, string parameter)
     {
@@ -15,9 +15,10 @@ public class MaxSkillsCommand : Command
         }
         
         player.skills.ServerUnlockAllSkills();
+        player.ServerShowHint("Your skills have set to max.", 2);
     }
 
-    public MaxSkillsCommand()
+    public CommandMaxSkills()
     {
         _command = "MaxSkills";
         _help = "/maxskills";

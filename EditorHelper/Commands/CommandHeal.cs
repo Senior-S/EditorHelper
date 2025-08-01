@@ -3,7 +3,7 @@ using Steamworks;
 
 namespace EditorHelper.Commands;
 
-public class HealCommand : Command
+public class CommandHeal : Command
 {
     protected override void execute(CSteamID executorID, string parameter)
     {
@@ -21,9 +21,11 @@ public class HealCommand : Command
         player.life.serverModifyStamina(100f);
         player.life.serverSetBleeding(false);
         player.life.serverSetBleeding(false);
+        
+        player.ServerShowHint("Fully healed.", 2);
     }
 
-    public HealCommand()
+    public CommandHeal()
     {
         _command = "Heal";
         _help = "/heal";

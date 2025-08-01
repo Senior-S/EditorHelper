@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace EditorHelper.Commands;
 
-public class JumpCommand : Command
+public class CommandJump : Command
 {
     protected override void execute(CSteamID executorID, string parameter)
     {
@@ -16,13 +16,20 @@ public class JumpCommand : Command
         }
         
         // Mask from https://github.com/TH3AL3X/uEssentials/blob/dev/src/Api/Unturned/UPlayer.cs#L244C45-L244C84
-        RaycastInfo? info = DamageTool.raycast(new Ray(player.look.aim.position, player.look.aim.forward), 1000f, RayMasks.BLOCK_COLLISION & ~(1 << 0x15));
-        if (info == null) return;
-        
-        player.teleportToLocationUnsafe(info.point + new Vector3(0f, 1f, 0f), player.look.yaw);
+        RaycastInfo? raycastInfo = DamageTool.raycast(new Ray(player.look.aim.position, player.look.aim.forward), 1000f, RayMasks.BLOCK_COLLISION & ~(1 << 0x15));
+        if (raycastInfo == null)
+        {
+            player.ServerShowHint("No valid surface in sight to teleport to.", 2);
+        }
+        else
+        {
+            Vector3 teleportPosition = raycastInfo.point + new Vector3(0f, 1f, 0f);
+            player.teleportToLocationUnsafe(teleportPosition, player.look.yaw);
+            player.ServerShowHint($"Teleported to {teleportPosition.ToString("F1")}", 2);
+        }
     }
 
-    public JumpCommand()
+    public CommandJump()
     {
         _command = "Jump";
         _help = "/jump";

@@ -37,7 +37,7 @@
 
     <!-- Publicizer -->
     <ItemGroup>
-        <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage|ReunObjectRemove|Menu|ItemStore|EditorInteract|GlazierResources|Utilities.TimeUtility).*" />
+        <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(UseableGun|Player|Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage|ReunObjectRemove|Menu|ItemStore|EditorInteract|GlazierResources|Utilities.TimeUtility).*" />
     </ItemGroup>
     
     <ItemGroup>
@@ -288,23 +288,27 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="Builders\UIBuilder.cs" />
-        <Compile Include="Commands\ExpCommand.cs" />
-        <Compile Include="Commands\HealCommand.cs" />
+        <Compile Include="Commands\CommandAmmo.cs" />
+        <Compile Include="Commands\CommandExp.cs" />
+        <Compile Include="Commands\CommandFly.cs" />
+        <Compile Include="Commands\CommandHeal.cs" />
+        <Compile Include="Commands\CommandResetSkills.cs" />
+        <Compile Include="Commands\FlyController.cs" />
         <Compile Include="Commands\ICommand.cs" />
-        <Compile Include="Commands\JumpCommand.cs" />
-        <Compile Include="Commands\MaxSkillsCommand.cs" />
-        <Compile Include="Commands\TpCommand.cs" />
-        <Compile Include="Commands\VCommand.cs" />
-        <Compile Include="Editor\AnimalSpawnsManager.cs" />
-        <Compile Include="Editor\FoliageAssetManager.cs" />
-        <Compile Include="Editor\FoliageCollectionManager.cs" />
-        <Compile Include="Editor\EditorManager.cs" />
-        <Compile Include="Editor\FoliageManager.cs" />
-        <Compile Include="Editor\NodesManager.cs" />
-        <Compile Include="Editor\ObjectsManager.cs" />
-        <Compile Include="Editor\RoadsManager.cs" />
-        <Compile Include="Editor\VehicleSpawnsManager.cs" />
-        <Compile Include="Editor\VisibilityManager.cs" />
+        <Compile Include="Commands\CommandJump.cs" />
+        <Compile Include="Commands\CommandMaxSkills.cs" />
+        <Compile Include="Commands\CommandTp.cs" />
+        <Compile Include="Commands\CommandV.cs" />
+        <Compile Include="Editor\Managers\AnimalSpawnsManager.cs" />
+        <Compile Include="Editor\Managers\EditorManager.cs" />
+        <Compile Include="Editor\Managers\FoliageAssetManager.cs" />
+        <Compile Include="Editor\Managers\FoliageCollectionManager.cs" />
+        <Compile Include="Editor\Managers\FoliageManager.cs" />
+        <Compile Include="Editor\Managers\NodesManager.cs" />
+        <Compile Include="Editor\Managers\ObjectsManager.cs" />
+        <Compile Include="Editor\Managers\RoadsManager.cs" />
+        <Compile Include="Editor\Managers\VehicleSpawnsManager.cs" />
+        <Compile Include="Editor\Managers\VisibilityManager.cs" />
         <Compile Include="Extras\INIFile.cs" />
         <Compile Include="Extras\UpdaterCore.cs" />
         <Compile Include="LSystem\AgentParameters.cs" />
@@ -328,32 +332,33 @@
         <Compile Include="Models\SerializableEditorCopy.cs" />
         <Compile Include="Models\SerializableLevelObjectTag.cs" />
         <Compile Include="Patches\CommanderPatches.cs" />
-        <Compile Include="Patches\EditorDashboardUIPatches.cs" />
-        <Compile Include="Patches\EditorEnvironmentNodesUIPatches.cs" />
-        <Compile Include="Patches\EditorInteractPatches.cs" />
-        <Compile Include="Patches\EditorLevelVisibilityUIPatches.cs" />
-        <Compile Include="Patches\EditorRoadsPatches.cs" />
-        <Compile Include="Patches\EditorRoadsUIPatches.cs" />
-        <Compile Include="Patches\EditorLevelObjectsUIPatches.cs" />
-        <Compile Include="Patches\EditorObjectsPatches.cs" />
-        <Compile Include="Patches\EditorSpawnsPatches.cs" />
-        <Compile Include="Patches\EditorSpawnsVehiclesUIPatches.cs" />
-        <Compile Include="Patches\EditorTerrainDetailsUIPatches.cs" />
-        <Compile Include="Patches\FoliageEditorPatches.cs" />
-        <Compile Include="Patches\FoliageResourceInfoAssetPatches.cs" />
-        <Compile Include="Patches\LevelAnimalPatches.cs" />
-        <Compile Include="Patches\LevelObjectsPatches.cs" />
-        <Compile Include="Patches\LevelPatches.cs" />
-        <Compile Include="Patches\LevelPlayersPatches.cs" />
-        <Compile Include="Patches\LevelRoadsPatches.cs" />
-        <Compile Include="Patches\LevelVehiclesPatches.cs" />
-        <Compile Include="Patches\LevelZombiesPatches.cs" />
-        <Compile Include="Patches\MenuDashboardUIPatches.cs" />
-        <Compile Include="Patches\MenuUIPatches.cs" />
+        <Compile Include="Patches\Editor\EditorInteractPatches.cs" />
+        <Compile Include="Patches\Editor\EditorObjectsPatches.cs" />
+        <Compile Include="Patches\Editor\EditorRoadsPatches.cs" />
+        <Compile Include="Patches\Editor\EditorSpawnsPatches.cs" />
+        <Compile Include="Patches\Editor\UI\EditorDashboardUIPatches.cs" />
+        <Compile Include="Patches\Editor\UI\EditorEnvironmentNodesUIPatches.cs" />
+        <Compile Include="Patches\Editor\UI\EditorLevelObjectsUIPatches.cs" />
+        <Compile Include="Patches\Editor\UI\EditorLevelVisibilityUIPatches.cs" />
+        <Compile Include="Patches\Editor\UI\EditorRoadsUIPatches.cs" />
+        <Compile Include="Patches\Editor\UI\EditorSpawnsVehiclesUIPatches.cs" />
+        <Compile Include="Patches\Editor\UI\EditorTerrainDetailsUIPatches.cs" />
+        <Compile Include="Patches\Foliage\FoliageEditorPatches.cs" />
+        <Compile Include="Patches\Foliage\FoliageResourceInfoAssetPatches.cs" />
+        <Compile Include="Patches\Level\LevelAnimalPatches.cs" />
+        <Compile Include="Patches\Level\LevelObjectsPatches.cs" />
+        <Compile Include="Patches\Level\LevelPatches.cs" />
+        <Compile Include="Patches\Level\LevelPlayersPatches.cs" />
+        <Compile Include="Patches\Level\LevelRoadsPatches.cs" />
+        <Compile Include="Patches\Level\LevelVehiclesPatches.cs" />
+        <Compile Include="Patches\Level\LevelZombiesPatches.cs" />
+        <Compile Include="Patches\Menu\UI\MenuDashboardUIPatches.cs" />
+        <Compile Include="Patches\Menu\UI\MenuUIPatches.cs" />
         <Compile Include="Patches\ReunObjectRemovePatches.cs" />
         <Compile Include="Patches\LocationDevkitNodeSystemPatches.cs" />
         <Compile Include="Patches\RoadPatches.cs" />
         <Compile Include="Patches\RuntimeGizmosPatches.cs" />
+        <Compile Include="Patches\UseableGun\UseableGunPatches.cs" />
         <Compile Include="ProjectMain.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="Schematics\SchematicsManager.cs" />
