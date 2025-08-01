@@ -37,5 +37,6 @@ public class CommandFly : Command
         _command = "fly";
         _info = "Toggle flight mode with vertical controls.";
         _help = "Fly using space to go up, ctrl/c to go down.";
+        CommandWindow.Log($"{_command} command registered correctly!");
     }
 }

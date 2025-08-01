@@ -358,7 +358,6 @@
         <Compile Include="Patches\LocationDevkitNodeSystemPatches.cs" />
         <Compile Include="Patches\RoadPatches.cs" />
         <Compile Include="Patches\RuntimeGizmosPatches.cs" />
-        <Compile Include="Patches\UseableGun\UseableGunPatches.cs" />
         <Compile Include="ProjectMain.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="Schematics\SchematicsManager.cs" />

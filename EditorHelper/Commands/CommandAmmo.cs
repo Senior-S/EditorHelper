@@ -41,5 +41,6 @@ public class CommandAmmo : Command
         _command = "ammo";
         _info = "Ammo [Amount]";
         _help = "This gives magazines for the equipped gun.";
+        CommandWindow.Log($"{_command} command registered correctly!");
     }
 }

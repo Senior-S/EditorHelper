@@ -7,7 +7,7 @@ slug: /Roads
 
 ## Road radius
 
-When clicking on a road you will have a circle around the selected node that displays the radius that the selected material will use, this is useful for making exact roads
+When clicking on a road you will have a circle around the selected node that displays the radius that the selected material or asset will use, this is useful for placing exact roads.
 
 ### Radius includes depth
 
@@ -15,7 +15,7 @@ This is an option for the road radius, if this option is enabled the radius will
 
 ## Road handles
 
-When clicking on a road you will have handles to precisely move it, it lets you switch between **Local** and **Global** position same as in the objects tab.
+When clicking on a road you will have handles to precisely move it or rotate it, it lets you switch between **Local** and **Global** position same as in the objects tab.
 
 ### Snap Translation
 
@@ -32,3 +32,7 @@ You can use **CTRL + B** (Copy) and **CTRL + N** (Paste) to copy/paste the posit
 ## Undo/redo
 
 You can use **CTRL + Z** to undo a change and **CTRL + X** to redo a change.
+
+## Multiple nodes selection
+
+By using the middle click you can select multiple nodes at the same time to rotate or move them all at the same time.

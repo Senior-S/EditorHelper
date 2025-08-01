@@ -1,6 +1,6 @@
 ---
 sidebar_label: "General Features"
-sidebar_position: 2
+sidebar_position: 1
 slug: /General
 ---
 
