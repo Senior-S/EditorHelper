@@ -249,8 +249,10 @@ public class RoadsManager
         _snapTransformField.IsVisible = buttonVisible;
         _handlePriorizeToggleButton.IsVisible = buttonVisible;
 
-        DrawNodeBoxes();
-        
+        if (LevelVisibility.roadsVisible)
+        {
+            DrawNodeBoxes();
+        }
         // While dragging, update the selection rectangle and highlight nodes under it
         if (_isSelecting)
         {
@@ -272,8 +274,8 @@ public class RoadsManager
                 ClearSelection();
             }
             
-            if (SelectedJoints.Count > 0)
-                clear();
+            /*if (SelectedJoints.Count > 0)
+                clear();*/
 
             return;
         }
