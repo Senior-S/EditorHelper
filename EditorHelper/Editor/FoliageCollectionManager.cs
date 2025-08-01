@@ -52,7 +52,7 @@ namespace EditorHelper.Editor
             builder.SetPositionScaleX(0f)
                 .SetPositionScaleY(1f)
                 .SetPositionOffsetX(0f)
-                .SetPositionOffsetY(-110f);
+                .SetPositionOffsetY(-310f);
             _saveButton = builder.BuildButton("Write to file.");
             _saveButton.text = "Save";
             _saveButton.onClickedButton += WriteToFile;
@@ -61,7 +61,9 @@ namespace EditorHelper.Editor
             builder.SetPositionScaleX(0f)
                 .SetPositionScaleY(0f)
                 .SetPositionOffsetX(0f)
-                .SetSizeOffsetY(-240f)
+                //.SetSizeOffsetY(-240f)
+                .SetSizeOffsetY(-440f)
+                .SetSizeOffsetX(280f)
                 .SetOneTimeSpacing(0f);
             _assetScrollView = builder.BuildScrollBox<FoliageInfoAsset>(30, 1);
             _assetScrollView.onCreateElement = OnCreateElement;
@@ -72,7 +74,7 @@ namespace EditorHelper.Editor
             UIBuilder builder = new();
             builder
                 .SetPositionScaleX(0f)
-                .SetPositionScaleY(0f)
+                .SetPositionScaleY(0f);
             ISleekBox box = builder.CreateSimpleBox();
 
 
