@@ -1,4 +1,5 @@
 ---
+title: "Module Commands"
 sidebar_label: "Module commands"
 sidebar_position: 2
 slug: /Commands

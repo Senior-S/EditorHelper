@@ -1,4 +1,5 @@
 ---
+title: "General Features"
 sidebar_label: "General Features"
 sidebar_position: 1
 slug: /General

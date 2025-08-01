@@ -247,7 +247,7 @@ public class MenuDashboardUIPatches
                 SleekButtonIcon updateButton = builder.BuildButton("Update your module right now");
                 updateButton.onClickedButton += (_) =>
                 {
-                    OpenUrl("https://seniors.gumroad.com/l/editorhelper");
+                    OpenUrl("https://editorhelper.sshost.club/Download");
                     
                     Provider.QuitGame("EditorHelper required an update!");
                 };
