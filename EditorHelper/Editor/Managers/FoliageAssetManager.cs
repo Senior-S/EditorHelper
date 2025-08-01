@@ -49,7 +49,7 @@ public class FoliageAssetManager
 
     public void CustomUpdate(EditorTerrainDetailsUI uiInstance)
     {
-        bool visibility = uiInstance.tool.mode != FoliageEditor.EFoliageMode.BAKE;
+        bool visibility = uiInstance.tool.mode != FoliageEditor.EFoliageMode.BAKE && uiInstance.searchTypeButton.state == 0;
         _densitySaveButton.IsVisible = visibility;
         _densityField.IsVisible = visibility;
         uiInstance.assetScrollView.SizeOffset_Y = _densityField.IsVisible ? -200f : -120f;

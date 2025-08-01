@@ -96,6 +96,13 @@ namespace EditorHelper.Editor.Managers
 
         public void CustomUpdate(EditorTerrainDetailsUI uiInstance)
         {
+            bool visibility = uiInstance.tool.mode != FoliageEditor.EFoliageMode.BAKE && uiInstance.searchTypeButton.state == 1;
+            
+            _collectionNameField.IsVisible = visibility;
+            _collectionCreateButton.IsVisible = visibility;
+            _saveButton.IsVisible = visibility;
+            _assetScrollView.IsVisible = visibility;
+            
             // Store the current UI instance for use in toggle callbacks
             _currentUIInstance = uiInstance;
 
