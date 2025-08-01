@@ -31,8 +31,8 @@ public class RoadPatches
             return false;
         }
         
-        foreach (var road in LevelRoads.roads)
-        foreach (var path in road.paths)
+        foreach (Road? road in LevelRoads.roads)
+        foreach (RoadPath? path in road.paths)
             path.unhighlightVertex(); 
 
         RoadsManager.SelectedJoints.Clear();

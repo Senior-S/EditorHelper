@@ -36,7 +36,7 @@ public class CommandTp : Command
 			CommandWindow.LogError(localization.format("NoPlayerErrorText", componentsFromSerial[0]));
 			return;
 		}
-		if (PlayerTool.tryGetSteamPlayer(componentsFromSerial[(!flag) ? 1u : 0u], out var player2))
+		if (PlayerTool.tryGetSteamPlayer(componentsFromSerial[(!flag) ? 1u : 0u], out SteamPlayer? player2))
 		{
 			if (player2.player.movement.getVehicle() != null)
 			{
@@ -114,7 +114,7 @@ public class CommandTp : Command
     protected bool raycastFromSkyToPosition(ref Vector3 position)
     {
 	    position.y = 1024f;
-	    if (Physics.Raycast(position, Vector3.down, out var hitInfo, 2048f, RayMasks.WAYPOINT))
+	    if (Physics.Raycast(position, Vector3.down, out RaycastHit hitInfo, 2048f, RayMasks.WAYPOINT))
 	    {
 		    position = hitInfo.point + Vector3.up;
 		    return true;
@@ -127,7 +127,7 @@ public class CommandTp : Command
     /// </summary>
     protected void raycastFromNearPosition(ref Vector3 position)
     {
-	    if (Physics.Raycast(position + new Vector3(0f, 4f, 0f), Vector3.down, out var hitInfo, 8f, RayMasks.WAYPOINT))
+	    if (Physics.Raycast(position + new Vector3(0f, 4f, 0f), Vector3.down, out RaycastHit hitInfo, 8f, RayMasks.WAYPOINT))
 	    {
 		    position = hitInfo.point + Vector3.up;
 	    }

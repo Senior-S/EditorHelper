@@ -18,18 +18,18 @@ public class AssetWriter
         string fileText = File.ReadAllText(filePath);
 
         // Regex to find the "Foliage" block
-        var foliageRegex = new Regex(
+        Regex foliageRegex = new Regex(
             @"(?<indent>\t*)""Foliage""\s*\[(?:.|\n)*?\]",
             RegexOptions.Multiline);
 
         // Foliage block
-        var assetsBlock = new StringBuilder();
+        StringBuilder assetsBlock = new StringBuilder();
         assetsBlock.AppendLine("\t\"Foliage\"");
         assetsBlock.AppendLine("\t[");
 
-        foreach (var element in asset.elements)
+        foreach (FoliageInfoCollectionAsset.FoliageInfoCollectionElement element in asset.elements)
         {
-            var assetName = element.asset.Find()?.name ?? element.asset.GUID.ToString();
+            string assetName = element.asset.Find()?.name ?? element.asset.GUID.ToString();
             
             assetsBlock.AppendLine("\t\t{");
             assetsBlock.AppendLine("\t\t\t\"Asset\"");
@@ -51,7 +51,7 @@ public class AssetWriter
 
     public static void CreateEmptyFoliageInfoCollectionAssetFile(string name)
     {
-        var sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
         Guid guid = Guid.NewGuid();
 
         // Metadata block
@@ -87,7 +87,7 @@ public class AssetWriter
         string filePath = asset.absoluteOriginFilePath;
         string fileText = File.ReadAllText(filePath);
 
-        var densityRegex = new Regex(
+        Regex densityRegex = new Regex(
             @"^(\s*""?Density""?\s+)(""[^""]*""|[^\s]+)",
             RegexOptions.Multiline);
 

@@ -168,7 +168,7 @@ public class LevelPatches
 		float captureHeight;
 		if (mainVolume != null)
 		{
-			mainVolume.GetSatelliteCaptureTransform(out var position, out var rotation);
+			mainVolume.GetSatelliteCaptureTransform(out Vector3 position, out Quaternion rotation);
 			SDG.Unturned.Level.satelliteCaptureTransform.SetPositionAndRotation(position, rotation);
 			Bounds bounds = mainVolume.CalculateWorldBounds();
 			terrainMinHeight = bounds.min.y;
@@ -247,7 +247,7 @@ public class LevelPatches
 			float num2 = y / (float)imageHeight;
 			Vector3 position2 = new Vector3((num - 0.5f) * captureWidth, (num2 - 0.5f) * captureHeight, 0f);
 			Vector3 vector2 = SDG.Unturned.Level.satelliteCaptureTransform.TransformPoint(position2);
-			SDG.Unturned.Level.FindChartHit(vector2, out var chart, out var hit);
+			SDG.Unturned.Level.FindChartHit(vector2, out EObjectChart chart, out RaycastHit hit);
 			Transform transform = hit.transform;
 			Vector3 point = hit.point;
 			if (transform == null)

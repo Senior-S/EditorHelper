@@ -87,7 +87,7 @@ public class IniFile
         {
             HasUnsavedChanges = true;
             bool found = false;
-            foreach (var x in _data)
+            foreach (IniLine? x in _data)
             {
                 if (x.IsDataEntry)
                 {
@@ -116,7 +116,7 @@ public class IniFile
     public bool KeySet(string Key)
     {
         bool ret = false;
-        foreach (var x in _data)
+        foreach (IniLine? x in _data)
         {
             if (x.IsDataEntry)
             {
