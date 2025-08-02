@@ -37,7 +37,7 @@
 
     <!-- Publicizer -->
     <ItemGroup>
-        <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(UseableGun|Player|Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage|ReunObjectRemove|Menu|ItemStore|EditorInteract|GlazierResources|Utilities.TimeUtility).*" />
+        <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(UseableGun|Player|Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage|ReunObjectRemove|Menu|ItemStore|EditorInteract|GlazierResources|Utilities.TimeUtility|CullingVolume).*" />
     </ItemGroup>
     
     <ItemGroup>
@@ -332,6 +332,7 @@
         <Compile Include="Models\SerializableEditorCopy.cs" />
         <Compile Include="Models\SerializableLevelObjectTag.cs" />
         <Compile Include="Patches\CommanderPatches.cs" />
+        <Compile Include="Patches\CullingVolumePatches.cs" />
         <Compile Include="Patches\Editor\EditorInteractPatches.cs" />
         <Compile Include="Patches\Editor\EditorObjectsPatches.cs" />
         <Compile Include="Patches\Editor\EditorRoadsPatches.cs" />
