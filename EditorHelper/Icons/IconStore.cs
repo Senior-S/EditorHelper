@@ -318,10 +318,10 @@ namespace EditorHelper.Icons
 
                 if (PendingIconInfo.ObjectAsset.rubble != EObjectRubble.NONE)
                 {
-                    Transform? alive = PendingObject.Find("Alive");
-                    if (alive != null) alive.gameObject.SetActive(PendingIconInfo.ObjectAsset.rubbleEditor == EObjectRubbleEditor.ALIVE);
-                    Transform? dead = PendingObject.Find("Dead");
-                    if (dead != null) dead.gameObject.SetActive(PendingIconInfo.ObjectAsset.rubbleEditor == EObjectRubbleEditor.DEAD);
+                    InteractableObjectRubble interactableRubble = PendingObject.gameObject.AddComponent<InteractableObjectRubble>();
+                    interactableRubble.updateState(PendingIconInfo.ObjectAsset, PendingIconInfo.ObjectAsset.getState());
+                    Transform? editor = PendingObject.Find("Editor");
+                    if (editor != null) editor.gameObject.SetActive(PendingIconInfo.ObjectAsset.rubbleEditor == EObjectRubbleEditor.DEAD && Level.isEditor);
                 }
 
                 if (PendingIconInfo.ObjectAsset.interactability == EObjectInteractability.NPC)
