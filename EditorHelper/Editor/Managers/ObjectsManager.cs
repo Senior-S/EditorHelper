@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using EditorHelper.Builders;
+using EditorHelper.Icons;
 using EditorHelper.Models;
+using HarmonyLib;
 using HighlightingSystem;
 using Newtonsoft.Json;
 using SDG.Unturned;
@@ -53,6 +55,18 @@ public class ObjectsManager
     //private readonly ISleekToggle[] _layersToggle;
     private readonly Dictionary<ISleekToggle, string> _toggleToLayer = new();
     private readonly SleekButtonIcon _layersMaskButton;
+
+    private readonly IconStore IconStore;
+    private int ObjectIconHandle;
+    private readonly ISleekBox _objectIconContainer;
+    private readonly ISleekImage _objectIconImage;
+
+    private readonly SleekButtonIcon _objectIconGridButton;
+    private float PreferredObjectIconGridHeight = 760f;
+    private readonly ISleekBox _objectIconGridContainer;
+    private readonly SleekGrid<Asset> _objectIconGridScrollBox;
+    private readonly ISleekBox _selectedObjectBox = (ISleekBox)AccessTools.Field(typeof(EditorLevelObjectsUI), nameof(EditorLevelObjectsUI.selectedBox)).GetValue(null);
+    private readonly List<Asset> _objectAssets = (List<Asset>)AccessTools.Field(typeof(EditorLevelObjectsUI), nameof(EditorLevelObjectsUI.assets)).GetValue(null);
 
     private readonly SleekButtonIcon _schematicsButton;
     private readonly ISleekBox _schematicsContainer;
@@ -253,7 +267,71 @@ public class ObjectsManager
         
         _tagField = builder.BuildStringField();
         _tagField.OnTextSubmitted += TagFieldOnOnTextSubmitted;
-        
+
+        IconStore = new IconStore(width: 300, height: 300);
+
+        builder.SetPositionScaleX(1f)
+            .SetPositionScaleY(1f)
+            .SetPositionOffsetX(-395f)
+            .SetPositionOffsetY(-150f)
+            .SetSizeOffsetX(150f)
+            .SetSizeOffsetY(150f)
+            .SetText("Object Icon");
+
+        _objectIconContainer = builder.BuildBox();
+        _objectIconContainer.TextColor = new Color(0.35f, 0.35f, 0.35f, 0.35f);
+
+        builder.SetPositionOffsetX(-145f)
+            .SetPositionOffsetY(-145f)
+            .SetSizeOffsetX(140f)
+            .SetSizeOffsetY(140f);
+
+        _objectIconImage = builder.BuildImage();
+        _objectIconImage.ShouldDestroyTexture = false;
+
+        _objectIconContainer.AddChild(_objectIconImage);
+
+        builder.SetPositionScaleX(1f)
+            .SetPositionScaleY(1f)
+            .SetPositionOffsetX(-395f)
+            .SetPositionOffsetY(-190f)
+            .SetSizeOffsetX(150f)
+            .SetSizeOffsetY(30f)
+            .SetText("Grid View");
+
+        Bundle bundle = Bundles.getBundle("/Bundles/Textures/Edit/Icons/EditorEnvironment/EditorEnvironment.unity3d");
+        _objectIconGridButton = builder.BuildButton("View objects in a grid with icons", bundle.load<Texture2D>("Navigation"));
+        _objectIconGridButton.onClickedButton += OnObjectIconGridButton;
+        bundle.unload();
+
+        builder.SetPositionScaleX(0.5f)
+            .SetPositionScaleY(0f)
+            .SetPositionOffsetX(-500f)
+            .SetPositionOffsetY(770f)
+            .SetSizeOffsetX(1000f)
+            .SetSizeOffsetY(760f)
+            .SetOneTimeSpacing(0f)
+            .SetText("");
+
+        _objectIconGridContainer = builder.BuildAlphaBox();
+        _objectIconGridContainer.IsVisible = false;
+
+        builder.SetPositionScaleX(0f)
+            .SetPositionScaleY(0f)
+            .SetPositionOffsetX(0f)
+            .SetPositionOffsetY(10f)
+            .SetSizeOffsetX(1000f)
+            .SetSizeOffsetY(0f)
+            .SetOneTimeSpacing(0f);
+
+        _objectIconGridScrollBox = builder.BuildScrollGrid<Asset>(125, 15);
+        _objectIconGridScrollBox.OnCreateElement = OnCreateGridObject;
+
+        _objectIconGridContainer.AddChild(_objectIconGridScrollBox);
+
+        OnResolutionUpdateIconGridSize();
+        GraphicsSettings.graphicsSettingsApplied += OnResolutionUpdateIconGridSize;
+
         builder.SetPositionScaleX(0.5f)
             .SetPositionScaleY(0.5f)
             .SetPositionOffsetX(-325f)
@@ -351,6 +429,11 @@ public class ObjectsManager
         LoadObjectTags();
     }
 
+    public void OnDestroy()
+    {
+        GraphicsSettings.graphicsSettingsApplied -= OnResolutionUpdateIconGridSize;
+    }
+
     private void TagFieldOnOnTextSubmitted(ISleekField field)
     {
         if (_selectedObject == null) return;
@@ -365,6 +448,125 @@ public class ObjectsManager
         {
             _dicLevelObjects.Add(levelObject, new LevelObjectExtension(field.Text));
         }
+    }
+
+    public void OnAssetSelected()
+    {
+        if (EditorObjects.selectedItemAsset != null)
+            ObjectIconHandle = IconStore.RequestIcon(EditorObjects.selectedItemAsset, OnObjectIconReady);
+        else if (EditorObjects.selectedObjectAsset != null)
+            ObjectIconHandle = IconStore.RequestIcon(EditorObjects.selectedObjectAsset, OnObjectIconReady);
+        else
+            _objectIconContainer.Text = "Object Icon";
+    }
+
+    private void OnObjectIconReady(int handle, Texture2D texture)
+    {
+        if (handle != -1 && ObjectIconHandle != handle) return;
+
+        _objectIconContainer.Text = string.Empty;
+        _objectIconImage.UpdateTexture(texture);
+    }
+
+    private void OnObjectIconGridButton(ISleekElement button)
+    {
+        _objectIconGridContainer.IsVisible = !_objectIconGridContainer.IsVisible;
+        if (_objectIconGridContainer.IsVisible)
+        {
+            _objectIconGridScrollBox.SetData(_objectAssets);
+            _objectIconGridContainer.SizeOffset_Y = Mathf.Min(PreferredObjectIconGridHeight, _objectIconGridScrollBox.ContentHeight);
+            _schematicsContainer.IsVisible = false;
+        }
+    }
+
+    private void OnResolutionUpdateIconGridSize()
+    {
+        if (GraphicsSettings.resolution.Width < 1500)
+            UpdateIconGridSize(725f, 500f);
+        else if (GraphicsSettings.resolution.Width < 1700)
+            UpdateIconGridSize(860f, 600f);
+        else
+            UpdateIconGridSize(1000f, 760f);
+    }
+
+    private void UpdateIconGridSize(float newWidth, float newHeight)
+    {
+        _objectIconGridContainer.PositionOffset_X = -(newWidth / 2f);
+        _objectIconGridContainer.SizeOffset_X = newWidth;
+        _objectIconGridScrollBox.SizeOffset_X = newWidth;
+
+        PreferredObjectIconGridHeight = newHeight;
+
+        if (_objectIconGridContainer.IsVisible)
+            _objectIconGridScrollBox.ForceRebuildElements();
+
+        _objectIconGridContainer.SizeOffset_Y = Mathf.Min(PreferredObjectIconGridHeight, _objectIconGridScrollBox.ContentHeight);
+    }
+
+    private ISleekElement OnCreateGridObject(Asset item)
+    {
+        UIBuilder builder = new();
+
+        ISleekButton button = builder.CreateSimpleButton();
+        button.OnClicked += OnGridObjectClicked;
+
+        builder.SetPositionScaleX(0f)
+            .SetPositionScaleY(0f)
+            .SetPositionOffsetX(12f)
+            .SetPositionOffsetY(7f)
+            .SetSizeOffsetX(0f)
+            .SetSizeOffsetY(0f);
+
+        ISleekImage objectIcon = builder.BuildImage();
+        objectIcon.ShouldDestroyTexture = false;
+        objectIcon.SizeScale_X = 0.8f;
+        objectIcon.SizeScale_Y = 0.8f;
+        button.AddChild(objectIcon);
+
+        builder.SetPositionOffsetX(0f)
+            .SetPositionOffsetY(-2f)
+            .SetText(item.FriendlyName);
+
+        ISleekLabel objectLabel = builder.BuildLabel(TextAnchor.LowerCenter);
+        objectLabel.SizeScale_X = 1f;
+        objectLabel.SizeScale_Y = 1f;
+        objectLabel.TextContrastContext = ETextContrastContext.ColorfulBackdrop;
+        button.AddChild(objectLabel);
+
+        int iconHandle = -2;
+        if (item is ItemAsset itemAsset)
+            iconHandle = IconStore.RequestIcon(itemAsset, (handle, texture) =>
+            {
+                if (handle != -1 && handle != iconHandle) return;
+                objectIcon.UpdateTexture(texture);
+            });
+        else if (item is ObjectAsset objectAsset)
+            iconHandle = IconStore.RequestIcon(objectAsset, (handle, texture) =>
+            {
+                if (handle != -1 && handle != iconHandle) return;
+                objectIcon.UpdateTexture(texture);
+            });
+
+        return button;
+    }
+
+    public void OnUpdateObjectBrowser(List<Asset> objectAssets)
+    {
+        if (!_objectIconGridContainer.IsVisible) return;
+
+        _objectIconGridScrollBox.SetData(objectAssets);
+        _objectIconGridContainer.SizeOffset_Y = Mathf.Min(PreferredObjectIconGridHeight, _objectIconGridScrollBox.ContentHeight);
+    }
+
+    private void OnGridObjectClicked(ISleekElement button)
+    {
+        Asset? objectAsset = _objectIconGridScrollBox.GetItemFromVisibleElement(button);
+        if (objectAsset == null) return;
+
+        EditorObjects.selectedItemAsset = objectAsset as ItemAsset;
+        EditorObjects.selectedObjectAsset = objectAsset as ObjectAsset;
+        _selectedObjectBox.Text = objectAsset.FriendlyName;
+        OnAssetSelected();
     }
 
     private void OnSchematicSearchTextChanged(ISleekField field)
@@ -440,6 +642,7 @@ public class ObjectsManager
     private void OnSchematicsButtonClicked(ISleekElement button)
     {
         _schematicsContainer.IsVisible = !_schematicsContainer.IsVisible;
+        if (_schematicsContainer.IsVisible) _objectIconGridContainer.IsVisible = false;
     }
 
     private void OnLayerToggleChanged(ISleekToggle toggle, bool state)
@@ -502,6 +705,9 @@ public class ObjectsManager
         uiInstance.AddChild(_objectScaleZ);
         uiInstance.AddChild(_layersContainer);
         uiInstance.AddChild(_layersMaskButton);
+        uiInstance.AddChild(_objectIconContainer);
+        uiInstance.AddChild(_objectIconGridButton);
+        uiInstance.AddChild(_objectIconGridContainer);
         uiInstance.AddChild(_schematicsButton);
         uiInstance.AddChild(_schematicsContainer);
         uiInstance.AddChild(_tagField);
@@ -840,6 +1046,8 @@ public class ObjectsManager
     // Basically a CustomUpdate which doesn't replace the original update function.
     public void LateUpdate()
     {
+        IconStore.CustomUpdate();
+
         if (EditorObjects.selection == null) return;
         ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
         // TODO: Implement a grid system with options to automatically align objects with the grid corners.
