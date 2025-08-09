@@ -16,6 +16,14 @@ The in game UI have a **`How to use schematics`** button that redirects you to [
 It lets you change what type of objects you're selecting, useful when mass editing maps, it contains all the
 vanilla layers: Large, Medium, Small, Structure and Barricade.
 
+## Object preview icon
+
+Shows a preview icon of the object you currently have selected.
+
+## Object grid selection
+
+Lets you pick objects in a grid full of icons, making it way quicker to identify what object you want.
+
 ## Object precision
 
 When selecting a single object, multiple new options appear, 3 of that options are coordinates, they let you precisely modify the object _Position_, _Rotation_ and _Scale_.
