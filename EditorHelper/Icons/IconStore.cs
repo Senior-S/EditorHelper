@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -68,7 +69,7 @@ namespace EditorHelper.Icons
 
         public int RequestIcon(ItemAsset itemAsset, ItemIconReady callback)
         {
-            if (CachedIcons.TryGetValue(itemAsset.GUID, out var icon))
+            if (CachedIcons.TryGetValue(itemAsset.GUID, out Texture2D? icon))
             {
                 callback(-1, icon);
                 return -1;
@@ -96,7 +97,7 @@ namespace EditorHelper.Icons
 
         public int RequestIcon(ObjectAsset objectAsset, ItemIconReady callback)
         {
-            if (CachedIcons.TryGetValue(objectAsset.GUID, out var icon))
+            if (CachedIcons.TryGetValue(objectAsset.GUID, out Texture2D? icon))
             {
                 callback(-1, icon);
                 return -1;
@@ -190,9 +191,36 @@ namespace EditorHelper.Icons
         private Texture2D CaptureObjectIcon(ObjectAsset objectAsset, Transform objectTransform)
         {
             Bounds bounds = GetBounds(objectTransform);
-            _camera.transform.position = objectTransform.position + new Vector3(bounds.size.z, bounds.size.y, bounds.size.x);
+            
+            Vector3 direction;
+            if (objectAsset.FriendlyName.ToLower().Contains("billboard") || objectAsset.interactability == EObjectInteractability.NPC)
+            {
+                direction = (objectTransform.right - objectTransform.up).normalized;
+            }
+            else
+            {
+                direction = (objectTransform.right + objectTransform.up).normalized;
+            }
+            float distance = Mathf.Max(bounds.size.x, bounds.size.z);
+            float height = (bounds.size.y * 0.85f);
+            if (bounds.size.y * 2 > Math.Abs(bounds.size.x - bounds.size.z))
+            {
+                height = bounds.size.y * 0.45f;
+            }
+            
+            bool isFlat = bounds.size.y < 9f && bounds.size.y < Mathf.Min(bounds.size.x, bounds.size.z) * 0.25f;
+            if (isFlat)
+            {
+                _camera.transform.position = bounds.center + direction * distance + Vector3.up * Mathf.Max(bounds.size.x, bounds.size.z);
+            }
+            else
+            {
+                _camera.transform.position = bounds.center + direction * distance + Vector3.up * height;
+            }
+            
             _camera.transform.rotation = Quaternion.LookRotation((bounds.center - _camera.transform.position).normalized);
-
+            
+            
             int antiAliasing = SDG.Unturned.GraphicsSettings.IsItemIconAntiAliasingEnabled ? 4 : 1;
             RenderTexture temporary = RenderTexture.GetTemporary(_width, _height, 16, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB, antiAliasing);
             temporary.name = "Render_" + objectTransform.name;

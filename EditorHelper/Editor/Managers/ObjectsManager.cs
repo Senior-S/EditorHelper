@@ -238,10 +238,8 @@ public class ObjectsManager
         _toggleToLayer[toggles[3]] = "Structure";
         _toggleToLayer[toggles[4]] = "Barricade";
         
-        //_layersToggle = toggles.ToArray();
-        for (int i = 0; i < toggles.Count; i++)
+        foreach (ISleekToggle toggle in toggles)
         {
-            ISleekToggle toggle = toggles[i];
             _layersContainer.AddChild(toggle);
             toggle.OnValueChanged += OnLayerToggleChanged;
         }
@@ -272,7 +270,7 @@ public class ObjectsManager
 
         builder.SetPositionScaleX(1f)
             .SetPositionScaleY(1f)
-            .SetPositionOffsetX(-395f)
+            .SetPositionOffsetX(-385f)
             .SetPositionOffsetY(-150f)
             .SetSizeOffsetX(150f)
             .SetSizeOffsetY(150f)
@@ -293,7 +291,7 @@ public class ObjectsManager
 
         builder.SetPositionScaleX(1f)
             .SetPositionScaleY(1f)
-            .SetPositionOffsetX(-395f)
+            .SetPositionOffsetX(-385f)
             .SetPositionOffsetY(-190f)
             .SetSizeOffsetX(150f)
             .SetSizeOffsetY(30f)

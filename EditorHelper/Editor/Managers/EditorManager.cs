@@ -62,7 +62,8 @@ public class EditorManager
     {
         UIBuilder builder = new(positionScaleX: 0.5f);
         
-        builder.SetPositionOffsetX(150f)
+        builder.SetSizeOffsetX(130f)
+            .SetPositionOffsetX(150f)
             .SetPositionOffsetY(-30f)
             .SetText("Join Singleplayer");
 
