@@ -1,380 +1,380 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <Import Project="..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.props" Condition="Exists('..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.props')" />
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.props" Condition="Exists('..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{2DE12D43-676B-46AA-9164-6E8E962F0E61}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>EditorHelper</RootNamespace>
+    <AssemblyName>EditorHelper</AssemblyName>
+    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
+    <LangVersion>Latest</LangVersion>
+    <FileAlignment>512</FileAlignment>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  
+  <!-- Publicizer -->
+  <ItemGroup>
+    <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(UseableGun|Player|Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage|ReunObjectRemove|Menu|ItemStore|EditorInteract|GlazierResources|Utilities.TimeUtility|CullingVolume).*" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Include="0Harmony, Version=2.3.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Lib.Harmony.2.3.5\lib\net48\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\Libs\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="com.rlabrecque.steamworks.net">
+      <HintPath>..\Libs\com.rlabrecque.steamworks.net.dll</HintPath>
+    </Reference>
+    <Reference Include="HighlightingSystem">
+      <HintPath>..\Libs\HighlightingSystem.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="SDG.Glazier.Runtime">
+      <HintPath>..\Libs\SDG.Glazier.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="SDG.NetPak.Runtime">
+      <HintPath>..\Libs\SDG.NetPak.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="SDG.NetTransport">
+      <HintPath>..\Libs\SDG.NetTransport.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AccessibilityModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.AccessibilityModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.AIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AndroidJNIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.AndroidJNIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ARModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ARModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.AssetBundleModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ClothModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ClothModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ClusterInputModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ClusterInputModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ClusterRendererModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ClusterRendererModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CrashReportingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.CrashReportingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.DirectorModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.DirectorModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.DSPGraphModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.DSPGraphModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.GameCenterModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.GameCenterModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.GIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.GIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.GridModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.GridModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.HotReloadModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.HotReloadModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.InputModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.JSONSerializeModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.LocalizationModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.LocalizationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.NVIDIAModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.NVIDIAModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ParticleSystemModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PerformanceReportingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.PerformanceReportingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.Physics2DModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ProfilerModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ProfilerModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ScreenCaptureModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ScreenCaptureModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SharedInternalsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.SharedInternalsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SpriteMaskModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.SpriteMaskModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SpriteShapeModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.SpriteShapeModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.StreamingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.StreamingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SubstanceModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.SubstanceModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SubsystemsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.SubsystemsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TerrainModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TerrainModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TerrainPhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TerrainPhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextCoreFontEngineModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextCoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TextCoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextCoreTextEngineModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TilemapModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TilemapModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TLSModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TLSModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIElementsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UIElementsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIElementsNativeModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UIElementsNativeModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UmbraModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UmbraModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UNETModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UNETModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityAnalyticsCommonModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityAnalyticsCommonModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityAnalyticsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityAnalyticsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityConnectModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityConnectModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityCurlModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityCurlModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityTestProtocolModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityTestProtocolModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestAudioModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityWebRequestModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestTextureModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestWWWModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.VehiclesModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.VehiclesModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.VFXModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.VFXModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.VideoModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.VideoModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.VirtualTexturingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.VirtualTexturingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.VRModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.VRModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.WindModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.WindModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.XRModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.XRModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEx">
+      <HintPath>..\Libs\UnityEx.dll</HintPath>
+    </Reference>
+    <Reference Include="UnturnedDat">
+      <HintPath>..\Libs\UnturnedDat.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Builders\UIBuilder.cs" />
+    <Compile Include="Commands\CommandAmmo.cs" />
+    <Compile Include="Commands\CommandExp.cs" />
+    <Compile Include="Commands\CommandFly.cs" />
+    <Compile Include="Commands\CommandHeal.cs" />
+    <Compile Include="Commands\CommandResetSkills.cs" />
+    <Compile Include="Commands\FlyController.cs" />
+    <Compile Include="Commands\ICommand.cs" />
+    <Compile Include="Commands\CommandJump.cs" />
+    <Compile Include="Commands\CommandMaxSkills.cs" />
+    <Compile Include="Commands\CommandTp.cs" />
+    <Compile Include="Commands\CommandV.cs" />
+    <Compile Include="Editor\Managers\AnimalSpawnsManager.cs" />
+    <Compile Include="Editor\Managers\EditorManager.cs" />
+    <Compile Include="Editor\Managers\FoliageAssetManager.cs" />
+    <Compile Include="Editor\Managers\FoliageCollectionManager.cs" />
+    <Compile Include="Editor\Managers\FoliageManager.cs" />
+    <Compile Include="Editor\Managers\NodesManager.cs" />
+    <Compile Include="Editor\Managers\ObjectsManager.cs" />
+    <Compile Include="Editor\Managers\RoadsManager.cs" />
+    <Compile Include="Editor\Managers\VehicleSpawnsManager.cs" />
+    <Compile Include="Editor\Managers\VisibilityManager.cs" />
+    <Compile Include="Extras\INIFile.cs" />
+    <Compile Include="Extras\UpdaterCore.cs" />
+    <Compile Include="Icons\IconStore.cs" />
+    <Compile Include="LSystem\AgentParameters.cs" />
+    <Compile Include="LSystem\Direction.cs" />
+    <Compile Include="LSystem\LSystemGenerator.cs" />
+    <Compile Include="LSystem\PlacementHelper.cs" />
+    <Compile Include="LSystem\RoadHelper.cs" />
+    <Compile Include="LSystem\Rule.cs" />
+    <Compile Include="LSystem\Visualizer.cs" />
+    <Compile Include="Models\CameraPosition.cs" />
+    <Compile Include="Models\EditorCopyExtension.cs" />
+    <Compile Include="Models\JsonWithMetadata.cs" />
+    <Compile Include="Models\LevelObjectExtension.cs" />
+    <Compile Include="Models\PositionModel.cs" />
+    <Compile Include="Models\ReunObjectRemoveExtension.cs" />
+    <Compile Include="Models\ReunRoadTransform.cs" />
+    <Compile Include="Models\RoadJointCustom.cs" />
+    <Compile Include="Models\RoadSelection.cs" />
+    <Compile Include="Models\RotationModel.cs" />
+    <Compile Include="Models\SchematicModel.cs" />
+    <Compile Include="Models\SerializableEditorCopy.cs" />
+    <Compile Include="Models\SerializableLevelObjectTag.cs" />
+    <Compile Include="Models\SleekGrid.cs" />
+    <Compile Include="Patches\CommanderPatches.cs" />
+    <Compile Include="Patches\CullingVolumePatches.cs" />
+    <Compile Include="Patches\Editor\EditorInteractPatches.cs" />
+    <Compile Include="Patches\Editor\EditorObjectsPatches.cs" />
+    <Compile Include="Patches\Editor\EditorRoadsPatches.cs" />
+    <Compile Include="Patches\Editor\EditorSpawnsPatches.cs" />
+    <Compile Include="Patches\Editor\UI\EditorDashboardUIPatches.cs" />
+    <Compile Include="Patches\Editor\UI\EditorEnvironmentNodesUIPatches.cs" />
+    <Compile Include="Patches\Editor\UI\EditorLevelObjectsUIPatches.cs" />
+    <Compile Include="Patches\Editor\UI\EditorLevelVisibilityUIPatches.cs" />
+    <Compile Include="Patches\Editor\UI\EditorRoadsUIPatches.cs" />
+    <Compile Include="Patches\Editor\UI\EditorSpawnsVehiclesUIPatches.cs" />
+    <Compile Include="Patches\Editor\UI\EditorTerrainDetailsUIPatches.cs" />
+    <Compile Include="Patches\Foliage\FoliageEditorPatches.cs" />
+    <Compile Include="Patches\Level\LevelAnimalPatches.cs" />
+    <Compile Include="Patches\Level\LevelObjectsPatches.cs" />
+    <Compile Include="Patches\Level\LevelPatches.cs" />
+    <Compile Include="Patches\Level\LevelPlayersPatches.cs" />
+    <Compile Include="Patches\Level\LevelRoadsPatches.cs" />
+    <Compile Include="Patches\Level\LevelVehiclesPatches.cs" />
+    <Compile Include="Patches\Level\LevelZombiesPatches.cs" />
+    <Compile Include="Patches\Menu\UI\MenuDashboardUIPatches.cs" />
+    <Compile Include="Patches\Menu\UI\MenuUIPatches.cs" />
+    <Compile Include="Patches\ReunObjectRemovePatches.cs" />
+    <Compile Include="Patches\LocationDevkitNodeSystemPatches.cs" />
+    <Compile Include="Patches\RoadPatches.cs" />
+    <Compile Include="Patches\RuntimeGizmosPatches.cs" />
+    <Compile Include="ProjectMain.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Schematics\SchematicsManager.cs" />
+    <Compile Include="Writers\AssetWriter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{2DE12D43-676B-46AA-9164-6E8E962F0E61}</ProjectGuid>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>EditorHelper</RootNamespace>
-        <AssemblyName>EditorHelper</AssemblyName>
-        <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
-        <LangVersion>Latest</LangVersion>
-        <FileAlignment>512</FileAlignment>
-        <Nullable>enable</Nullable>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105.The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
-        <DebugType>pdbonly</DebugType>
-        <Optimize>true</Optimize>
-        <OutputPath>bin\Release\</OutputPath>
-        <DefineConstants>TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
-
-    <!-- Publicizer -->
-    <ItemGroup>
-        <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(UseableGun|Player|Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage|ReunObjectRemove|Menu|ItemStore|EditorInteract|GlazierResources|Utilities.TimeUtility|CullingVolume).*" />
-    </ItemGroup>
-    
-    <ItemGroup>
-        <Reference Include="0Harmony, Version=2.3.5.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\Lib.Harmony.2.3.5\lib\net48\0Harmony.dll</HintPath>
-        </Reference>
-        <Reference Include="Assembly-CSharp">
-          <HintPath>..\Libs\Assembly-CSharp.dll</HintPath>
-        </Reference>
-        <Reference Include="com.rlabrecque.steamworks.net">
-          <HintPath>..\Libs\com.rlabrecque.steamworks.net.dll</HintPath>
-        </Reference>
-        <Reference Include="HighlightingSystem">
-          <HintPath>..\Libs\HighlightingSystem.dll</HintPath>
-        </Reference>
-        <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-          <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-        </Reference>
-        <Reference Include="SDG.Glazier.Runtime">
-          <HintPath>..\Libs\SDG.Glazier.Runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="SDG.NetPak.Runtime">
-          <HintPath>..\Libs\SDG.NetPak.Runtime.dll</HintPath>
-        </Reference>
-        <Reference Include="SDG.NetTransport">
-          <HintPath>..\Libs\SDG.NetTransport.dll</HintPath>
-        </Reference>
-        <Reference Include="System" />
-        <Reference Include="System.Core" />
-        <Reference Include="System.Data" />
-        <Reference Include="System.Xml" />
-        <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AccessibilityModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.AccessibilityModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.AIModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AndroidJNIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.AndroidJNIModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AnimationModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.AnimationModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ARModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ARModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AssetBundleModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.AssetBundleModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.AudioModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ClothModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ClothModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ClusterInputModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ClusterInputModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ClusterRendererModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ClusterRendererModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.CoreModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.CrashReportingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.CrashReportingModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.DirectorModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.DirectorModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.DSPGraphModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.DSPGraphModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.GameCenterModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.GameCenterModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.GIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.GIModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.GridModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.GridModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.HotReloadModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.HotReloadModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ImageConversionModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.IMGUIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.IMGUIModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.InputLegacyModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.InputLegacyModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.InputModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.InputModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.JSONSerializeModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.JSONSerializeModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.LocalizationModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.LocalizationModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.NVIDIAModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.NVIDIAModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ParticleSystemModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ParticleSystemModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.PerformanceReportingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.PerformanceReportingModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.Physics2DModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.PhysicsModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ProfilerModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ProfilerModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.ScreenCaptureModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.ScreenCaptureModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.SharedInternalsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.SharedInternalsModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.SpriteMaskModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.SpriteMaskModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.SpriteShapeModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.SpriteShapeModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.StreamingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.StreamingModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.SubstanceModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.SubstanceModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.SubsystemsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.SubsystemsModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TerrainModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TerrainModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TerrainPhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TerrainPhysicsModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TextCoreFontEngineModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TextCoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TextCoreModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TextCoreTextEngineModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TextRenderingModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TilemapModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TilemapModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.TLSModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.TLSModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UI.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UIElementsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UIElementsModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UIElementsNativeModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UIElementsNativeModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UIModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UmbraModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UmbraModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UNETModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UNETModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityAnalyticsCommonModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityAnalyticsCommonModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityAnalyticsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityAnalyticsModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityConnectModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityConnectModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityCurlModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityCurlModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityTestProtocolModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityTestProtocolModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestAudioModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityWebRequestModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestTextureModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UnityWebRequestWWWModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.VehiclesModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.VehiclesModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.VFXModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.VFXModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.VideoModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.VideoModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.VirtualTexturingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.VirtualTexturingModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.VRModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.VRModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.WindModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.WindModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.XRModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\OpenMod.UnityEngine.Redist.2021.3.29.1\lib\netstandard2.0\UnityEngine.XRModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEx">
-          <HintPath>..\Libs\UnityEx.dll</HintPath>
-        </Reference>
-        <Reference Include="UnturnedDat">
-          <HintPath>..\Libs\UnturnedDat.dll</HintPath>
-        </Reference>
-    </ItemGroup>
-    <ItemGroup>
-        <Compile Include="Builders\UIBuilder.cs" />
-        <Compile Include="Commands\CommandAmmo.cs" />
-        <Compile Include="Commands\CommandExp.cs" />
-        <Compile Include="Commands\CommandFly.cs" />
-        <Compile Include="Commands\CommandHeal.cs" />
-        <Compile Include="Commands\CommandResetSkills.cs" />
-        <Compile Include="Commands\FlyController.cs" />
-        <Compile Include="Commands\ICommand.cs" />
-        <Compile Include="Commands\CommandJump.cs" />
-        <Compile Include="Commands\CommandMaxSkills.cs" />
-        <Compile Include="Commands\CommandTp.cs" />
-        <Compile Include="Commands\CommandV.cs" />
-        <Compile Include="Editor\Managers\AnimalSpawnsManager.cs" />
-        <Compile Include="Editor\Managers\EditorManager.cs" />
-        <Compile Include="Editor\Managers\FoliageAssetManager.cs" />
-        <Compile Include="Editor\Managers\FoliageCollectionManager.cs" />
-        <Compile Include="Editor\Managers\FoliageManager.cs" />
-        <Compile Include="Editor\Managers\NodesManager.cs" />
-        <Compile Include="Editor\Managers\ObjectsManager.cs" />
-        <Compile Include="Editor\Managers\RoadsManager.cs" />
-        <Compile Include="Editor\Managers\VehicleSpawnsManager.cs" />
-        <Compile Include="Editor\Managers\VisibilityManager.cs" />
-        <Compile Include="Extras\INIFile.cs" />
-        <Compile Include="Extras\UpdaterCore.cs" />
-        <Compile Include="LSystem\AgentParameters.cs" />
-        <Compile Include="LSystem\Direction.cs" />
-        <Compile Include="LSystem\LSystemGenerator.cs" />
-        <Compile Include="LSystem\PlacementHelper.cs" />
-        <Compile Include="LSystem\RoadHelper.cs" />
-        <Compile Include="LSystem\Rule.cs" />
-        <Compile Include="LSystem\Visualizer.cs" />
-        <Compile Include="Models\CameraPosition.cs" />
-        <Compile Include="Models\EditorCopyExtension.cs" />
-        <Compile Include="Models\JsonWithMetadata.cs" />
-        <Compile Include="Models\LevelObjectExtension.cs" />
-        <Compile Include="Models\PositionModel.cs" />
-        <Compile Include="Models\ReunObjectRemoveExtension.cs" />
-        <Compile Include="Models\ReunRoadTransform.cs" />
-        <Compile Include="Models\RoadJointCustom.cs" />
-        <Compile Include="Models\RoadSelection.cs" />
-        <Compile Include="Models\RotationModel.cs" />
-        <Compile Include="Models\SchematicModel.cs" />
-        <Compile Include="Models\SerializableEditorCopy.cs" />
-        <Compile Include="Models\SerializableLevelObjectTag.cs" />
-        <Compile Include="Patches\CommanderPatches.cs" />
-        <Compile Include="Patches\CullingVolumePatches.cs" />
-        <Compile Include="Patches\Editor\EditorInteractPatches.cs" />
-        <Compile Include="Patches\Editor\EditorObjectsPatches.cs" />
-        <Compile Include="Patches\Editor\EditorRoadsPatches.cs" />
-        <Compile Include="Patches\Editor\EditorSpawnsPatches.cs" />
-        <Compile Include="Patches\Editor\UI\EditorDashboardUIPatches.cs" />
-        <Compile Include="Patches\Editor\UI\EditorEnvironmentNodesUIPatches.cs" />
-        <Compile Include="Patches\Editor\UI\EditorLevelObjectsUIPatches.cs" />
-        <Compile Include="Patches\Editor\UI\EditorLevelVisibilityUIPatches.cs" />
-        <Compile Include="Patches\Editor\UI\EditorRoadsUIPatches.cs" />
-        <Compile Include="Patches\Editor\UI\EditorSpawnsVehiclesUIPatches.cs" />
-        <Compile Include="Patches\Editor\UI\EditorTerrainDetailsUIPatches.cs" />
-        <Compile Include="Patches\Foliage\FoliageEditorPatches.cs" />
-        <Compile Include="Patches\Level\LevelAnimalPatches.cs" />
-        <Compile Include="Patches\Level\LevelObjectsPatches.cs" />
-        <Compile Include="Patches\Level\LevelPatches.cs" />
-        <Compile Include="Patches\Level\LevelPlayersPatches.cs" />
-        <Compile Include="Patches\Level\LevelRoadsPatches.cs" />
-        <Compile Include="Patches\Level\LevelVehiclesPatches.cs" />
-        <Compile Include="Patches\Level\LevelZombiesPatches.cs" />
-        <Compile Include="Patches\Menu\UI\MenuDashboardUIPatches.cs" />
-        <Compile Include="Patches\Menu\UI\MenuUIPatches.cs" />
-        <Compile Include="Patches\ReunObjectRemovePatches.cs" />
-        <Compile Include="Patches\LocationDevkitNodeSystemPatches.cs" />
-        <Compile Include="Patches\RoadPatches.cs" />
-        <Compile Include="Patches\RuntimeGizmosPatches.cs" />
-        <Compile Include="ProjectMain.cs" />
-        <Compile Include="Properties\AssemblyInfo.cs" />
-        <Compile Include="Schematics\SchematicsManager.cs" />
-        <Compile Include="Writers\AssetWriter.cs" />
-    </ItemGroup>
-    <ItemGroup>
-      <None Include="packages.config" />
-    </ItemGroup>
-
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-    <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-      <PropertyGroup>
-        <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105.The missing file is {0}.</ErrorText>
-      </PropertyGroup>
-      <Error Condition="!Exists('..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.props'))" />
-      <Error Condition="!Exists('..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.targets'))" />
-    </Target>
-    <Import Project="..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.targets" Condition="Exists('..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.targets')" />
-
+    <Error Condition="!Exists('..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.props'))" />
+    <Error Condition="!Exists('..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.targets'))" />
+  </Target>
+  <Import Project="..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.targets" Condition="Exists('..\packages\Krafs.Publicizer.2.3.0\build\Krafs.Publicizer.targets')" />
 </Project>

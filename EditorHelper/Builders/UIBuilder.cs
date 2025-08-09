@@ -287,6 +287,39 @@ public class UIBuilder
         return scrollBox;
     }
 
+    public SleekGrid<T> BuildScrollGrid<T>(int itemSize, int itemPadding) where T : class
+    {
+        SleekGrid<T> scrollGrid = new()
+        {
+            PositionOffset_X = _positionOffsetX,
+            PositionOffset_Y = _positionOffsetY,
+            PositionScale_X = _positionScaleX,
+            PositionScale_Y = _positionScaleY,
+            SizeOffset_X = _sizeOffsetX,
+            SizeOffset_Y = _sizeOffsetY,
+            SizeScale_Y = 1f,
+            itemSize = itemSize,
+            itemPadding = itemPadding
+        };
+
+        ApplySpacing();
+        return scrollGrid;
+    }
+
+    public ISleekImage BuildImage()
+    {
+        ISleekImage image = Glazier.Get().CreateImage();
+        image.PositionOffset_X = _positionOffsetX;
+        image.PositionOffset_Y = _positionOffsetY;
+        image.PositionScale_X = _positionScaleX;
+        image.PositionScale_Y = _positionScaleY;
+        image.SizeOffset_X = _sizeOffsetX;
+        image.SizeOffset_Y = _sizeOffsetY;
+
+        ApplySpacing();
+        return image;
+    }
+
     public ISleekButton CreateSimpleButton()
     {
         ISleekButton button = Glazier.Get().CreateButton();
