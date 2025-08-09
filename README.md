@@ -12,6 +12,8 @@ The module is a work in progress and features will be added as I upload more upd
 At the moment the module features are:
 - Highlight objects by type. *(Select an object and highlight all the same objects in the map with a counter displaying how much objects of this type were highlighted)*
 - Highlight color selector.
+- Preview icon for selected object.
+- Selection grid with icons for objects.
 - Manual position, rotation and scale setters. *(Change the exact position, rotation or scale by changing the numbers like in Unity)*
 - Road controls. *(Use the control arrows from objects with roads for better precision)*
 - Road radius. *(See a circle around your road point with a **accurated** radius of the road material)*
