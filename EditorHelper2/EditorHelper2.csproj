@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <LangVersion>preview</LangVersion>
+        <Nullable>enable</Nullable>
+        <Version>1.0.0.0</Version>
+    </PropertyGroup>
+
+    <!-- Publicizer -->
+    <ItemGroup>
+        <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(Asset|UseableGun|Player|Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage|ReunObjectRemove|Menu|ItemStore|EditorInteract|GlazierResources|Utilities.TimeUtility|CullingVolume).*" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Assembly-CSharp">
+        <HintPath>..\Libs\Assembly-CSharp.dll</HintPath>
+      </Reference>
+      <Reference Include="com.rlabrecque.steamworks.net">
+        <HintPath>..\Libs\com.rlabrecque.steamworks.net.dll</HintPath>
+      </Reference>
+      <Reference Include="HighlightingSystem">
+        <HintPath>..\Libs\HighlightingSystem.dll</HintPath>
+      </Reference>
+      <Reference Include="SDG.Glazier.Runtime">
+        <HintPath>..\Libs\SDG.Glazier.Runtime.dll</HintPath>
+      </Reference>
+      <Reference Include="SDG.NetPak.Runtime">
+        <HintPath>..\Libs\SDG.NetPak.Runtime.dll</HintPath>
+      </Reference>
+      <Reference Include="SDG.NetTransport">
+        <HintPath>..\Libs\SDG.NetTransport.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEx">
+        <HintPath>..\Libs\UnityEx.dll</HintPath>
+      </Reference>
+      <Reference Include="UnturnedDat">
+        <HintPath>..\Libs\UnturnedDat.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="DanielWillett.UnturnedUITools" Version="1.4.5" />
+      <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Lib.Harmony" Version="2.3.6" />
+      <PackageReference Include="OpenMod.UnityEngine.Redist" Version="2021.3.29.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Extensions\Environment\" />
+      <Folder Include="Extensions\Spawns\" />
+      <Folder Include="Extensions\Terrain\" />
+    </ItemGroup>
+
+</Project>

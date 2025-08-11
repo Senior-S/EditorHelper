@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "dgSpecHash": "5kC2wduPR04=",
+  "success": true,
+  "projectFilePath": "D:\\Plugins\\Modules\\EditorHelper2\\EditorHelper2\\EditorHelper2.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\maxim\\.nuget\\packages\\danielwillett.reflectiontools\\3.0.0\\danielwillett.reflectiontools.3.0.0.nupkg.sha512",
+    "C:\\Users\\maxim\\.nuget\\packages\\danielwillett.reflectiontools.harmony\\3.0.0\\danielwillett.reflectiontools.harmony.3.0.0.nupkg.sha512",
+    "C:\\Users\\maxim\\.nuget\\packages\\danielwillett.unturneduitools\\1.4.5\\danielwillett.unturneduitools.1.4.5.nupkg.sha512",
+    "C:\\Users\\maxim\\.nuget\\packages\\krafs.publicizer\\2.3.0\\krafs.publicizer.2.3.0.nupkg.sha512",
+    "C:\\Users\\maxim\\.nuget\\packages\\lib.harmony\\2.3.6\\lib.harmony.2.3.6.nupkg.sha512",
+    "C:\\Users\\maxim\\.nuget\\packages\\lib.harmony.ref\\2.3.6\\lib.harmony.ref.2.3.6.nupkg.sha512",
+    "C:\\Users\\maxim\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\3.1.0\\microsoft.extensions.dependencyinjection.abstractions.3.1.0.nupkg.sha512",
+    "C:\\Users\\maxim\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\3.1.0\\microsoft.extensions.logging.abstractions.3.1.0.nupkg.sha512",
+    "C:\\Users\\maxim\\.nuget\\packages\\openmod.unityengine.redist\\2021.3.29.1\\openmod.unityengine.redist.2021.3.29.1.nupkg.sha512",
+    "C:\\Users\\maxim\\.nuget\\packages\\system.reflection.emit\\4.7.0\\system.reflection.emit.4.7.0.nupkg.sha512"
+  ],
+  "logs": []
+}
