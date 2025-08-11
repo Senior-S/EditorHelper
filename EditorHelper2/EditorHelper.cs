@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
-using DanielWillett.UITools;
-using DanielWillett.UITools.Core.Extensions;
-using EditorHelper2.API.Abstract;
 using EditorHelper2.Loader;
 using HarmonyLib;
 using SDG.Framework.Modules;
@@ -19,8 +15,6 @@ public class EditorHelper : IModuleNexus
     public EditorHelper()
     {
         Harmony = new Harmony("com.seniors.editorhelper2");
-        
-        //UnturnedUIToolsNexus.UIExtensionManager.
     }
     
     public void initialize()
