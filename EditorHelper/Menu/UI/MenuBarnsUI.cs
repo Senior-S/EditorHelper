@@ -126,6 +126,16 @@ namespace EditorHelper.Menu.UI
             menuScrollBox.AddChild(sleekButton);
             offsetY += 40;
             
+            ISleekButton browseButton = Glazier.Get().CreateButton();
+            browseButton.PositionOffset_Y = offsetY;
+            browseButton.SizeOffset_X = 400f;
+            browseButton.SizeOffset_Y = 30f;
+            browseButton.Text = "Browse Workshop";
+            browseButton.TooltipText = "Find more barns on the workshop.";
+            browseButton.OnClicked += onClickedBrowseButton;
+            menuScrollBox.AddChild(browseButton);
+            offsetY += 40;
+            
             ISleekButton resetButton = Glazier.Get().CreateButton();
             resetButton.PositionOffset_Y = offsetY;
             resetButton.SizeOffset_X = 400f;
@@ -179,6 +189,11 @@ namespace EditorHelper.Menu.UI
         {
             File.WriteAllText(SelectedMenuPath, "");
             SceneManager.LoadScene("Menu");
+        }
+        
+        private static void onClickedBrowseButton(ISleekElement button)
+        {
+            Provider.provider.browserService.open("https://steamcommunity.com/workshop/browse/?appid=304930&requiredtags%5B%5D=barn");
         }
     }
 }
