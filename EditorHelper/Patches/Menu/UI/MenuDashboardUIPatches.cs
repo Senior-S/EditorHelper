@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using EditorHelper.Builders;
 using EditorHelper.Extras;
+using EditorHelper.Menu.UI;
 using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.NetTransport;
@@ -15,6 +18,14 @@ namespace EditorHelper.Patches.Menu.UI;
 [HarmonyPatch]
 public class MenuDashboardUIPatches
 {
+    private static SleekButtonIcon? _barnsButton;
+    private static MenuBarnsUI? _menuBarnsUI; 
+    
+    // Barns Button
+    static Assembly assembly = typeof(EditorHelper).Assembly;
+    static string bundlePath = Path.Combine(Path.GetDirectoryName(assembly.Location) ?? string.Empty, "Icons.unity3d");
+    private static AssetBundle? _iconsBundle = AssetBundle.LoadFromFile(bundlePath);
+    
     [HarmonyPatch(typeof(MenuDashboardUI), MethodType.Constructor)]
     [HarmonyPrefix]
     [UsedImplicitly]
@@ -463,6 +474,19 @@ public class MenuDashboardUIPatches
             MenuUI.instance.escapeMenu();
             MenuPauseUI.close();
         }
+        
+        _barnsButton = new SleekButtonIcon(_iconsBundle.LoadAsset<Texture2D>("Barns"));
+        _barnsButton.PositionOffset_Y = -110;
+        _barnsButton.PositionScale_Y = 1f;
+        _barnsButton.SizeOffset_X = 200f;
+        _barnsButton.SizeOffset_Y = 50f;
+        _barnsButton.text = "Barns";
+        _barnsButton.fontSize = ESleekFontSize.Medium;
+        _barnsButton.iconColor = ESleekTint.FOREGROUND;
+        _barnsButton.onClickedButton += OnBarnsButtonClicked;
+        MenuDashboardUI.container.AddChild(_barnsButton);
+        _menuBarnsUI = new MenuBarnsUI();
+        
         return false;
     }
 
@@ -504,5 +528,28 @@ public class MenuDashboardUIPatches
                 throw;
             }
         }
+    }
+    
+    private static void OnBarnsButtonClicked(ISleekElement button)
+    {
+        MenuBarnsUI.open();
+        MenuDashboardUI.close();
+        MenuTitleUI.close();
+    }
+}
+
+[HarmonyPatch(typeof(MenuUI), "escapeMenu")]
+public class MenuUIEscapeMenuPatch
+{ 
+    [HarmonyPostfix]
+    public static void PostfixEscapeMenu()
+    {
+        if (!Provider.provider.matchmakingService.isAttemptingServerQuery)
+            if (MenuBarnsUI.active)
+            {
+                MenuBarnsUI.close();
+                MenuDashboardUI.open();
+                MenuTitleUI.open();
+            }
     }
 }

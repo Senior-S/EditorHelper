@@ -285,6 +285,9 @@
     <Reference Include="UnturnedDat">
       <HintPath>..\Libs\UnturnedDat.dll</HintPath>
     </Reference>
+    <Reference Include="SystemEx">
+      <HintPath>..\Libs\SystemEx.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Builders\UIBuilder.cs" />
@@ -321,6 +324,7 @@
     <Compile Include="LSystem\Visualizer.cs" />
     <Compile Include="Models\CameraPosition.cs" />
     <Compile Include="Models\EditorCopyExtension.cs" />
+    <Compile Include="Models\EWorkshopMenuSubmissionModePatch.cs" />
     <Compile Include="Models\JsonWithMetadata.cs" />
     <Compile Include="Models\LevelObjectExtension.cs" />
     <Compile Include="Models\PositionModel.cs" />
@@ -354,8 +358,9 @@
     <Compile Include="Patches\Level\LevelRoadsPatches.cs" />
     <Compile Include="Patches\Level\LevelVehiclesPatches.cs" />
     <Compile Include="Patches\Level\LevelZombiesPatches.cs" />
-    <Compile Include="Patches\Menu\UI\MenuDashboardUIPatches.cs" />
     <Compile Include="Patches\Menu\UI\MenuUIPatches.cs" />
+    <Compile Include="Patches\Menu\UI\MenuDashboardUIPatches.cs" />
+    <Compile Include="Patches\Menu\UI\MenuWorkshopSubmitUIPatches.cs" />
     <Compile Include="Patches\ReunObjectRemovePatches.cs" />
     <Compile Include="Patches\LocationDevkitNodeSystemPatches.cs" />
     <Compile Include="Patches\RoadPatches.cs" />
@@ -364,6 +369,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Schematics\SchematicsManager.cs" />
     <Compile Include="Writers\AssetWriter.cs" />
+    <Compile Include="Menu\BarnAssetManager.cs" />
+    <Compile Include="Menu\UI\MenuBarnsUI.cs" />
+    <Compile Include="Menu\UI\SleekBarn.cs" />
+    <Compile Include="Patches\UseableGun\UseableGunPatches.cs" />
+    <Compile Include="CustomAssets\SceneAsset.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
