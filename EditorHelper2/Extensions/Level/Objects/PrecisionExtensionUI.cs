@@ -2,16 +2,17 @@
 using System.Linq;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
-using EditorHelper2.API.Abstract;
 using EditorHelper2.API.Attributes;
 using EditorHelper2.Factories;
+using EditorHelper2.Patches.Editor;
 using SDG.Unturned;
 using UnityEngine;
 
 namespace EditorHelper2.Extensions.Level.Objects;
 
 [UIExtension(typeof(EditorLevelObjectsUI))]
-public sealed class PrecisionExtensionUI : LevelObjectsExtension, IDisposable
+[EHExtension("Precision Extension")]
+public sealed class PrecisionExtensionUI : UIExtension, IDisposable
 {
     public static PrecisionExtensionUI? Instance;
 
@@ -108,7 +109,7 @@ public sealed class PrecisionExtensionUI : LevelObjectsExtension, IDisposable
 
     private void Initialize()
     {
-        if (_container == null || !IsEnabled) return;
+        if (_container == null) return;
         _container.AddChild(_objectPositionLabel);
         _container.AddChild(_objectPositionX);
         _container.AddChild(_objectPositionY);
@@ -122,12 +123,12 @@ public sealed class PrecisionExtensionUI : LevelObjectsExtension, IDisposable
         _container.AddChild(_objectScaleY);
         _container.AddChild(_objectScaleZ);
         
-        OnCalculateHandleOffsets += HandleCalculatedOffsets;
+        EditorObjectsPatches.OnCalculateHandleOffsets += HandleCalculatedOffsets;
     }
 
     private void HandleCalculatedOffsets(EditorObjects obj)
     {
-        if (!IsEnabled || EditorObjects.selection == null || EditorObjects.selection.Count != 1) return;
+        if (EditorObjects.selection == null || EditorObjects.selection.Count != 1) return;
         Transform selectedObject = EditorObjects.selection.First().transform;
         
         _objectPositionX.Value = selectedObject.position.x;
@@ -262,7 +263,7 @@ public sealed class PrecisionExtensionUI : LevelObjectsExtension, IDisposable
     
     public void Dispose()
     {
-        OnCalculateHandleOffsets -= HandleCalculatedOffsets;
+        EditorObjectsPatches.OnCalculateHandleOffsets -= HandleCalculatedOffsets;
         _objectPositionX.OnValueChanged -= OnPositionValueUpdated;
         _objectPositionY.OnValueChanged -= OnPositionValueUpdated;
         _objectPositionZ.OnValueChanged -= OnPositionValueUpdated;
@@ -274,7 +275,7 @@ public sealed class PrecisionExtensionUI : LevelObjectsExtension, IDisposable
         _objectScaleZ.OnValueChanged -= OnScaleValueUpdated;
 
         Instance = null;
-        if (_container == null || !IsEnabled) return;
+        if (_container == null) return;
         
         _container.RemoveChild(_objectPositionLabel);
         _container.RemoveChild(_objectPositionX);

@@ -16,3 +16,4 @@ D:\Plugins\Modules\EditorHelper2\EditorHelper2\obj\Debug\netstandard2.1\EditorHe
 D:\Plugins\Modules\EditorHelper2\EditorHelper2\obj\Debug\netstandard2.1\EditorHe.EAE2D38C.Up2Date
 D:\Plugins\Modules\EditorHelper2\EditorHelper2\obj\Debug\netstandard2.1\EditorHelper2.dll
 D:\Plugins\Modules\EditorHelper2\EditorHelper2\obj\Debug\netstandard2.1\EditorHelper2.pdb
+D:\Plugins\Modules\EditorHelper2\EditorHelper2\obj\Debug\netstandard2.1\EditorHelper2.sourcelink.json

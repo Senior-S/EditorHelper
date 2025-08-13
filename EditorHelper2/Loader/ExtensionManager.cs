@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using EditorHelper2.API.Abstract;
+using DanielWillett.ReflectionTools;
 using EditorHelper2.API.Attributes;
 using SDG.Unturned;
 
@@ -28,18 +28,19 @@ public static class ExtensionManager
         foreach (Assembly asm in assemblies)
         {
             IEnumerable<Type> types = asm.GetTypes()
-                .Where(t => typeof(LevelObjectsExtension).IsAssignableFrom(t) 
+                .Where(t => t.TryGetAttributeSafe<EHExtensionAttribute>(out _)
                             && !t.IsAbstract);
 
             foreach (Type? type in types)
             {
-                AlwaysEnabledAttribute alwaysEnabled = type.GetCustomAttribute<AlwaysEnabledAttribute>();
-                if (alwaysEnabled == null)
-                { 
-                    _instanceStatus[type.Name] = false;
+                EHExtensionAttribute extensionAttribute = type.GetCustomAttribute<EHExtensionAttribute>();
+                
+                if (!extensionAttribute.AlwaysEnabled)
+                {
+                    _instanceStatus[extensionAttribute.Name] = false;
                 }
                 
-                CommandWindow.LogFormat("[EditorHelper2] Extension {0} loaded successfully.", type.Name);
+                CommandWindow.LogFormat("[EditorHelper2] Extension {0} loaded successfully.", extensionAttribute.Name);
                 loadedExtensions++;
             }
         }

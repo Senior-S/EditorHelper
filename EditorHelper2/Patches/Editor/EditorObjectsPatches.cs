@@ -1,4 +1,4 @@
-﻿using EditorHelper2.API.Abstract;
+﻿using System;
 using EditorHelper2.Updates.Editor;
 using HarmonyLib;
 using JetBrains.Annotations;
@@ -9,6 +9,11 @@ namespace EditorHelper2.Patches.Editor;
 [HarmonyPatch(typeof(EditorObjects))]
 public class EditorObjectsPatches
 {
+    /// <summary>
+    /// Event invoked after <see cref="EditorObjects.calculateHandleOffsets"/> is called.
+    /// </summary>
+    public static event Action<EditorObjects> OnCalculateHandleOffsets;
+    
     [HarmonyPatch(nameof(EditorObjects.Update))]
     [HarmonyPrefix]
     [UsedImplicitly]
@@ -24,6 +29,6 @@ public class EditorObjectsPatches
     [UsedImplicitly]
     private static void PostfixCalculateHandleOffsets(EditorObjects __instance)
     {
-        EditorHelper.InvokeStaticEvent(typeof(LevelObjectsExtension), nameof(LevelObjectsExtension.OnCalculateHandleOffsets), __instance);
+        OnCalculateHandleOffsets?.Invoke(__instance);
     }
 }
