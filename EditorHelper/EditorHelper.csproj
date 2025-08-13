@@ -37,7 +37,7 @@
   
   <!-- Publicizer -->
   <ItemGroup>
-    <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(UseableGun|Player|Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage|ReunObjectRemove|Menu|ItemStore|EditorInteract|GlazierResources|Utilities.TimeUtility|CullingVolume).*" />
+    <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(UseableGun|Player|Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage|ReunObjectRemove|Menu|ItemStore|EditorInteract|GlazierResources|Utilities.TimeUtility|CullingVolume|MenuWorkshopSubmitUI).*" />
   </ItemGroup>
   
   <ItemGroup>
