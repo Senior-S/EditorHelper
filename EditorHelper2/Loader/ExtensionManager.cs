@@ -16,8 +16,8 @@ public static class ExtensionManager
     /// <summary>
     /// Dictionary containing the enabled/disabled value of each extension
     /// </summary>
-    private static readonly Dictionary<string, bool> _instanceStatus = [];
-    public static IReadOnlyDictionary<string, bool> Instances => _instanceStatus;
+    private static readonly Dictionary<EHExtensionAttribute, bool> _instanceStatus = [];
+    public static IReadOnlyDictionary<EHExtensionAttribute, bool> Instances => _instanceStatus;
     
     public static int LoadAllExtensions()
     {
@@ -37,7 +37,7 @@ public static class ExtensionManager
                 
                 if (!extensionAttribute.AlwaysEnabled)
                 {
-                    _instanceStatus[extensionAttribute.Name] = false;
+                    _instanceStatus[extensionAttribute] = true;
                 }
                 
                 CommandWindow.LogFormat("[EditorHelper2] Extension {0} loaded successfully.", extensionAttribute.Name);
@@ -46,5 +46,11 @@ public static class ExtensionManager
         }
 
         return loadedExtensions;
+    }
+
+    public static void UpdateExtensionStatus(EHExtensionAttribute extensionAttribute, bool enabled)
+    {
+        if (!_instanceStatus.ContainsKey(extensionAttribute)) return;
+        _instanceStatus[extensionAttribute] = enabled;
     }
 }

@@ -1,7 +1,7 @@
 ﻿using SDG.Unturned;
 using UnityEngine;
 
-namespace EditorHelper2.Factories;
+namespace EditorHelper2.UI.Builders;
 
 /// <summary>
 /// UI builder to create different UI elements
@@ -40,6 +40,16 @@ public class UIBuilder
     /// 0 = Top
     /// </summary>
     private float _anchorY;
+
+    /// <summary>
+    /// Horizontal stretch for the UI
+    /// </summary>
+    private float _scaleX;
+    
+    /// <summary>
+    /// Vertical stretch for the UI
+    /// </summary>
+    private float _scaleY;
     
     private float _spacing;
     
@@ -49,7 +59,7 @@ public class UIBuilder
     private string _text = string.Empty;
     
     /// <summary>
-    /// Create a new UIFactory for the creation of different UI elements
+    /// Create a new UIBuilder for the creation of different UI elements
     /// Defaulting pivots to Left-Bottom
     /// </summary>
     /// <param name="sizeX">Horizontal size</param>
@@ -71,8 +81,8 @@ public class UIBuilder
     /// Sets the horizontal offset
     /// </summary>
     /// <param name="x">New value for the horizontal offset</param>
-    /// <returns>UIFactory with the updated value</returns>
-    public UIBuilder SetHorizontalOffset(float x)
+    /// <returns>UIBuilder with the updated value</returns>
+    public UIBuilder SetOffsetHorizontal(float x)
     {
         _positionOffsetX = x;
         return this;
@@ -82,8 +92,8 @@ public class UIBuilder
     /// Sets the vertical offset
     /// </summary>
     /// <param name="y">New value for the vertical offset</param>
-    /// <returns>UIFactory with the updated value</returns>
-    public UIBuilder SetVerticalOffset(float y)
+    /// <returns>UIBuilder with the updated value</returns>
+    public UIBuilder SetOffsetVertical(float y)
     {
         _positionOffsetY = y;
         return this;
@@ -93,8 +103,8 @@ public class UIBuilder
     /// Sets the horizontal size
     /// </summary>
     /// <param name="x">New value for the horizontal size</param>
-    /// <returns>UIFactory with the updated value</returns>
-    public UIBuilder SetHorizontalSize(float x)
+    /// <returns>UIBuilder with the updated value</returns>
+    public UIBuilder SetSizeHorizontal(float x)
     {
         _sizeX = x;
         return this;
@@ -104,8 +114,8 @@ public class UIBuilder
     /// Sets the vertical size
     /// </summary>
     /// <param name="y">New value for the vertical size</param>
-    /// <returns>UIFactory with the updated value</returns>
-    public UIBuilder SetVerticalSize(float y)
+    /// <returns>UIBuilder with the updated value</returns>
+    public UIBuilder SetSizeVertical(float y)
     {
         _sizeY = y;
         _spacing = _sizeY + 10f;
@@ -116,8 +126,8 @@ public class UIBuilder
     /// Sets the horizontal anchor
     /// </summary>
     /// <param name="x">New value for the horizontal anchor. 1 = right</param>
-    /// <returns>UIFactory with the updated value</returns>
-    public UIBuilder SetHorizontalAnchor(float x)
+    /// <returns>UIBuilder with the updated value</returns>
+    public UIBuilder SetAnchorHorizontal(float x)
     {
         _anchorX = x;
         return this;
@@ -127,10 +137,32 @@ public class UIBuilder
     /// Sets the vertical anchor
     /// </summary>
     /// <param name="y">New value for the vertical anchor. 1 = bottom</param>
-    /// <returns>UIFactory with the updated value</returns>
-    public UIBuilder SetVerticalAnchor(float y)
+    /// <returns>UIBuilder with the updated value</returns>
+    public UIBuilder SetAnchorVertical(float y)
     {
         _anchorY = y;
+        return this;
+    }
+    
+    /// <summary>
+    /// Sets the horizontal scale
+    /// </summary>
+    /// <param name="x">New value for the horizontal scale. 1 = cover the total horizontal</param>
+    /// <returns>UIBuilder with the updated value</returns>
+    public UIBuilder SetScaleHorizontal(float x)
+    {
+        _scaleX = x;
+        return this;
+    }
+    
+    /// <summary>
+    /// Sets the vertical scale
+    /// </summary>
+    /// <param name="y">New value for the vertical scale. 1 = covert the total vertical</param>
+    /// <returns>UIBuilder with the updated value</returns>
+    public UIBuilder SetScaleVertical(float y)
+    {
+        _scaleY = y;
         return this;
     }
     
@@ -138,7 +170,7 @@ public class UIBuilder
     /// Sets the text value
     /// </summary>
     /// <param name="text">New value for the text</param>
-    /// <returns>UIFactory with the updated value</returns>
+    /// <returns>UIBuilder with the updated value</returns>
     public UIBuilder SetText(string text)
     {
         _text = text;
@@ -149,7 +181,7 @@ public class UIBuilder
     /// Sets the spacing value
     /// </summary>
     /// <param name="spacing">New value for the spacing</param>
-    /// <returns>UIFactory with the updated value</returns>
+    /// <returns>UIBuilder with the updated value</returns>
     public UIBuilder SetSpacing(float spacing)
     {
         _positionOffsetY += _anchorY < 1f ? -_spacing : _spacing;
@@ -157,6 +189,22 @@ public class UIBuilder
         _positionOffsetY += _anchorY < 1f ? _spacing : -_spacing;
         return this;
     }
+
+    public UIBuilder ResetProperties()
+    {
+        _positionOffsetX = 0;
+        _positionOffsetY = 0;
+        _anchorX = 0f;
+        _anchorY = 0f;
+        _sizeX = 0f;
+        _sizeY = 0f;
+        _scaleX = 0f;
+        _scaleY = 0f;
+        _spacing = 0f;
+        _text = string.Empty;
+        return this;
+    }
+    
     
     /// <summary>
     /// Method called after every build to apply a default spacing
@@ -166,36 +214,33 @@ public class UIBuilder
         _positionOffsetY += _anchorY < 1f ? _spacing : -_spacing;
     }
     
+    #region Builder functions
     public SleekButtonState BuildButtonState(params GUIContent[] states)
     {
         SleekButtonState buttonState = new(states)
         {
-            PositionOffset_X = _positionOffsetX,
-            PositionOffset_Y = _positionOffsetY,
-            PositionScale_X = _anchorX,
-            PositionScale_Y = _anchorY,
-            SizeOffset_X = _sizeX,
-            SizeOffset_Y = _sizeY,
             tooltip = _text
         };
+        FormatElement(ref buttonState);
 
         ApplySpacing();
         return buttonState;
     }
 
-    public SleekButtonIcon BuildButton(string tooltip, Texture2D icon = null!)
+    public SleekButtonIcon BuildButton(string tooltip, Texture2D icon = null!, ESleekFontSize fontSize = ESleekFontSize.Medium)
     {        
         SleekButtonIcon button = new(icon)
         {
-            PositionOffset_X = _positionOffsetX,
-            PositionOffset_Y = _positionOffsetY,
-            PositionScale_X = _anchorX,
-            PositionScale_Y = _anchorY,
-            SizeOffset_X = _sizeX,
-            SizeOffset_Y = _sizeY,
-            text = _text,
-            tooltip = tooltip
+            tooltip = tooltip,
+            fontSize = fontSize,
+            iconColor = ESleekTint.FOREGROUND
         };
+        if (_text.Length > 0)
+        {
+            button.text = _text;
+            button.textColor = ESleekTint.FONT;
+        }
+        FormatElement(ref button);
         
         ApplySpacing();
         return button;
@@ -204,43 +249,42 @@ public class UIBuilder
     public ISleekFloat32Field BuildFloatInput(ESleekSide labelSide = ESleekSide.LEFT)
     {   
         ISleekFloat32Field floatField = Glazier.Get().CreateFloat32Field();
-        floatField.PositionOffset_X = _positionOffsetX;
-        floatField.PositionOffset_Y = _positionOffsetY;
-        floatField.PositionScale_X = _anchorX;
-        floatField.PositionScale_Y = _anchorY;
-        floatField.SizeOffset_X = _sizeX;
-        floatField.SizeOffset_Y = _sizeY;
         floatField.Value = 0f;
         if (_text.Length > 0)
         {
             floatField.AddLabel(_text, labelSide);
+            floatField.TextColor = ESleekTint.FONT;
         }
+        FormatElement(ref floatField);
         
         ApplySpacing();
         return floatField;
     }
-    
-    
+
+    public SleekFullscreenBox BuildFullscreenBox()
+    {
+        SleekFullscreenBox sleekFullscreenBox = new();
+        FormatElement(ref sleekFullscreenBox);
+        
+        ApplySpacing();
+        return sleekFullscreenBox;
+    }
     
     public ISleekToggle BuildToggle(string tooltipText = "", ESleekSide labelSide = ESleekSide.RIGHT)
     {
         ISleekToggle toggle = Glazier.Get().CreateToggle();
-        toggle.PositionOffset_X = _positionOffsetX;
-        toggle.PositionOffset_Y = _positionOffsetY;
-        toggle.PositionScale_X = _anchorX;
-        toggle.PositionScale_Y = _anchorY;
-        toggle.SizeOffset_X = _sizeX;
-        toggle.SizeOffset_Y = _sizeY;
         toggle.Value = true;
+        toggle.ForegroundColor = ESleekTint.FOREGROUND;
         if (tooltipText.Length > 0)
         {
             toggle.TooltipText = tooltipText;
         }
-        
         if (_text.Length > 0)
         {
             toggle.AddLabel(_text, labelSide);
+            toggle.SideLabel!.TextColor = ESleekTint.FONT;
         }
+        FormatElement(ref toggle);
 
         ApplySpacing();
         return toggle;
@@ -249,15 +293,11 @@ public class UIBuilder
     public ISleekLabel BuildLabel(TextAnchor textAnchor = TextAnchor.MiddleCenter)
     {
         ISleekLabel label = Glazier.Get().CreateLabel();
-        label.PositionOffset_X = _positionOffsetX;
-        label.PositionOffset_Y = _positionOffsetY;
-        label.PositionScale_X = _anchorX;
-        label.PositionScale_Y = _anchorY;
-        label.SizeOffset_X = _sizeX;
-        label.SizeOffset_Y = _sizeY;
         label.Text = _text;
         label.TextAlignment = textAnchor;
-
+        label.TextColor = ESleekTint.FONT;
+        FormatElement(ref label);
+        
         ApplySpacing();
         return label;
     }
@@ -265,16 +305,12 @@ public class UIBuilder
     public ISleekField BuildStringField()
     {
         ISleekField stringField = Glazier.Get().CreateStringField();
-        stringField.PositionOffset_X = _positionOffsetX;
-        stringField.PositionOffset_Y = _positionOffsetY;
-        stringField.PositionScale_X = _anchorX;
-        stringField.PositionScale_Y = _anchorY;
-        stringField.SizeOffset_X = _sizeX;
-        stringField.SizeOffset_Y = _sizeY;
         if (_text.Length > 0)
         {
             stringField.PlaceholderText = _text;
+            stringField.TextColor = ESleekTint.FONT;
         }
+        FormatElement(ref stringField);
         
         ApplySpacing();
         return stringField;
@@ -283,17 +319,13 @@ public class UIBuilder
     public ISleekInt32Field BuildInt32Field(string tooltipText = "")
     {
         ISleekInt32Field int32Field = Glazier.Get().CreateInt32Field();
-        int32Field.PositionOffset_X = _positionOffsetX;
-        int32Field.PositionOffset_Y = _positionOffsetY;
-        int32Field.PositionScale_X = _anchorX;
-        int32Field.PositionScale_Y = _anchorY;
-        int32Field.SizeOffset_X = _sizeX;
-        int32Field.SizeOffset_Y = _sizeY;
         int32Field.TooltipText = tooltipText;
         if (_text.Length > 0)
         {
             int32Field.AddLabel(_text, ESleekSide.LEFT);
+            int32Field.TextColor = ESleekTint.FONT;
         }
+        FormatElement(ref int32Field);
         
         ApplySpacing();
         return int32Field;
@@ -302,18 +334,14 @@ public class UIBuilder
     public ISleekBox BuildBox(TextAnchor textAnchor = TextAnchor.MiddleCenter)
     {
         ISleekBox box = Glazier.Get().CreateBox();
-        box.PositionOffset_X = _positionOffsetX;
-        box.PositionOffset_Y = _positionOffsetY;
-        box.PositionScale_X = _anchorX;
-        box.PositionScale_Y = _anchorY;
-        box.SizeOffset_X = _sizeX;
-        box.SizeOffset_Y = _sizeY;
         if (_text.Length > 0)
         {
             box.Text = _text;
             box.TextAlignment = textAnchor;
             box.AllowRichText = true;
+            box.TextColor = ESleekTint.FONT;
         }
+        FormatElement(ref box);
         
         ApplySpacing();
         return box;
@@ -322,19 +350,15 @@ public class UIBuilder
     public ISleekBox BuildAlphaBox(TextAnchor textAnchor = TextAnchor.MiddleCenter)
     {
         ISleekBox box = Glazier.Get().CreateBox();
-        box.PositionOffset_X = _positionOffsetX;
-        box.PositionOffset_Y = _positionOffsetY;
-        box.PositionScale_X = _anchorX;
-        box.PositionScale_Y = _anchorY;
-        box.SizeOffset_X = _sizeX;
-        box.SizeOffset_Y = _sizeY;
         box.BackgroundColor = new SleekColor(ESleekTint.NONE, 0f);
         if (_text.Length > 0)
         {
             box.Text = _text;
             box.TextAlignment = textAnchor;
             box.AllowRichText = true;
+            box.TextColor = ESleekTint.FONT;
         }
+        FormatElement(ref box);
         
         ApplySpacing();
         return box;
@@ -344,19 +368,24 @@ public class UIBuilder
     {
         SleekList<T> scrollBox = new()
         {
-            PositionOffset_X = _positionOffsetX,
-            PositionOffset_Y = _positionOffsetY,
-            PositionScale_X = _anchorX,
-            PositionScale_Y = _anchorY,
-            SizeOffset_X = _sizeX,
-            SizeOffset_Y = _sizeY,
-            SizeScale_Y = 1f,
             itemHeight = itemHeight,
             itemPadding = itemPadding
         };
-
+        FormatElement(ref scrollBox);
+        
         ApplySpacing();
         return scrollBox;
+    }
+
+    public ISleekScrollView BuildScrollView(bool scaleContentToWidth = false, bool scaleContentToHeight = false)
+    {
+        ISleekScrollView scrollView = Glazier.Get().CreateScrollView();
+        scrollView.ScaleContentToWidth = scaleContentToWidth;
+        scrollView.ScaleContentToHeight = scaleContentToHeight;
+        FormatElement(ref scrollView);
+        
+        ApplySpacing();
+        return scrollView;
     }
 
     public ISleekButton CreateSimpleButton()
@@ -365,6 +394,7 @@ public class UIBuilder
         if (_text.Length > 0)
         {
             button.Text = _text;
+            button.TextColor = ESleekTint.FONT;
         }
 
         return button;
@@ -377,11 +407,12 @@ public class UIBuilder
         {
             box.TextAlignment = textAnchor;
             box.Text = _text;
+            box.TextColor = ESleekTint.FONT;
         } 
         return box;
     }
     
-    public ISleekBox CreateAlphaBox(TextAnchor textAnchor = TextAnchor.MiddleCenter)
+    public ISleekBox CreateSimpleAlphaBox(TextAnchor textAnchor = TextAnchor.MiddleCenter)
     {
         ISleekBox box = Glazier.Get().CreateBox();
         box.BackgroundColor = new SleekColor(ESleekTint.NONE, 0f);
@@ -389,7 +420,38 @@ public class UIBuilder
         {
             box.TextAlignment = textAnchor;
             box.Text = _text;
+            box.TextColor = ESleekTint.FONT;
         } 
         return box;
+    }
+    #endregion
+
+    /// <summary>
+    /// Generic method to apply common properties to the <see cref="SDG.Unturned.ISleekElement"/> 
+    /// </summary>
+    /// <param name="element">UI Element</param>
+    /// <typeparam name="T">Class extending from <see cref="SDG.Unturned.ISleekElement"/></typeparam>
+    public void FormatElement<T>(ref T element) where T : ISleekElement
+    {
+        element.PositionOffset_X = _positionOffsetX;
+        element.PositionOffset_Y = _positionOffsetY;
+        element.PositionScale_X = _anchorX;
+        element.PositionScale_Y = _anchorY;
+        if (_sizeX != 0)
+        {
+            element.SizeOffset_X = _sizeX;
+        }
+        if (_sizeY != 0)
+        {
+            element.SizeOffset_Y = _sizeY;
+        }
+        if (_scaleX != 0)
+        {
+            element.SizeScale_X = _scaleX;
+        }
+        if (_scaleY != 0)
+        {
+            element.SizeScale_Y = _scaleY;
+        }
     }
 }

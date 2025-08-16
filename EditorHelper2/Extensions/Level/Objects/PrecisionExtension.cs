@@ -3,18 +3,19 @@ using System.Linq;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.API.Attributes;
-using EditorHelper2.Factories;
 using EditorHelper2.Patches.Editor;
+using EditorHelper2.UI.Builders;
 using SDG.Unturned;
 using UnityEngine;
 
 namespace EditorHelper2.Extensions.Level.Objects;
 
 [UIExtension(typeof(EditorLevelObjectsUI))]
-[EHExtension("Precision Extension")]
-public sealed class PrecisionExtensionUI : UIExtension, IDisposable
+[EHExtension("Precision Extension", "Senior S")]
+public sealed class PrecisionExtension : UIExtension, IDisposable
 {
-    public static PrecisionExtensionUI? Instance;
+    // An instance isn't required but recommended if other extensions may interact with yours
+    public static PrecisionExtension? Instance;
 
     private readonly ISleekLabel _objectPositionLabel;
     private readonly ISleekFloat32Field _objectPositionX;
@@ -34,73 +35,73 @@ public sealed class PrecisionExtensionUI : UIExtension, IDisposable
     [ExistingMember("container")]
     private readonly SleekFullscreenBox? _container;
 
-    public PrecisionExtensionUI()
+    public PrecisionExtension()
     {
         Instance = this;
         UIBuilder builder = new(120f, 30f);
         
-        builder.SetHorizontalOffset(20f)
-            .SetVerticalOffset(-390f)
+        builder.SetOffsetHorizontal(20f)
+            .SetOffsetVertical(-390f)
             .SetText("X:");
         _objectPositionX = builder.BuildFloatInput();
         _objectPositionX.OnValueChanged += OnPositionValueUpdated;
 
         builder.SetSpacing(0f)
-            .SetHorizontalOffset(170f)
+            .SetOffsetHorizontal(170f)
             .SetText("Y:");
         _objectPositionY = builder.BuildFloatInput();
         _objectPositionY.OnValueChanged += OnPositionValueUpdated;
 
-        builder.SetHorizontalOffset(320f)
+        builder.SetOffsetHorizontal(320f)
             .SetText("Z:");
         _objectPositionZ = builder.BuildFloatInput();
         _objectPositionZ.OnValueChanged += OnPositionValueUpdated;
         
         builder.SetSpacing(25f)
-            .SetHorizontalOffset(5f)
+            .SetOffsetHorizontal(5f)
             .SetText("Position");
         _objectPositionLabel = builder.BuildLabel(TextAnchor.MiddleLeft);
         
-        builder.SetHorizontalOffset(20f)
+        builder.SetOffsetHorizontal(20f)
             .SetText("X:");
         _objectRotationX = builder.BuildFloatInput();
         _objectRotationX.OnValueChanged += OnRotationValueUpdated;
 
         builder.SetSpacing(0f)
-            .SetHorizontalOffset(170f)
+            .SetOffsetHorizontal(170f)
             .SetText("Y:");
         _objectRotationY = builder.BuildFloatInput();
         _objectRotationY.OnValueChanged += OnRotationValueUpdated;
         
-        builder.SetHorizontalOffset(320f)
+        builder.SetOffsetHorizontal(320f)
             .SetText("Z:");
         _objectRotationZ = builder.BuildFloatInput();
         _objectRotationZ.OnValueChanged += OnRotationValueUpdated;
         
         builder
             .SetSpacing(25f)
-            .SetHorizontalOffset(5f)
+            .SetOffsetHorizontal(5f)
             .SetText("Rotation");
         _objectRotationLabel = builder.BuildLabel(TextAnchor.MiddleLeft);
 
         builder.SetText("X:")
-            .SetHorizontalOffset(20f);
+            .SetOffsetHorizontal(20f);
         _objectScaleX = builder.BuildFloatInput();
         _objectScaleX.OnValueChanged += OnScaleValueUpdated;
         
         builder.SetSpacing(0f)
-            .SetHorizontalOffset(170f)
+            .SetOffsetHorizontal(170f)
             .SetText("Y:");
         _objectScaleY = builder.BuildFloatInput();
         _objectScaleY.OnValueChanged += OnScaleValueUpdated;
         
-        builder.SetHorizontalOffset(320f)
+        builder.SetOffsetHorizontal(320f)
             .SetText("Z:");
         _objectScaleZ = builder.BuildFloatInput();
         _objectScaleZ.OnValueChanged += OnScaleValueUpdated;
         
         builder.SetSpacing(25f)
-            .SetHorizontalOffset(5f)
+            .SetOffsetHorizontal(5f)
             .SetText("Scale");
         _objectScaleLabel = builder.BuildLabel(TextAnchor.MiddleLeft);
 

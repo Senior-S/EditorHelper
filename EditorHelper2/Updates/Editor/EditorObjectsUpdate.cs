@@ -386,7 +386,7 @@ public static class EditorObjectsUpdate
 		}
 		
 		#region PreicisionExtension
-		PrecisionExtensionUI.Instance?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
+		PrecisionExtension.Instance?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
 		#endregion
     }
 }
