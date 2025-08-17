@@ -385,8 +385,14 @@ public static class EditorObjectsUpdate
 			}
 		}
 		
-		#region PreicisionExtension
-		PrecisionExtension.Instance?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
+		#region PrecisionExtension
+		PrecisionExtension? precisionExtension = DanielWillett.UITools.UnturnedUIToolsNexus.UIExtensionManager.GetInstance<PrecisionExtension>();
+		precisionExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
+		#endregion
+		
+		#region HighlightExtension
+		HighlightExtension? highlightExtension = DanielWillett.UITools.UnturnedUIToolsNexus.UIExtensionManager.GetInstance<HighlightExtension>();
+		highlightExtension?.CustomUpdate();
 		#endregion
     }
 }

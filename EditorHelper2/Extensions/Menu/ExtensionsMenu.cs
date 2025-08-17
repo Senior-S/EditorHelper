@@ -18,9 +18,8 @@ namespace EditorHelper2.Extensions.Menu;
 public class ExtensionsMenu : UIExtension, IDisposable
 {
     [ExistingMember("container")]
-    private readonly SleekFullscreenBox? _OriginalContainer;
-    
-    public static ExtensionsMenu Instance { get; private set; }
+    private readonly SleekFullscreenBox? _originalContainer;
+
     private bool _active;
     private readonly SleekButtonIcon _extensionsButton;
     private readonly SleekButtonIcon _backButton;
@@ -30,7 +29,6 @@ public class ExtensionsMenu : UIExtension, IDisposable
     
     public ExtensionsMenu()
     {
-        Instance = this;
         _active = false;
         UIBuilder builder = new(200f, 50f);
 
@@ -68,7 +66,7 @@ public class ExtensionsMenu : UIExtension, IDisposable
             .SetScaleVertical(0f)
             .SetText("Back");
 
-        _backButton = builder.BuildButton("Back", bundle.load<Texture2D>("Exit"));
+        _backButton = builder.BuildButton("Back", bundle.load<Texture2D>("Exit"), ESleekFontSize.Medium);
 
         builder.ResetProperties()
             .SetSizeVertical(50f)
@@ -86,7 +84,6 @@ public class ExtensionsMenu : UIExtension, IDisposable
         _extensionsScrollView = builder.BuildScrollView(scaleContentToWidth: true);
         PopulateExtensions();
         
-        
         Initialize();
     }
 
@@ -100,21 +97,21 @@ public class ExtensionsMenu : UIExtension, IDisposable
             builder.SetOffsetVertical(i * 50)
                 .SetScaleHorizontal(1f);
 
-            SleekExtension sleekExtension = new(extensionAttribute, i);
+            SleekExtension sleekExtension = new(extensionAttribute);
             builder.FormatElement(ref sleekExtension);
             
             _extensionsScrollView.AddChild(sleekExtension);
         }
-        _extensionsScrollView.ContentSizeOffset = new Vector2(0f, ExtensionManager.Instances.Count * -50 - 10);
+        _extensionsScrollView.ContentSizeOffset = new Vector2(0f, ExtensionManager.Instances.Count * 50 - 10);
         _extensionsScrollView.NormalizedStateCenter = new Vector2(0.5f, 1);
         
     }
 
     private void Initialize()
     {
-        if (_OriginalContainer == null) return;
+        if (_originalContainer == null) return;
         
-        _OriginalContainer.AddChild(_extensionsButton);
+        _originalContainer.AddChild(_extensionsButton);
         _container.AddChild(_backButton);
         _container.AddChild(_headerBox);
         _container.AddChild(_extensionsScrollView);
@@ -163,9 +160,9 @@ public class ExtensionsMenu : UIExtension, IDisposable
     
     public void Dispose()
     {
-        if (_OriginalContainer == null) return;
+        if (_originalContainer == null) return;
         
-        _OriginalContainer.RemoveChild(_extensionsButton);
+        _originalContainer.RemoveChild(_extensionsButton);
         _container.RemoveChild(_backButton);
         _container.RemoveChild(_headerBox);
         _container.RemoveChild(_extensionsScrollView);

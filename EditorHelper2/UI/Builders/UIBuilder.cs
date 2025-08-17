@@ -72,7 +72,7 @@ public class UIBuilder
         _positionOffsetX = 0;
         _positionOffsetY = 0;
         _anchorX = 0f;
-        _anchorY = 1f;
+        _anchorY = 0f;
         
         _spacing = _sizeY + 10f;
     }
@@ -227,7 +227,7 @@ public class UIBuilder
         return buttonState;
     }
 
-    public SleekButtonIcon BuildButton(string tooltip, Texture2D icon = null!, ESleekFontSize fontSize = ESleekFontSize.Medium)
+    public SleekButtonIcon BuildButton(string tooltip, Texture2D icon = null!, ESleekFontSize fontSize = ESleekFontSize.Default)
     {        
         SleekButtonIcon button = new(icon)
         {

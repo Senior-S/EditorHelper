@@ -14,6 +14,11 @@ public class EditorObjectsPatches
     /// </summary>
     public static event Action<EditorObjects> OnCalculateHandleOffsets;
     
+    /// <summary>
+    /// Event invoked after <see cref="EditorObjects.clearSelection"/> is called.
+    /// </summary>
+    public static event Action<EditorObjects> OnClearSelection;
+    
     [HarmonyPatch(nameof(EditorObjects.Update))]
     [HarmonyPrefix]
     [UsedImplicitly]
@@ -30,5 +35,13 @@ public class EditorObjectsPatches
     private static void PostfixCalculateHandleOffsets(EditorObjects __instance)
     {
         OnCalculateHandleOffsets?.Invoke(__instance);
+    }
+    
+    [HarmonyPatch(nameof(EditorObjects.clearSelection))]
+    [HarmonyPostfix]
+    [UsedImplicitly]
+    private static void PostfixClearSelection(EditorObjects __instance)
+    {
+        OnClearSelection?.Invoke(__instance);
     }
 }

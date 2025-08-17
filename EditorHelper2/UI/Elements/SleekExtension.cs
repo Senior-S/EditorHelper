@@ -10,7 +10,7 @@ public class SleekExtension : SleekWrapper
 {
     private readonly EHExtensionAttribute _extensionAttribute;
     
-    public SleekExtension(EHExtensionAttribute extensionAttribute, int i)
+    public SleekExtension(EHExtensionAttribute extensionAttribute)
     {
         _extensionAttribute = extensionAttribute;
         UIBuilder builder = new(0, 0);
@@ -26,9 +26,11 @@ public class SleekExtension : SleekWrapper
             .SetAnchorVertical(0.5f)
             .SetSizeHorizontal(42f)
             .SetSizeVertical(42f)
-            .SetText(extensionAttribute.Name + $"[{i}]");
+            .SetText(extensionAttribute.Name);
 
         ISleekToggle toggle = builder.BuildToggle($"Toggle the status of {extensionAttribute.Name}");
+        toggle.SideLabel!.SizeScale_X = 1f;
+        toggle.SideLabel!.SizeOffset_X = 600f;
         toggle.Value = ExtensionManager.Instances[extensionAttribute];
         toggle.OnValueChanged += OnExtensionToggleChanged;
         AddChild(toggle);

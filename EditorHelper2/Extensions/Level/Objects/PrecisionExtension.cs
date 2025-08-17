@@ -3,6 +3,7 @@ using System.Linq;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.API.Attributes;
+using EditorHelper2.API.Interfaces;
 using EditorHelper2.Patches.Editor;
 using EditorHelper2.UI.Builders;
 using SDG.Unturned;
@@ -12,11 +13,8 @@ namespace EditorHelper2.Extensions.Level.Objects;
 
 [UIExtension(typeof(EditorLevelObjectsUI))]
 [EHExtension("Precision Extension", "Senior S")]
-public sealed class PrecisionExtension : UIExtension, IDisposable
+public sealed class PrecisionExtension : UIExtension, IExtension
 {
-    // An instance isn't required but recommended if other extensions may interact with yours
-    public static PrecisionExtension? Instance;
-
     private readonly ISleekLabel _objectPositionLabel;
     private readonly ISleekFloat32Field _objectPositionX;
     private readonly ISleekFloat32Field _objectPositionY;
@@ -37,7 +35,6 @@ public sealed class PrecisionExtension : UIExtension, IDisposable
 
     public PrecisionExtension()
     {
-        Instance = this;
         UIBuilder builder = new(120f, 30f);
         
         builder.SetOffsetHorizontal(20f)
@@ -108,7 +105,7 @@ public sealed class PrecisionExtension : UIExtension, IDisposable
         Initialize();
     }
 
-    private void Initialize()
+    public void Initialize()
     {
         if (_container == null) return;
         _container.AddChild(_objectPositionLabel);
@@ -127,6 +124,7 @@ public sealed class PrecisionExtension : UIExtension, IDisposable
         EditorObjectsPatches.OnCalculateHandleOffsets += HandleCalculatedOffsets;
     }
 
+    #region Event Handlers
     private void HandleCalculatedOffsets(EditorObjects obj)
     {
         if (EditorObjects.selection == null || EditorObjects.selection.Count != 1) return;
@@ -261,6 +259,7 @@ public sealed class PrecisionExtension : UIExtension, IDisposable
         selectedObject.localScale = scale;
         EditorObjects.calculateHandleOffsets();
     }
+    #endregion
     
     public void Dispose()
     {
@@ -275,7 +274,6 @@ public sealed class PrecisionExtension : UIExtension, IDisposable
         _objectScaleY.OnValueChanged -= OnScaleValueUpdated;
         _objectScaleZ.OnValueChanged -= OnScaleValueUpdated;
 
-        Instance = null;
         if (_container == null) return;
         
         _container.RemoveChild(_objectPositionLabel);
