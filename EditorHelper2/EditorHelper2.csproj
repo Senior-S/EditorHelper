@@ -5,6 +5,7 @@
         <LangVersion>preview</LangVersion>
         <Nullable>enable</Nullable>
         <Version>1.0.0.0</Version>
+        <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     </PropertyGroup>
 
     <!-- Publicizer -->
@@ -58,5 +59,9 @@
     <ItemGroup>
       <ProjectReference Include="..\EditorHelper2.common\EditorHelper2.common.csproj" />
     </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Module\&quot; /Y /I" />
+    </Target>
 
 </Project>

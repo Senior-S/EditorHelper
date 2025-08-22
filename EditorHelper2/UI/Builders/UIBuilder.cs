@@ -60,7 +60,7 @@ public class UIBuilder
     
     /// <summary>
     /// Create a new UIBuilder for the creation of different UI elements
-    /// Defaulting pivots to Left-Bottom
+    /// Defaulting pivots to Left-Top
     /// </summary>
     /// <param name="sizeX">Horizontal size</param>
     /// <param name="sizeY">Vertical size</param>

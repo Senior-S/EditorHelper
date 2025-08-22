@@ -9,12 +9,12 @@ using SDG.Unturned;
 
 namespace EditorHelper2.common.Helpers;
 
-public static class SchematicsHelper
+public class SchematicsHelper
 {
-    private static readonly string SchematicsFolder;
-    public static List<Schematic> Schematics = [];
-    
-    static SchematicsHelper()
+    private readonly string SchematicsFolder;
+    public List<Schematic> Schematics = [];
+
+    public SchematicsHelper()
     {
         SchematicsFolder = Path.Combine(Globals.ExtensionsFolder, "Schematics");
 
@@ -23,7 +23,7 @@ public static class SchematicsHelper
         ReloadSchematics();
     }
 
-    public static Schematic? TryLoadSchematic(int index, string schematicSearchValue)
+    public Schematic? TryLoadSchematic(int index, string schematicSearchValue)
     {
         if (Schematics.Count < index)
         {
@@ -56,7 +56,7 @@ public static class SchematicsHelper
         return schematic;
     }
     
-    public static void ReloadSchematics()
+    public void ReloadSchematics()
     {
         string[] files = Directory.GetFiles(SchematicsFolder, "*.json");
 
@@ -69,7 +69,7 @@ public static class SchematicsHelper
         Schematics = owners.Select(c => new Schematic(c.File.Replace(SchematicsFolder, "").Substring(1), c.Owner)).ToList();
     }
 
-    public static void SaveSchematic(string schematicName)
+    public void SaveSchematic(string schematicName)
     {
         string formattedName = schematicName + ".json";
 
@@ -109,7 +109,7 @@ public static class SchematicsHelper
         Schematics.Add(schematic);
     }
     
-    private static string? GetOwnerFromJsonAsync(string filePath)
+    private string? GetOwnerFromJsonAsync(string filePath)
     {
         using FileStream stream = File.OpenRead(filePath);
         using StreamReader reader = new StreamReader(stream);

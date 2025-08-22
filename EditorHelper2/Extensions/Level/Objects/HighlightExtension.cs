@@ -66,7 +66,8 @@ public class HighlightExtension : UIExtension, IExtension
         _highlightColorsButton = builder.BuildButtonState(new GUIContent("Yellow"), new GUIContent("Red"), 
             new GUIContent("Purple"), new GUIContent("Blue"));
         
-        builder.SetText("Select highlighted objects");
+        builder.SetOffsetVertical(-110f)
+            .SetText("Select highlighted objects");
         
         _selectHighlightedButton = builder.BuildButton("Select all highlighted objects");
         

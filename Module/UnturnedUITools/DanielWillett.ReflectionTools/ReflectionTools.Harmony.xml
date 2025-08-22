@@ -1,0 +1,960 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ReflectionTools.Harmony</name>
+    </assembly>
+    <members>
+        <member name="T:DanielWillett.ReflectionTools.BlockInfoExtensions">
+            <summary>
+            Extension methods relating to <see cref="T:DanielWillett.ReflectionTools.BlockInfo"/>
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.BlockInfoExtensions.SetupBlockStart(HarmonyLib.CodeInstruction,DanielWillett.ReflectionTools.BlockInfo@)">
+            <summary>
+            Moves any labels and needed blocks that were on the start of the previous block to the given instruction, which should start the new block.
+            </summary>
+            <returns>The instance of the same instruction for method chaining.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.BlockInfoExtensions.SetupBlockEnd(HarmonyLib.CodeInstruction,DanielWillett.ReflectionTools.BlockInfo@)">
+            <summary>
+            Moves any labels and needed blocks that were on the end of the previous block to the given instruction, which should end the new block.
+            </summary>
+            <returns>The instance of the same instruction for method chaining.</returns>
+        </member>
+        <member name="T:DanielWillett.ReflectionTools.BlockInfo">
+            <summary>
+            Information about the labels and exception blocks in a group of instructions.
+            </summary>
+        </member>
+        <member name="F:DanielWillett.ReflectionTools.BlockInfo.Instructions">
+            <summary>
+            All instructions in the block.
+            </summary>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.BlockInfo.First">
+            <summary>
+            The first instruction in the block
+            </summary>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.BlockInfo.Last">
+            <summary>
+            The last instruction in the block.
+            </summary>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.BlockInfo.Item(System.Int32)">
+            <summary>
+            Get the instruction at the given index in this block.
+            </summary>
+            <exception cref="T:System.IndexOutOfRangeException"/>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.BlockInfo.Length">
+            <summary>
+            Size of the block in instructions.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.BlockInfo.SetupBlockStart(HarmonyLib.CodeInstruction)">
+            <summary>
+            Moves any labels and needed blocks that were on the start of the previous block to the given instruction, which should start the new block.
+            </summary>
+            <returns>The instance of the same instruction for method chaining.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.BlockInfo.SetupBlockEnd(HarmonyLib.CodeInstruction)">
+            <summary>
+            Moves any labels and needed blocks that were on the end of the previous block to the given instruction, which should end the new block.
+            </summary>
+            <returns>The instance of the same instruction for method chaining.</returns>
+        </member>
+        <member name="T:DanielWillett.ReflectionTools.InstructionBlockInfo">
+            <summary>
+            Information about the labels and exception blocks in one instruction.
+            </summary>
+        </member>
+        <member name="F:DanielWillett.ReflectionTools.InstructionBlockInfo.OpCode">
+            <summary>
+            OpCode of the instruction.
+            </summary>
+        </member>
+        <member name="F:DanielWillett.ReflectionTools.InstructionBlockInfo.Operand">
+            <summary>
+            Operand of the instruction.
+            </summary>
+        </member>
+        <member name="F:DanielWillett.ReflectionTools.InstructionBlockInfo.Labels">
+            <summary>
+            Array of all labels in the instruction.
+            </summary>
+        </member>
+        <member name="F:DanielWillett.ReflectionTools.InstructionBlockInfo.ExceptionBlocks">
+            <summary>
+            Array of all exception blocks in the instruction.
+            </summary>
+        </member>
+        <member name="T:DanielWillett.ReflectionTools.Formatting.DefaultCodeInstructionFormatter">
+            <summary>
+            Default plain-text implementation of <see cref="T:DanielWillett.ReflectionTools.Formatting.ICodeInstructionFormatter"/>.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.DefaultCodeInstructionFormatter.FormatCodeInstruction(HarmonyLib.CodeInstruction,DanielWillett.ReflectionTools.Formatting.OpCodeFormattingContext)">
+            <inheritdoc/>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.Formatting.DefaultTranspileContextLogger.Enabled">
+            <summary>
+            If this <see cref="T:DanielWillett.ReflectionTools.Formatting.DefaultTranspileContextLogger"/> is enabled or not.
+            </summary>
+            <remarks>Defaults to <see langword="true"/>.</remarks>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.DefaultTranspileContextLogger.LogFailure(DanielWillett.ReflectionTools.TranspileContext,DanielWillett.ReflectionTools.Formatting.IMemberDefinition,DanielWillett.ReflectionTools.IAccessor)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.DefaultTranspileContextLogger.LogFailure(DanielWillett.ReflectionTools.TranspileContext,System.String,DanielWillett.ReflectionTools.IAccessor)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.DefaultTranspileContextLogger.LogDebug(DanielWillett.ReflectionTools.TranspileContext,System.String,DanielWillett.ReflectionTools.IAccessor)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.DefaultTranspileContextLogger.LogInfo(DanielWillett.ReflectionTools.TranspileContext,System.String,DanielWillett.ReflectionTools.IAccessor)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.DefaultTranspileContextLogger.LogWarning(DanielWillett.ReflectionTools.TranspileContext,System.String,DanielWillett.ReflectionTools.IAccessor)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.DefaultTranspileContextLogger.LogError(DanielWillett.ReflectionTools.TranspileContext,System.String,DanielWillett.ReflectionTools.IAccessor)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.DefaultTranspileContextLogger.LogError(DanielWillett.ReflectionTools.TranspileContext,System.Exception,System.String,DanielWillett.ReflectionTools.IAccessor)">
+            <inheritdoc />
+        </member>
+        <member name="T:DanielWillett.ReflectionTools.Formatting.ICodeInstructionFormatter">
+            <summary>
+            Converts a code instruction into a string representation
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.ICodeInstructionFormatter.FormatCodeInstruction(HarmonyLib.CodeInstruction,DanielWillett.ReflectionTools.Formatting.OpCodeFormattingContext)">
+            <summary>
+            Convert a code instruction to a string representation.
+            </summary>
+        </member>
+        <member name="T:DanielWillett.ReflectionTools.Formatting.ITranspileContextLogger">
+            <summary>
+            Handles formatting transpiler logs and writing them to a <see cref="T:DanielWillett.ReflectionTools.IReflectionToolsLogger"/>.
+            </summary>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.Formatting.ITranspileContextLogger.Enabled">
+            <summary>
+            If logging should be enabled.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.ITranspileContextLogger.LogFailure(DanielWillett.ReflectionTools.TranspileContext,DanielWillett.ReflectionTools.Formatting.IMemberDefinition,DanielWillett.ReflectionTools.IAccessor)">
+            <summary>
+            Log failure to find a reflection member with a message.
+            </summary>
+            <param name="context">The transpiler that failed.</param>
+            <param name="missingMember">A definition of the member that couldn't be found.</param>
+            <param name="accessor">Instance of <see cref="T:DanielWillett.ReflectionTools.IAccessor"/> to use. Defaults to <see cref="P:DanielWillett.ReflectionTools.Accessor.Active"/>.</param>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.ITranspileContextLogger.LogFailure(DanielWillett.ReflectionTools.TranspileContext,System.String,DanielWillett.ReflectionTools.IAccessor)">
+            <summary>
+            Log failure with a message.
+            </summary>
+            <param name="context">The transpiler that failed.</param>
+            <param name="message">Human-readable message to accompany the transpile context in the final log.</param>
+            <param name="accessor">Instance of <see cref="T:DanielWillett.ReflectionTools.IAccessor"/> to use. Defaults to <see cref="P:DanielWillett.ReflectionTools.Accessor.Active"/>.</param>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.ITranspileContextLogger.LogDebug(DanielWillett.ReflectionTools.TranspileContext,System.String,DanielWillett.ReflectionTools.IAccessor)">
+            <summary>
+            Log debug information with a message.
+            </summary>
+            <param name="context">The transpiler.</param>
+            <param name="message">Human-readable message describing the event.</param>
+            <param name="accessor">Instance of <see cref="T:DanielWillett.ReflectionTools.IAccessor"/> to use. Defaults to <see cref="P:DanielWillett.ReflectionTools.Accessor.Active"/>.</param>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.ITranspileContextLogger.LogInfo(DanielWillett.ReflectionTools.TranspileContext,System.String,DanielWillett.ReflectionTools.IAccessor)">
+            <summary>
+            Log information with a message.
+            </summary>
+            <param name="context">The transpiler.</param>
+            <param name="message">Human-readable message describing the event.</param>
+            <param name="accessor">Instance of <see cref="T:DanielWillett.ReflectionTools.IAccessor"/> to use. Defaults to <see cref="P:DanielWillett.ReflectionTools.Accessor.Active"/>.</param>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.ITranspileContextLogger.LogWarning(DanielWillett.ReflectionTools.TranspileContext,System.String,DanielWillett.ReflectionTools.IAccessor)">
+            <summary>
+            Log a warning with a message.
+            </summary>
+            <param name="context">The transpiler.</param>
+            <param name="message">Human-readable message describing the event.</param>
+            <param name="accessor">Instance of <see cref="T:DanielWillett.ReflectionTools.IAccessor"/> to use. Defaults to <see cref="P:DanielWillett.ReflectionTools.Accessor.Active"/>.</param>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.ITranspileContextLogger.LogError(DanielWillett.ReflectionTools.TranspileContext,System.String,DanielWillett.ReflectionTools.IAccessor)">
+            <summary>
+            Log an error with a message.
+            </summary>
+            <param name="context">The transpiler.</param>
+            <param name="message">Human-readable message describing the event.</param>
+            <param name="accessor">Instance of <see cref="T:DanielWillett.ReflectionTools.IAccessor"/> to use. Defaults to <see cref="P:DanielWillett.ReflectionTools.Accessor.Active"/>.</param>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.Formatting.ITranspileContextLogger.LogError(DanielWillett.ReflectionTools.TranspileContext,System.Exception,System.String,DanielWillett.ReflectionTools.IAccessor)">
+            <summary>
+            Log an error with an exception and message.
+            </summary>
+            <param name="context">The transpiler.</param>
+            <param name="ex">Error detailing what went wrong during the event.</param>
+            <param name="message">Human-readable message describing the event.</param>
+            <param name="accessor">Instance of <see cref="T:DanielWillett.ReflectionTools.IAccessor"/> to use. Defaults to <see cref="P:DanielWillett.ReflectionTools.Accessor.Active"/>.</param>
+        </member>
+        <member name="T:DanielWillett.ReflectionTools.HarmonyLog">
+            <summary>
+            Manages <see cref="T:HarmonyLib.FileLog"/>, with a <see cref="M:DanielWillett.ReflectionTools.HarmonyLog.Reset(System.String,System.Boolean)"/> method to clear the file that can be called on startup, along with setting a specific log path.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.HarmonyLog.ResetConditional(System.String,System.Boolean)">
+            <summary>
+            If the log has already been started, clear the file, then update the log location for harmony to the given file.
+            </summary>
+            <remarks>Will only compile if <c>REFLECTION_TOOLS_ENABLE_HARMONY_LOG</c> is defined, otherwise does the same thing as <see cref="M:DanielWillett.ReflectionTools.HarmonyLog.Reset(System.String,System.Boolean)"/>.</remarks>
+            <param name="logPath">The path to create the log file at. If this is <see langword="null"/>, an attempt will be made to get it from the environment variable.</param>
+            <param name="enableDebug">Should harmony debug logging be enabled (<see cref="F:HarmonyLib.Harmony.DEBUG"/>).</param>
+            <exception cref="T:System.InvalidOperationException">Log path is not set, neither is the environment variable 'HARMONY_LOG_FILE'.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.HarmonyLog.Reset(System.String,System.Boolean)">
+            <summary>
+            If the log has already been started, clear the file, then update the log location for harmony to the given file.
+            </summary>
+            <param name="logPath">The path to create the log file at. If this is <see langword="null"/>, an attempt will be made to get it from the environment variable.</param>
+            <param name="enableDebug">Should harmony debug logging be enabled (<see cref="F:HarmonyLib.Harmony.DEBUG"/>).</param>
+            <exception cref="T:System.InvalidOperationException">Log path is not set, neither is the environment variable 'HARMONY_LOG_FILE'.</exception>
+        </member>
+        <member name="T:DanielWillett.ReflectionTools.PatternMatch">
+            <summary>
+            Represents a predicate for code instructions.
+            </summary>
+            <param name="instruction">The code instruction to check for a match on.</param>
+            <returns><see langword="true"/> for a match, otherwise <see langword="false"/>.</returns>
+        </member>
+        <member name="T:DanielWillett.ReflectionTools.PatchUtility">
+            <summary>
+            Transpiling utilities.
+            </summary>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.PatchUtility.CodeInstructionFormatter">
+            <summary>
+            Formatter used to format <see cref="T:HarmonyLib.CodeInstruction"/>'s.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.Throw``1(System.String)">
+            <summary>
+            Returns instructions to throw the provided <typeparamref name="TException"/> with an optional <paramref name="message"/>.
+            </summary>
+            <exception cref="T:System.MemberAccessException">Unable to find any useable constructors for that exception.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.FollowPattern(System.Collections.Generic.IList{HarmonyLib.CodeInstruction},System.Int32@,DanielWillett.ReflectionTools.PatternMatch[])">
+            <summary>
+            Returns <see langword="true"/> if the instruction at <paramref name="index"/> and the following match <paramref name="matches"/>. Pass <see langword="null"/> as a wildcard match.
+            </summary>
+            <remarks><paramref name="index"/> will be incremented to the next instruction after the match.</remarks>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.FollowPattern(DanielWillett.ReflectionTools.TranspileContext,DanielWillett.ReflectionTools.PatternMatch[])">
+            <summary>
+            Returns <see langword="true"/> if the instruction at the caret and the following match <paramref name="matches"/>. Pass <see langword="null"/> as a wildcard match.
+            </summary>
+            <remarks>The caret will be incremented to the next instruction after the match.</remarks>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.RemovePattern(System.Collections.Generic.IList{HarmonyLib.CodeInstruction},System.Int32,DanielWillett.ReflectionTools.PatternMatch[])">
+            <summary>
+            Returns <see langword="true"/> and removes the instructions at <paramref name="index"/> and the following if they match <paramref name="matches"/>. Pass <see langword="null"/> as a wildcard match.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.RemovePattern(DanielWillett.ReflectionTools.TranspileContext,DanielWillett.ReflectionTools.PatternMatch[])">
+            <summary>
+            Returns a block with info of the removed instructions and removes the instructions at the caret and the following if they match <paramref name="matches"/>. Pass <see langword="null"/> as a wildcard match.
+            </summary>
+            <remarks>The return block will be of size 0 if no matches were found.</remarks>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.TryRemovePattern(DanielWillett.ReflectionTools.TranspileContext,DanielWillett.ReflectionTools.BlockInfo@,DanielWillett.ReflectionTools.PatternMatch[])">
+            <summary>
+            Creates a block with info of the removed instructions and removes the instructions at the caret and the following if they match <paramref name="matches"/>. Pass <see langword="null"/> as a wildcard match.
+            </summary>
+            <remarks>The outputted block will be of size 0 if no matches were found.</remarks>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.MatchPattern(System.Collections.Generic.IList{HarmonyLib.CodeInstruction},System.Int32,DanielWillett.ReflectionTools.PatternMatch[])">
+            <summary>
+            Returns <see langword="true"/> if the instruction at <paramref name="index"/> and the following match <paramref name="matches"/>. Pass <see langword="null"/> as a wildcard match.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.MatchPattern(DanielWillett.ReflectionTools.TranspileContext,DanielWillett.ReflectionTools.PatternMatch[])">
+            <summary>
+            Returns <see langword="true"/> if the instruction at the caret and the following match <paramref name="matches"/>. Pass <see langword="null"/> as a wildcard match.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.ReturnIfFalse(System.Collections.Generic.IList{HarmonyLib.CodeInstruction},System.Reflection.Emit.ILGenerator,System.Int32@,System.Func{System.Boolean},System.Nullable{System.Reflection.Emit.Label})">
+            <summary>
+            Inserts instructions to execute <paramref name="checker"/> and return (or optionally branch to <paramref name="goto"/>) if it returns <see langword="false"/>.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index"/> is out of range.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="checker"/> is not static.</exception>
+            <returns>Amount of instructions inserted.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.ReturnIfFalse(DanielWillett.ReflectionTools.TranspileContext,System.Func{System.Boolean},System.Nullable{System.Reflection.Emit.Label})">
+            <summary>
+            Inserts instructions to execute <paramref name="checker"/> and return (or optionally branch to <paramref name="goto"/>) if it returns <see langword="false"/>.
+            </summary>
+            <exception cref="T:System.ArgumentException"><paramref name="checker"/> is not static.</exception>
+            <returns>Amount of instructions inserted.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.ContinueUntil(System.Collections.Generic.IList{HarmonyLib.CodeInstruction},System.Int32@,DanielWillett.ReflectionTools.PatternMatch,System.Boolean)">
+            <summary>
+            Increment <paramref name="index"/> until <paramref name="match"/> matches or the function ends.
+            </summary>
+            <returns>Amount of instructions skipped.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.ContinueUntil(DanielWillett.ReflectionTools.TranspileContext,DanielWillett.ReflectionTools.PatternMatch,System.Boolean)">
+            <summary>
+            Increment the caret until <paramref name="match"/> matches or the function ends.
+            </summary>
+            <returns>Amount of instructions skipped.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.ContinueWhile(System.Collections.Generic.IList{HarmonyLib.CodeInstruction},System.Int32@,DanielWillett.ReflectionTools.PatternMatch,System.Boolean)">
+            <summary>
+            Increment <paramref name="index"/> until <paramref name="match"/> fails or the function ends.
+            </summary>
+            <returns>Amount of instructions skipped.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.ContinueWhile(DanielWillett.ReflectionTools.TranspileContext,DanielWillett.ReflectionTools.PatternMatch,System.Boolean)">
+            <summary>
+            Increment the caret until <paramref name="match"/> fails or the function ends.
+            </summary>
+            <returns>Amount of instructions skipped.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.LabelNext(System.Collections.Generic.IList{HarmonyLib.CodeInstruction},System.Int32,System.Reflection.Emit.Label,DanielWillett.ReflectionTools.PatternMatch,System.Int32,System.Boolean)">
+            <summary>
+            Add <paramref name="label"/> to the next instruction that matches <paramref name="match"/>.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.LabelNext(DanielWillett.ReflectionTools.TranspileContext,System.Reflection.Emit.Label,DanielWillett.ReflectionTools.PatternMatch,System.Int32,System.Boolean)">
+            <summary>
+            Add <paramref name="label"/> to the next instruction that matches <paramref name="match"/>.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.LabelNext(System.Collections.Generic.IList{HarmonyLib.CodeInstruction},System.Reflection.Emit.ILGenerator,System.Int32,DanielWillett.ReflectionTools.PatternMatch,System.Int32)">
+            <summary>
+            Get a label to the next instruction that matches <paramref name="match"/>.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.LabelNext(DanielWillett.ReflectionTools.TranspileContext,DanielWillett.ReflectionTools.PatternMatch,System.Int32)">
+            <summary>
+            Get a label to the next instruction that matches <paramref name="match"/>.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.LabelNextOrReturn(System.Collections.Generic.IList{HarmonyLib.CodeInstruction},System.Reflection.Emit.ILGenerator,System.Int32,DanielWillett.ReflectionTools.PatternMatch,System.Int32,System.Boolean)">
+            <summary>
+            Get a label to the next instruction that matches <paramref name="match"/>, or the end of the function.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.LabelNextOrReturn(DanielWillett.ReflectionTools.TranspileContext,DanielWillett.ReflectionTools.PatternMatch,System.Int32,System.Boolean)">
+            <summary>
+            Get a label to the next instruction that matches <paramref name="match"/>, or the end of the function.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.GetNextBranchTarget(System.Collections.Generic.IList{HarmonyLib.CodeInstruction},System.Int32)">
+            <summary>
+            Get the label of the next branch instruction.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.GetNextBranchTarget(DanielWillett.ReflectionTools.TranspileContext)">
+            <summary>
+            Get the label of the next branch instruction.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.FindLabelDestinationIndex(System.Collections.Generic.IList{HarmonyLib.CodeInstruction},System.Reflection.Emit.Label,System.Int32)">
+            <summary>
+            Find the index of the code instruction to which the label refers.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.FindLabelDestinationIndex(DanielWillett.ReflectionTools.TranspileContext,System.Reflection.Emit.Label)">
+            <summary>
+            Find the index of the code instruction to which the label refers.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.GetLocalIndex(HarmonyLib.CodeInstruction,System.Boolean)">
+            <summary>
+            Get the index of a local code instruction.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.LoadConstantI4(System.Int32)">
+            <summary>
+            Emit an Int32.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.GetLocal(HarmonyLib.CodeInstruction,System.Int32@,System.Boolean)">
+            <summary>
+            Get the local builder or index of the instruction.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.CopyWithoutSpecial(HarmonyLib.CodeInstruction)">
+            <summary>
+            Copy an instruction without 
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.WithEndingInstructionNeeds(HarmonyLib.CodeInstruction,HarmonyLib.CodeInstruction)">
+            <summary>
+            Transfers blocks that would be on the last instruction of a block to the target instruction.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.WithStartingInstructionNeeds(HarmonyLib.CodeInstruction,HarmonyLib.CodeInstruction)">
+            <summary>
+            Transfers all labels and blocks that would be on the first instruction of a block to the target instruction.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.WithEndBlocksFrom(HarmonyLib.CodeInstruction,HarmonyLib.CodeInstruction)">
+            <summary>
+            Transfers blocks that would be on the last instruction of a block from <paramref name="other"/> to <paramref name="instruction"/>.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.WithStartBlocksFrom(HarmonyLib.CodeInstruction,HarmonyLib.CodeInstruction)">
+            <summary>
+            Transfers blocks that would be on the first instruction of a block from <paramref name="other"/> to <paramref name="instruction"/>.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.TransferEndingInstructionNeeds(HarmonyLib.CodeInstruction,HarmonyLib.CodeInstruction)">
+            <summary>
+            Transfers blocks that would be on the last instruction of a block to the target instruction.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.TransferStartingInstructionNeeds(HarmonyLib.CodeInstruction,HarmonyLib.CodeInstruction)">
+            <summary>
+            Transfers all labels and blocks that would be on the first instruction of a block to the target instruction.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.MoveBlocksAndLabels(HarmonyLib.CodeInstruction,HarmonyLib.CodeInstruction)">
+            <summary>
+            Cut and pastes all labels and blocks to the target instruction.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.IsBeginBlockType(HarmonyLib.ExceptionBlockType)">
+            <summary>
+            Would this block type begin a block?
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.PatchUtility.IsEndBlockType(HarmonyLib.ExceptionBlockType)">
+            <summary>
+            Would this block type end a block?
+            </summary>
+        </member>
+        <member name="T:DanielWillett.ReflectionTools.TranspileContext">
+            <summary>
+            Used for logging in a transpiler, along with finding members.
+            </summary>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.TranspileContext.DefaultTranspileLogger">
+            <summary>
+            The default log formatter to use for new <see cref="T:DanielWillett.ReflectionTools.TranspileContext"/> objects.
+            </summary>
+            <remarks>By assigning a value to this property, you transfer ownership of the object to this class, meaning it shouldn't be used or disposed outside this class at all.</remarks>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.TranspileContext.TranspileLogger">
+            <summary>
+            Formatter to use for formatting transpile loggers.
+            </summary>
+            <remarks>You are responsible for cleaning up this object after use, as one object is expected to be used for multiple <see cref="T:DanielWillett.ReflectionTools.TranspileContext"/> objects.</remarks>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.#ctor(System.Reflection.MethodBase,System.Reflection.Emit.ILGenerator,System.Collections.Generic.IEnumerable{HarmonyLib.CodeInstruction},DanielWillett.ReflectionTools.IAccessor)">
+            <summary>
+            Used for logging in a transpiler, along with finding members.
+            </summary>
+            <param name="method">Get by injecting a parameter of type <see cref="T:System.Reflection.MethodBase"/> into the transpiler method.</param>
+            <param name="generator">Get by injecting a parameter of type <see cref="T:System.Reflection.Emit.ILGenerator"/> into the transpiler method.</param>
+            <param name="instructions">Get by injecting the enumerable of code instructions into the transpiler method.</param>
+            <param name="accessor">The instance of <see cref="T:DanielWillett.ReflectionTools.IAccessor"/> to use for accessing members, defaulting to <see cref="P:DanielWillett.ReflectionTools.Accessor.Active"/>.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="method"/> and/or <paramref name="generator"/> are null.</exception>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.TranspileContext.ILOffset">
+            <summary>
+            Not supported in <see cref="T:DanielWillett.ReflectionTools.TranspileContext"/>.
+            </summary>
+            <exception cref="T:System.NotSupportedException">ILOffset not supported in TranspileContext.</exception>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.TranspileContext.Count">
+            <summary>
+            Number of instructions in the list.
+            </summary>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.TranspileContext.Method">
+            <summary>
+            The method that's being transpiled.
+            </summary>
+            <remarks>Get by injecting a parameter of type <see cref="T:System.Reflection.MethodBase"/> into the transpiler method.</remarks>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.TranspileContext.CaretIndex">
+            <summary>
+            Index in the instruction list where instructions are emitted.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Caret index must be &gt;= 0 and &lt;= instruction count.</exception>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.TranspileContext.Instruction">
+            <summary>
+            A reference to the instruction the caret is currently on.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.MoveNext">
+            <summary>
+            Move the caret to the next instruction in the instruction list.
+            </summary>
+            <returns><see langword="true"/> if the caret is on an instruction, otherwise false.</returns>
+        </member>
+        <member name="P:DanielWillett.ReflectionTools.TranspileContext.Item(System.Int32)">
+            <summary>
+            Get the code instruction at the given index.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"/>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Remove(System.Int32)">
+            <summary>
+            Remove <paramref name="count"/> instructions from the instruction list, returning their label and block information.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Fail(DanielWillett.ReflectionTools.Formatting.IMemberDefinition)">
+            <summary>
+            Fail the transpiler because a member couldn't be found and log an error to <see cref="P:DanielWillett.ReflectionTools.TranspileContext.TranspileLogger"/>. 
+            </summary>
+            <param name="missingMember">A definition of the original member that couldn't be found.</param>
+            <returns>The original method's instructions.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Fail(System.String)">
+            <summary>
+            Fail the transpiler with a generic message and log an error to <see cref="P:DanielWillett.ReflectionTools.TranspileContext.TranspileLogger"/>. 
+            </summary>
+            <param name="message">A generic human-readable message describing what went wrong.</param>
+            <returns>The original method's instructions.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.LogDebug(System.String)">
+            <summary>
+            Log debug information to <see cref="P:DanielWillett.ReflectionTools.TranspileContext.TranspileLogger"/>. 
+            </summary>
+            <param name="message">A generic human-readable message describing the event.</param>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.LogInfo(System.String)">
+            <summary>
+            Log information to <see cref="P:DanielWillett.ReflectionTools.TranspileContext.TranspileLogger"/>. 
+            </summary>
+            <param name="message">A generic human-readable message describing the event.</param>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.LogWarning(System.String)">
+            <summary>
+            Log a warning to <see cref="P:DanielWillett.ReflectionTools.TranspileContext.TranspileLogger"/>. 
+            </summary>
+            <param name="message">A generic human-readable message describing the event.</param>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.LogError(System.String)">
+            <summary>
+            Log an error to <see cref="P:DanielWillett.ReflectionTools.TranspileContext.TranspileLogger"/>. 
+            </summary>
+            <param name="message">A generic human-readable message describing the event.</param>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.LogError(System.Exception,System.String)">
+            <summary>
+            Log an error to <see cref="P:DanielWillett.ReflectionTools.TranspileContext.TranspileLogger"/>. 
+            </summary>
+            <param name="message">A generic human-readable message describing the event.</param>
+            <param name="ex">Error detailing what went wrong during the event.</param>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Comment(System.String)">
+            <summary>
+            Not supported by <see cref="T:DanielWillett.ReflectionTools.TranspileContext"/>, will be ignored.
+            </summary>
+            <remarks>Removed when not compiled for <c>DEBUG</c> mode.</remarks>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.BeginCatchBlock(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.ApplyBlocksAndLabels">
+            <summary>
+            Applies any marked labels to the instruction at index <see cref="P:DanielWillett.ReflectionTools.TranspileContext.CaretIndex"/>. This happens automatically when you emit a new instruction.
+            </summary>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#BeginExceptFilterBlock">
+            <summary>
+            Not supported in <see cref="T:DanielWillett.ReflectionTools.TranspileContext"/>.
+            </summary>
+            <exception cref="T:System.NotSupportedException">Harmony does not support filter blocks.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.BeginExceptionBlock">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.BeginFaultBlock">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.BeginFinallyBlock">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#BeginScope">
+            <summary>
+            Not supported in <see cref="T:DanielWillett.ReflectionTools.TranspileContext"/>.
+            </summary>
+            <exception cref="T:System.NotSupportedException">Harmony does not support scopes.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DeclareLocal(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DeclareLocal(System.Type,System.Boolean)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DefineLabel">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(HarmonyLib.CodeInstruction)">
+            <summary>Puts the specified instruction onto the stream of instructions.</summary>
+            <param name="instruction">The Microsoft Intermediate Language (MSIL) instruction to be put onto the stream, with an optional operand and label list.</param>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#Emit(System.Reflection.Emit.OpCode,System.Int16)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#Emit(System.Reflection.Emit.OpCode,System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#Emit(System.Reflection.Emit.OpCode,System.Reflection.ConstructorInfo)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.Label)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.Label[])">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.LocalBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.SignatureHelper)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#Emit(System.Reflection.Emit.OpCode,System.Reflection.FieldInfo)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#Emit(System.Reflection.Emit.OpCode,System.Reflection.MethodInfo)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#Emit(System.Reflection.Emit.OpCode,System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.Byte)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Byte)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.Double)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Double)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.Single)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Single)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.Int32)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Int32)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.Int64)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Int64)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.SByte)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.SByte)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.Int16)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Int16)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.String)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.String)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.Reflection.ConstructorInfo)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Reflection.ConstructorInfo)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.Label)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.Label)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.Label[])">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.Label[])"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.LocalBuilder)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.LocalBuilder)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.SignatureHelper)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.SignatureHelper)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.Reflection.FieldInfo)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Reflection.FieldInfo)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.Reflection.MethodInfo)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Reflection.MethodInfo)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.Emit(System.Reflection.Emit.OpCode,System.Type)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Type)"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(HarmonyLib.CodeInstruction)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.TranspileContext.Emit(HarmonyLib.CodeInstruction)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.Byte)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Byte)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.Double)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Double)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.Single)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Single)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.Int32)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Int32)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.Int64)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Int64)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.SByte)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.SByte)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.Int16)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Int16)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.String)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.String)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.Reflection.ConstructorInfo)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Reflection.ConstructorInfo)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.Reflection.Emit.Label)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.Label)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.Reflection.Emit.Label[])">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.Label[])"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.Reflection.Emit.LocalBuilder)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.LocalBuilder)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.Reflection.Emit.SignatureHelper)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Reflection.Emit.SignatureHelper)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.Reflection.FieldInfo)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Reflection.FieldInfo)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.Reflection.MethodInfo)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Reflection.MethodInfo)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitAbove(System.Reflection.Emit.OpCode,System.Type)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.Emit(System.Reflection.Emit.OpCode,System.Type)"/>
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#EmitCall(System.Reflection.Emit.OpCode,System.Reflection.MethodInfo,System.Type[])">
+            <inheritdoc />
+            <remarks>Using <paramref name="optionalParameterTypes"/> is not supported in <see cref="T:DanielWillett.ReflectionTools.TranspileContext"/>.</remarks>
+            <exception cref="T:System.NotSupportedException">Optional parameters are not supported.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitCall(System.Reflection.Emit.OpCode,System.Reflection.MethodInfo,System.Type[])">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.EmitCall(System.Reflection.Emit.OpCode,System.Reflection.MethodInfo,System.Type[])"/>
+            <returns>An instance of the added instruction, allowing you to modify the reference to the one added to the instruction set.</returns>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#EmitCalli(System.Reflection.Emit.OpCode,System.Reflection.CallingConventions,System.Type,System.Type[],System.Type[])">
+            <summary>
+            Not supported in <see cref="T:DanielWillett.ReflectionTools.TranspileContext"/>.
+            </summary>
+            <exception cref="T:System.NotSupportedException">Calli is not supported.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#EmitCalli(System.Reflection.Emit.OpCode,System.Runtime.InteropServices.CallingConvention,System.Type,System.Type[])">
+            <summary>
+            Not supported in <see cref="T:DanielWillett.ReflectionTools.TranspileContext"/>.
+            </summary>
+            <exception cref="T:System.NotSupportedException">Calli is not supported.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitWriteLine(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitWriteLineAbove(System.String)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.EmitWriteLine(System.String)" />
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitWriteLine(System.Reflection.Emit.LocalBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitWriteLineAbove(System.Reflection.Emit.LocalBuilder)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.EmitWriteLine(System.Reflection.Emit.LocalBuilder)" />
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitWriteLine(System.Reflection.FieldInfo)">
+            <inheritdoc />
+            <exception cref="T:System.ArgumentException">Field must be static, or the same instance as the current method.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EmitWriteLineAbove(System.Reflection.FieldInfo)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.EmitWriteLine(System.Reflection.FieldInfo)" />
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+            <exception cref="T:System.ArgumentException">Field must be static, or the same instance as the current method.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EndExceptionBlock">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.EndScope">
+            <summary>
+            Not supported in <see cref="T:DanielWillett.ReflectionTools.TranspileContext"/>.
+            </summary>
+            <exception cref="T:System.NotSupportedException">Harmony does not support scopes.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.MarkLabel(System.Reflection.Emit.Label)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.ThrowException(System.Type)">
+            <inheritdoc />
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.ThrowExceptionAbove(System.Type)">
+            <inheritdoc cref="M:DanielWillett.ReflectionTools.Emit.IOpCodeEmitter.ThrowException(System.Type)" />
+            <remarks>Emits above the active instruction, pushing it down the execution list and taking it's labels and blocks.</remarks>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.ThrowException(System.Type,System.String)">
+            <summary>Emits an instruction to throw an exception.</summary>
+            <param name="excType">The class of the type of exception to throw.</param>
+            <param name="message">The message add to the exception if there's a constructor for a message present.</param>
+            <exception cref="T:System.ArgumentException">
+            <paramref name="excType" /> is not the <see cref="T:System.Exception" /> class or a derived class of <see cref="T:System.Exception" />.
+            -or-
+            The type does not have a default constructor or a constructor with a string argument.</exception>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="excType" /> is <see langword="null" />.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.ThrowExceptionAbove(System.Type,System.String)">
+            <summary>Emits an instruction to throw an exception.</summary>
+            <param name="excType">The class of the type of exception to throw.</param>
+            <param name="message">The message add to the exception if there's a constructor for a message present.</param>
+            <exception cref="T:System.ArgumentException">
+            <paramref name="excType" /> is not the <see cref="T:System.Exception" /> class or a derived class of <see cref="T:System.Exception" />.
+            -or-
+            The type does not have a default constructor or a constructor with a string argument.</exception>
+            <exception cref="T:System.ArgumentNullException">
+            <paramref name="excType" /> is <see langword="null" />.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.DanielWillett#ReflectionTools#Emit#IOpCodeEmitter#UsingNamespace(System.String)">
+            <summary>
+            Not supported in <see cref="T:DanielWillett.ReflectionTools.TranspileContext"/>.
+            </summary>
+            <exception cref="T:System.NotSupportedException">UsingNamespace is not supported.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.GetStackChange(System.Reflection.Emit.OpCode,System.Object)">
+            <summary>
+            Get the stack size change of this <see cref="T:System.Reflection.Emit.OpCode"/> with the given operand and method.
+            </summary>
+            <exception cref="T:System.NotSupportedException"><c>calli</c> instructions are not supported.</exception>
+            <remarks>This does not take into account catch blocks, so if one is present one must be added to the stack change.</remarks>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.GetStackChange(System.Reflection.Emit.OpCode,System.Object,System.Reflection.MethodBase)">
+            <summary>
+            Get the stack size change of this <see cref="T:System.Reflection.Emit.OpCode"/> with the given operand and method.
+            </summary>
+            <exception cref="T:System.NotSupportedException"><c>calli</c> instructions are not supported.</exception>
+            <remarks>This does not take into account catch blocks, so if one is present one must be added to the stack change.</remarks>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.TryGetStackSize(System.Int32@)">
+            <summary>
+            Tries to calculate the stack size before <see cref="P:DanielWillett.ReflectionTools.TranspileContext.CaretIndex"/>.
+            </summary>
+            <exception cref="T:System.NotSupportedException"><c>calli</c> instructions are not supported.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.TryGetStackSizeAtIndex(System.Int32,System.Int32@)">
+            <summary>
+            Tries to calculate the stack size before the given instruction index.
+            </summary>
+            <exception cref="T:System.NotSupportedException"><c>calli</c> instructions are not supported.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.GetLastUnconsumedIndex(System.Reflection.Emit.OpCode,System.Object)">
+            <summary>
+            Returns the index of the last instruction before <see cref="P:DanielWillett.ReflectionTools.TranspileContext.CaretIndex"/> which starts with a stack size of zero.
+            </summary>
+            <remarks>This can be useful for isolating and replicating method calls with arguments that could change over time.</remarks>
+            <param name="code">Code to match. Use the other overload for a wildcard match.</param>
+            <param name="operand">Operand to match, or <see langword="null"/> for a wildcard.</param>
+            <exception cref="T:System.InvalidProgramException">At any point your stack size drops below zero.</exception>
+            <exception cref="T:System.NotSupportedException"><c>calli</c> _instructions are not supported.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.GetLastUnconsumedIndex(System.Int32,System.Reflection.Emit.OpCode,System.Object)">
+            <summary>
+            Returns the index of the last instruction before <paramref name="startIndex"/> which starts with a stack size of zero.
+            </summary>
+            <remarks>This can be useful for isolating and replicating method calls with arguments that could change over time.</remarks>
+            <param name="startIndex">Index to search backwards from.</param>
+            <param name="code">Code to match. Use the other overload for a wildcard match.</param>
+            <param name="operand">Operand to match, or <see langword="null"/> for a wildcard.</param>
+            <exception cref="T:System.InvalidProgramException">At any point your stack size drops below zero.</exception>
+            <exception cref="T:System.NotSupportedException"><c>calli</c> _instructions are not supported.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.GetLastUnconsumedIndex(DanielWillett.ReflectionTools.PatternMatch)">
+            <summary>
+            Returns the index of the last instruction before <see cref="P:DanielWillett.ReflectionTools.TranspileContext.CaretIndex"/> which starts with a stack size of zero.
+            </summary>
+            <remarks>This can be useful for isolating and replicating method calls with arguments that could change over time.</remarks>
+            <param name="codeFilter">Predicate for <see cref="T:HarmonyLib.CodeInstruction"/> to match, or <see langword="null"/> for a wildcard.</param>
+            <exception cref="T:System.InvalidProgramException">At any point your stack size drops below zero.</exception>
+            <exception cref="T:System.NotSupportedException"><c>calli</c> instructions are not supported.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.GetLastUnconsumedIndex(System.Int32,DanielWillett.ReflectionTools.PatternMatch)">
+            <summary>
+            Returns the index of the last instruction before <paramref name="startIndex"/> which starts with a stack size of zero.
+            </summary>
+            <remarks>This can be useful for isolating and replicating method calls with arguments that could change over time.</remarks>
+            <param name="startIndex">Index to search backwards from.</param>
+            <param name="codeFilter">Predicate for <see cref="T:HarmonyLib.CodeInstruction"/> to match, or <see langword="null"/> for a wildcard.</param>
+            <exception cref="T:System.InvalidProgramException">At any point your stack size drops below zero.</exception>
+            <exception cref="T:System.NotSupportedException"><c>calli</c> instructions are not supported.</exception>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.GetEnumerator">
+            <inheritdoc/>
+        </member>
+        <member name="M:DanielWillett.ReflectionTools.TranspileContext.System#Collections#IEnumerable#GetEnumerator">
+            <inheritdoc/>
+        </member>
+    </members>
+</doc>

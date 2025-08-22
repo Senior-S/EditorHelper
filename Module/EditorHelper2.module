@@ -1,0 +1,40 @@
+{
+	"IsEnabled": true,
+	"Name": "EditorHelper2",
+	"Version": "1.0.0.0",
+	"Assemblies":
+	[
+		{
+			"Path": "/UnturnedUITools/Bin/UnturnedUITools.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/Microsoft.Extensions.Logging.Abstractions.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/dnlib.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/netstandard.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/0Harmony.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/Publicizer.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/EditorHelper2.common.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/EditorHelper2.dll",
+			"Role": "Client"
+		}
+	]
+}

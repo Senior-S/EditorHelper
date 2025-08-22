@@ -4,6 +4,7 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
+        <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     </PropertyGroup>
 
     <!-- Publicizer -->
@@ -46,5 +47,9 @@
         <HintPath>..\Libs\UnturnedDat.dll</HintPath>
       </Reference>
     </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="xcopy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)Module\Libraries&quot; /Y /I" />
+    </Target>
 
 </Project>

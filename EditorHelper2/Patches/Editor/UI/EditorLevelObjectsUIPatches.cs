@@ -43,10 +43,11 @@ public class EditorLevelObjectsUIPatches
     {
         EditorObjects.selectedObjectAsset = asset as ObjectAsset;
         EditorObjects.selectedItemAsset = asset as ItemAsset;
-        _selectedAssetBox?.Text =
-            EditorObjects.selectedObjectAsset?.FriendlyName ??
-            EditorObjects.selectedItemAsset?.FriendlyName ??
-            string.Empty;
+        if (_selectedAssetBox != null)
+            _selectedAssetBox.Text =
+                EditorObjects.selectedObjectAsset?.FriendlyName ??
+                EditorObjects.selectedItemAsset?.FriendlyName ??
+                string.Empty;
 
         OnObjectAssetSelected?.Invoke();
     }

@@ -1,4 +1,5 @@
-﻿using EditorHelper2.Extensions.Level.Objects;
+﻿using DanielWillett.UITools;
+using EditorHelper2.Extensions.Level.Objects;
 using SDG.Unturned;
 using UnityEngine;
 
@@ -10,7 +11,8 @@ public static class EditorObjectsUpdate
     /// Main EditorObjects update method
     /// </summary>
     /// if you need to replace any part of the update, this method must be replaced instead and documented with date.
-    /// 8/10/25: Added code for <see cref="PrecisionExtension"/>
+    /// 8/10/25: Added code for <see cref="PrecisionExtension"/> *postfix*
+    /// 8/12/25: Added code for <see cref="HighlightExtension"/> *postfix*
     public static void Update(EditorObjects editorObjectsInstance)
     {
         if (!EditorObjects.isBuilding)
@@ -386,12 +388,12 @@ public static class EditorObjectsUpdate
 		}
 		
 		#region PrecisionExtension
-		PrecisionExtension? precisionExtension = DanielWillett.UITools.UnturnedUIToolsNexus.UIExtensionManager.GetInstance<PrecisionExtension>();
+		PrecisionExtension? precisionExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<PrecisionExtension>();
 		precisionExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
 		#endregion
 		
 		#region HighlightExtension
-		HighlightExtension? highlightExtension = DanielWillett.UITools.UnturnedUIToolsNexus.UIExtensionManager.GetInstance<HighlightExtension>();
+		HighlightExtension? highlightExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<HighlightExtension>();
 		highlightExtension?.CustomUpdate();
         #endregion
 

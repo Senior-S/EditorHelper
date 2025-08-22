@@ -31,6 +31,7 @@ public class SchematicsExtension : UIExtension, IExtension
 
     private string _schematicNameValue = string.Empty;
     private string _schematicSearchValue = string.Empty;
+    private SchematicsHelper _schematicsHelper;
     
     public SchematicsExtension()
     {
@@ -112,13 +113,14 @@ public class SchematicsExtension : UIExtension, IExtension
             .SetScaleVertical(1f); // IMPORTANT 2! We want the scrollbox to automatically resize based on the objects
 
         _schematicsScrollBox = builder.BuildScrollBox<Schematic>(50, 10);
-
+        
         Initialize();
     }
     
     public void Initialize()
     {
         if (_container == null) return;
+        _schematicsHelper = new SchematicsHelper();
         
         EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y -= 40f;
         
@@ -176,7 +178,7 @@ public class SchematicsExtension : UIExtension, IExtension
             }
         }
         
-        SchematicsHelper.SaveSchematic(_schematicNameValue);
+        _schematicsHelper.SaveSchematic(_schematicNameValue);
         UpdateSchematicsScrollbox();
     }
     
@@ -193,7 +195,7 @@ public class SchematicsExtension : UIExtension, IExtension
     
     private void OnSchematicsReloadClickedButton(ISleekElement button)
     {
-        SchematicsHelper.ReloadSchematics();
+        _schematicsHelper.ReloadSchematics();
         UpdateSchematicsScrollbox();
     }
     
@@ -201,7 +203,7 @@ public class SchematicsExtension : UIExtension, IExtension
     {
         int index = Mathf.FloorToInt(button.PositionOffset_Y / 60f);
         
-        Schematic? model = SchematicsHelper.TryLoadSchematic(index, _schematicSearchValue);
+        Schematic? model = _schematicsHelper.TryLoadSchematic(index, _schematicSearchValue);
         if (model == null)
         {
             // Errors are provided by the try load method so it isn't required here
@@ -235,12 +237,12 @@ public class SchematicsExtension : UIExtension, IExtension
     {
         if (_schematicSearchValue.Length > 0)
         {
-            _schematicsScrollBox.SetData(SchematicsHelper.Schematics
+            _schematicsScrollBox.SetData(_schematicsHelper.Schematics
                 .Where(c => c.Name.ToLower().Contains(_schematicSearchValue)).ToList());
         }
         else
         {
-            _schematicsScrollBox.SetData(SchematicsHelper.Schematics);
+            _schematicsScrollBox.SetData(_schematicsHelper.Schematics);
         }
     }
     #endregion

@@ -1,0 +1,58 @@
+{
+  "runtimeTarget": {
+    "name": ".NETStandard,Version=v2.1/",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETStandard,Version=v2.1": {},
+    ".NETStandard,Version=v2.1/": {
+      "ReflectionTools/3.2.0": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "3.1.0",
+          "Microsoft.Extensions.Logging.Abstractions": "3.1.0"
+        },
+        "runtime": {
+          "ReflectionTools.dll": {}
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/3.1.0": {
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
+            "assemblyVersion": "3.1.0.0",
+            "fileVersion": "3.100.19.56504"
+          }
+        }
+      },
+      "Microsoft.Extensions.Logging.Abstractions/3.1.0": {
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Extensions.Logging.Abstractions.dll": {
+            "assemblyVersion": "3.1.0.0",
+            "fileVersion": "3.100.19.56504"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "ReflectionTools/3.2.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Extensions.DependencyInjection.Abstractions/3.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-44rDtOf1JXXAFpNT2EXMExaDm/4OJ2RXOL9i9lE4bK427nzC7Exphv+beB6IgluyE2GIoo8zezTStMXI7MQ8WA==",
+      "path": "microsoft.extensions.dependencyinjection.abstractions/3.1.0",
+      "hashPath": "microsoft.extensions.dependencyinjection.abstractions.3.1.0.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Logging.Abstractions/3.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-jjo4YXRx6MIpv6DiRxJjSpl+sPP0+5VW0clMEdLyIAz44PPwrDTFrd5PZckIxIXl1kKZ2KK6IL2nkt0+ug2MQg==",
+      "path": "microsoft.extensions.logging.abstractions/3.1.0",
+      "hashPath": "microsoft.extensions.logging.abstractions.3.1.0.nupkg.sha512"
+    }
+  }
+}
