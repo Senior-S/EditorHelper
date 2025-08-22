@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using DanielWillett.UITools;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.common.API.Attributes;
@@ -27,7 +28,7 @@ public class SchematicsExtension : UIExtension, IExtension
     private readonly SleekButtonIcon _schematicsHowToButton;
     private readonly SleekButtonIcon _schematicsReload;
     private readonly ISleekField _schematicSearch;
-    
+
     private string _schematicNameValue = string.Empty;
     private string _schematicSearchValue = string.Empty;
     
@@ -145,8 +146,13 @@ public class SchematicsExtension : UIExtension, IExtension
     private void OnSchematicsButtonClicked(ISleekElement button)
     {
         _schematicsContainer.IsVisible = !_schematicsContainer.IsVisible;
+        if (_schematicsContainer.IsVisible)
+        {
+            IconsExtension? iconsExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<IconsExtension>();
+            iconsExtension?.HideIconGridContainer();
+        }
     }
-    
+
     private void SchematicNameOnTextSubmitted(ISleekField field)
     {
         _schematicNameValue = field.Text;
@@ -208,8 +214,10 @@ public class SchematicsExtension : UIExtension, IExtension
         UpdateSchematicsScrollbox();
     }
     #endregion
-    
+
     #region Extension functions
+    public void HideSchematicsContainer() => _schematicsContainer.IsVisible = false;
+
     private ISleekElement OnCreateSchematicModel(Schematic item)
     {
         UIBuilder builder = new(0f, 0f);

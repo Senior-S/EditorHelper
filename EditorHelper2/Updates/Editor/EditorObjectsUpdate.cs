@@ -393,6 +393,11 @@ public static class EditorObjectsUpdate
 		#region HighlightExtension
 		HighlightExtension? highlightExtension = DanielWillett.UITools.UnturnedUIToolsNexus.UIExtensionManager.GetInstance<HighlightExtension>();
 		highlightExtension?.CustomUpdate();
-		#endregion
+        #endregion
+
+        #region IconsExtension
+        IconsExtension? iconsExtension = DanielWillett.UITools.UnturnedUIToolsNexus.UIExtensionManager.GetInstance<IconsExtension>();
+        iconsExtension?.CustomUpdate();
+        #endregion
     }
 }
