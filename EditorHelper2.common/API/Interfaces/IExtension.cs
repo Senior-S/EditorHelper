@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace EditorHelper2.API.Interfaces;
+namespace EditorHelper2.common.API.Interfaces;
 
 public interface IExtension : IDisposable
 {

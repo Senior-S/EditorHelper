@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
-using EditorHelper2.API.Attributes;
-using EditorHelper2.API.Interfaces;
+using EditorHelper2.common.API.Attributes;
+using EditorHelper2.common.API.Interfaces;
+using EditorHelper2.common.Helpers.Level.Objects;
 using EditorHelper2.Patches.Editor;
 using EditorHelper2.UI.Builders;
 using HighlightingSystem;
@@ -34,6 +34,10 @@ public class HighlightExtension : UIExtension, IExtension
     
     private readonly Color[] _highlightColors = [Color.yellow, Color.red, Color.magenta, Color.blue];
     private int _currentColorIndex;
+    
+    private readonly SleekButtonIcon _filterByModButton;
+    private readonly ISleekField _filterByModField;
+    private string _filterByModText = string.Empty;
     
     public HighlightExtension()
     {
@@ -65,6 +69,15 @@ public class HighlightExtension : UIExtension, IExtension
         builder.SetText("Select highlighted objects");
         
         _selectHighlightedButton = builder.BuildButton("Select all highlighted objects");
+        
+        builder.SetText("Filter objects")
+            .SetAnchorVertical(1f)
+            .SetOffsetHorizontal(205f)
+            .SetOffsetVertical(-110f);
+        _filterByModButton = builder.BuildButton("Highlight all objects that derive from this mod.");
+
+        builder.SetText("Mod ID");
+        _filterByModField = builder.BuildStringField();
 
         Initialize();
     }
@@ -77,11 +90,15 @@ public class HighlightExtension : UIExtension, IExtension
         _container.AddChild(_highlightColorsButton);
         _container.AddChild(_highlightWrongScaleButton);
         _container.AddChild(_selectHighlightedButton);
+        _container.AddChild(_filterByModButton);
+        _container.AddChild(_filterByModField);
         
         _highlightButton.onClickedButton += OnHighlightButtonClicked;
         _highlightColorsButton.onSwappedState = OnSwappedStateColor;
         _highlightWrongScaleButton.onClickedButton += OnHighlightWrongScaleButtonClicked;
         _selectHighlightedButton.onClickedButton += OnSelectHighlightedClicked;
+        _filterByModButton.onClickedButton += OnFilterByModClicked;
+        _filterByModField.OnTextSubmitted += OnFilterByModFieldSubmitted;
         
         EditorObjectsPatches.OnClearSelection += OnClearSelection;
     }
@@ -104,7 +121,7 @@ public class HighlightExtension : UIExtension, IExtension
             UnhighlightAll(selectedObject);
         }
 
-        List<LevelObject> levelObjects = GetObjectsByGuid(levelObject.asset.GUID);
+        List<LevelObject> levelObjects = ObjectsHelper.GetObjectsByGuid(levelObject.asset.GUID);
         PrivateHighlight(levelObjects, levelObject);
 
         _highlightButton.text = $"Highlight objects ({levelObjects.Count})";
@@ -120,7 +137,7 @@ public class HighlightExtension : UIExtension, IExtension
     
     private void OnHighlightWrongScaleButtonClicked(ISleekElement button)
     {
-        List<LevelObject> levelObjects = GetWrongScaledObjects();
+        List<LevelObject> levelObjects = ObjectsHelper.GetWrongScaledObjects();
         if (levelObjects.Count < 1) return;
         
         PrivateHighlight(levelObjects);
@@ -135,6 +152,19 @@ public class HighlightExtension : UIExtension, IExtension
         UnhighlightAll();
         
         toSelect.ForEach(EditorObjects.addSelection);
+    }
+    
+    private void OnFilterByModClicked(ISleekElement button)
+    {
+        _filterByModText = _filterByModField.Text;
+        List<LevelObject> levelObjects = ObjectsHelper.GetObjectsByMod(_filterByModText);
+        PrivateHighlight(levelObjects);
+        _filterByModButton.text = $"Filter objects ({levelObjects.Count})";
+    }
+    
+    private void OnFilterByModFieldSubmitted(ISleekField field)
+    {
+        _filterByModText = field.Text;
     }
     #endregion
     
@@ -188,7 +218,7 @@ public class HighlightExtension : UIExtension, IExtension
             if (!highlightedObject || !highlightedObject.transform || highlightedObject.transform == ignore) continue;
             
             _highlightedTransforms.Remove(highlightedObject.transform);
-            UnityEngine.Object.DestroyImmediate(highlightedObject);
+            Object.DestroyImmediate(highlightedObject);
         }
         _highlightedObjects.Clear();
         _highlightButton.text = "Highlight objects";
@@ -216,33 +246,6 @@ public class HighlightExtension : UIExtension, IExtension
             highlighter.ConstantOn(_highlightColors[_currentColorIndex]);
             _highlightedObjects.Add(highlighter);
         }
-    }
-    
-    private List<LevelObject> GetWrongScaledObjects()
-    {
-        IEnumerable<LevelObject> levelObjects = LevelObjects.objects.Cast<List<LevelObject>>().SelectMany(list => list);
-
-        return levelObjects.Where(c => c != null && c.transform != null && HaveNegativeScale(c.transform.localScale)).ToList();
-    }
-    
-    private List<LevelObject> GetObjectsByGuid(Guid guid)
-    {
-        IEnumerable<LevelObject> levelObjects = LevelObjects.objects.Cast<List<LevelObject>>().SelectMany(list => list);
-
-        return levelObjects.Where(c => c != null && c.asset != null && c.asset.GUID == guid).ToList();
-    }
-    
-    private bool HaveNegativeScale(Vector3 scale)
-    {
-        for (int i = 0; i < 3; i++)
-        {
-            if (scale[i] < 0f)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
     #endregion
     

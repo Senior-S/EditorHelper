@@ -1,4 +1,4 @@
-﻿using EditorHelper2.API.Attributes;
+﻿using EditorHelper2.common.API.Attributes;
 using EditorHelper2.Loader;
 using EditorHelper2.UI.Builders;
 using SDG.Unturned;

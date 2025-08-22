@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace EditorHelper2.API.Attributes;
+namespace EditorHelper2.common.API.Attributes;
 
 /// <summary>
 /// Required attribute for all extensions

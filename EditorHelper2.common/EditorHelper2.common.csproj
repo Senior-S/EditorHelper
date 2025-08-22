@@ -2,14 +2,22 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
-        <LangVersion>preview</LangVersion>
+        <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <Version>1.0.0.0</Version>
     </PropertyGroup>
 
     <!-- Publicizer -->
     <ItemGroup>
         <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(Asset|UseableGun|Player|Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage|ReunObjectRemove|Menu|ItemStore|EditorInteract|GlazierResources|Utilities.TimeUtility|CullingVolume).*" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.4-beta1" />
+      <PackageReference Include="OpenMod.UnityEngine.Redist" Version="2021.3.29.1" />
     </ItemGroup>
 
     <ItemGroup>
@@ -37,26 +45,6 @@
       <Reference Include="UnturnedDat">
         <HintPath>..\Libs\UnturnedDat.dll</HintPath>
       </Reference>
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="DanielWillett.UnturnedUITools" Version="1.4.5" />
-      <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="Lib.Harmony" Version="2.3.6" />
-      <PackageReference Include="OpenMod.UnityEngine.Redist" Version="2021.3.29.1" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Extensions\Environment\" />
-      <Folder Include="Extensions\Spawns\" />
-      <Folder Include="Extensions\Terrain\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\EditorHelper2.common\EditorHelper2.common.csproj" />
     </ItemGroup>
 
 </Project>

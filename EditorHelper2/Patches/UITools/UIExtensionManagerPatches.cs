@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.Core.Extensions;
-using EditorHelper2.API.Attributes;
+using EditorHelper2.common.API.Attributes;
 using EditorHelper2.Loader;
 using HarmonyLib;
 using JetBrains.Annotations;

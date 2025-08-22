@@ -1,9 +1,8 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
-using EditorHelper2.API.Attributes;
-using EditorHelper2.API.Interfaces;
+using EditorHelper2.common.API.Attributes;
+using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.Patches.Editor;
 using EditorHelper2.UI.Builders;
 using SDG.Unturned;
@@ -37,7 +36,8 @@ public sealed class PrecisionExtension : UIExtension, IExtension
     {
         UIBuilder builder = new(120f, 30f);
         
-        builder.SetOffsetHorizontal(20f)
+        builder.SetAnchorVertical(1f)
+            .SetOffsetHorizontal(20f)
             .SetOffsetVertical(-390f)
             .SetText("X:");
         _objectPositionX = builder.BuildFloatInput();
@@ -169,7 +169,7 @@ public sealed class PrecisionExtension : UIExtension, IExtension
         if (levelObject == null) return;
 
         Vector3 position = selectedObject.position;
-
+        
         // Probably there's a better way of checking this
         if (field == _objectPositionX)
         {
@@ -202,6 +202,9 @@ public sealed class PrecisionExtension : UIExtension, IExtension
             position.z = _objectPositionZ.Value;
         }
         
+        LevelObjects.registerTransformObject(selectedObject, position, selectedObject.rotation, selectedObject.localScale,
+            selectedObject.position, selectedObject.rotation, selectedObject.localScale);
+        
         selectedObject.position = position;
         EditorObjects.calculateHandleOffsets();
     }
@@ -229,6 +232,9 @@ public sealed class PrecisionExtension : UIExtension, IExtension
             rotation.z = _objectRotationZ.Value;
         }
         
+        LevelObjects.registerTransformObject(selectedObject, selectedObject.position, Quaternion.Euler(rotation), selectedObject.localScale,
+            selectedObject.position, selectedObject.rotation, selectedObject.localScale);
+        
         selectedObject.rotation = Quaternion.Euler(rotation);
         EditorObjects.calculateHandleOffsets();
     }
@@ -255,6 +261,9 @@ public sealed class PrecisionExtension : UIExtension, IExtension
         {
             scale.z = _objectScaleZ.Value;
         }
+        
+        LevelObjects.registerTransformObject(selectedObject, selectedObject.position, selectedObject.rotation, scale,
+            selectedObject.position, selectedObject.rotation, selectedObject.localScale);
         
         selectedObject.localScale = scale;
         EditorObjects.calculateHandleOffsets();

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using DanielWillett.ReflectionTools;
-using EditorHelper2.API.Attributes;
+using EditorHelper2.common.API.Attributes;
 using SDG.Unturned;
 
 namespace EditorHelper2.Loader;

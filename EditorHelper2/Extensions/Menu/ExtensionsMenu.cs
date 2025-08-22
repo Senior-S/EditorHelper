@@ -3,7 +3,8 @@ using System.IO;
 using System.Linq;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
-using EditorHelper2.API.Attributes;
+using EditorHelper2.common.API.Attributes;
+using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.Loader;
 using EditorHelper2.Patches.UI;
 using EditorHelper2.UI.Builders;
@@ -15,7 +16,7 @@ namespace EditorHelper2.Extensions.Menu;
 
 [UIExtension(typeof(MenuWorkshopUI))]
 [EHExtension("Extensions Menu", "Senior S", alwaysEnabled: true)]
-public class ExtensionsMenu : UIExtension, IDisposable
+public class ExtensionsMenu : UIExtension, IExtension
 {
     [ExistingMember("container")]
     private readonly SleekFullscreenBox? _originalContainer;
@@ -25,7 +26,7 @@ public class ExtensionsMenu : UIExtension, IDisposable
     private readonly SleekButtonIcon _backButton;
     private readonly SleekFullscreenBox _container;
     private readonly ISleekBox _headerBox;
-    private ISleekScrollView _extensionsScrollView;
+    private readonly ISleekScrollView _extensionsScrollView;
     
     public ExtensionsMenu()
     {
@@ -107,7 +108,7 @@ public class ExtensionsMenu : UIExtension, IDisposable
         
     }
 
-    private void Initialize()
+    public void Initialize()
     {
         if (_originalContainer == null) return;
         
