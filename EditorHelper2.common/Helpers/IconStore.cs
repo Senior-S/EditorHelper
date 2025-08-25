@@ -214,7 +214,7 @@ public class IconStore
         RenderTexture.active = temporary;
         _camera.targetTexture = temporary;
         _camera.orthographicSize = objectAsset.interactability == EObjectInteractability.NPC ? 1.4f : CalculateOrthographicSize(bounds);
-        _camera.farClipPlane = (objectTransform.position - _camera.transform.position).magnitude * 2f;
+        _camera.farClipPlane = (bounds.center - _camera.transform.position).magnitude * 2f;
 
         bool fog = RenderSettings.fog;
         AmbientMode ambientMode = RenderSettings.ambientMode;
