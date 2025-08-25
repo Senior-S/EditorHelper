@@ -3,6 +3,7 @@ using EditorHelper2.Updates.Editor;
 using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.Unturned;
+using UnityEngine;
 
 namespace EditorHelper2.Patches.Editor;
 
@@ -19,6 +20,11 @@ public class EditorObjectsPatches
     /// </summary>
     public static event Action<EditorObjects> OnClearSelection;
     
+    /// <summary>
+    /// Event invoked after <see cref="EditorObjects.addSelection"/> is called.
+    /// </summary>
+    public static event Action<Transform> OnObjectTransformSelected;
+    
     [HarmonyPatch(nameof(EditorObjects.Update))]
     [HarmonyPrefix]
     [UsedImplicitly]
@@ -27,6 +33,14 @@ public class EditorObjectsPatches
         EditorObjectsUpdate.Update(__instance);
 
         return false;
+    }
+
+    [HarmonyPatch(nameof(EditorObjects.addSelection))]
+    [HarmonyPostfix]
+    [UsedImplicitly]
+    private static void PostfixaddSelection(Transform select)
+    {
+        OnObjectTransformSelected?.Invoke(select);
     }
     
     [HarmonyPatch(nameof(EditorObjects.calculateHandleOffsets))]

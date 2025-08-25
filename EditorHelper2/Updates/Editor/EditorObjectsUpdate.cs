@@ -13,6 +13,8 @@ public static class EditorObjectsUpdate
     /// if you need to replace any part of the update, this method must be replaced instead and documented with date.
     /// 8/10/25: Added code for <see cref="PrecisionExtension"/> *postfix*
     /// 8/12/25: Added code for <see cref="HighlightExtension"/> *postfix*
+    /// 8/22/25: Added code for <see cref="IconsExtension"/> *postfix*
+    /// 8/25/25: Added code for <see cref="ExtrasExtension"/> *postfix*
     public static void Update(EditorObjects editorObjectsInstance)
     {
         if (!EditorObjects.isBuilding)
@@ -398,8 +400,13 @@ public static class EditorObjectsUpdate
         #endregion
 
         #region IconsExtension
-        IconsExtension? iconsExtension = DanielWillett.UITools.UnturnedUIToolsNexus.UIExtensionManager.GetInstance<IconsExtension>();
+        IconsExtension? iconsExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<IconsExtension>();
         iconsExtension?.CustomUpdate();
+        #endregion
+        
+        #region ExtrasExtension
+        ExtrasExtension? extrasExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<ExtrasExtension>();
+        extrasExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
         #endregion
     }
 }

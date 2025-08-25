@@ -5,6 +5,8 @@ using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.common.Helpers.Level.Objects;
+using EditorHelper2.common.Types;
+using EditorHelper2.Patches.Editor;
 using EditorHelper2.UI.Builders;
 using SDG.Unturned;
 using UnityEngine;
@@ -12,7 +14,7 @@ using UnityEngine;
 namespace EditorHelper2.Extensions.Level.Objects;
 
 [UIExtension(typeof(EditorLevelObjectsUI))]
-[EHExtension("Extra Object Tools (Adjacent placement, Layer selection toggle)", "Senior S")]
+[EHExtension("Extra Object Tools (Adjacent placement, Layer selection toggle, Object tag)", "Senior S")]
 public class ExtrasExtension : UIExtension, IExtension
 {
     [ExistingMember("container")]
@@ -24,6 +26,9 @@ public class ExtrasExtension : UIExtension, IExtension
     private readonly ISleekBox _layersContainer;
     private readonly Dictionary<ISleekToggle, string> _toggleToLayer = new();
     private readonly SleekButtonIcon _layersMaskButton;
+    
+    private readonly ISleekField _tagField;
+    private readonly Dictionary<LevelObject, LevelObjectExtension> _dicLevelObjects;
     
     public ExtrasExtension()
     {
@@ -90,6 +95,13 @@ public class ExtrasExtension : UIExtension, IExtension
         
         _layersMaskButton = builder.BuildButton("Change the layer mask that determines what can be selected");
         
+        builder.SetOffsetVertical(EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y + 120f)
+            .SetText("Object tag");
+        
+        _tagField = builder.BuildStringField();
+        _tagField.IsVisible = false;
+        _dicLevelObjects = [];
+        
         Initialize();
     }
     
@@ -102,6 +114,7 @@ public class ExtrasExtension : UIExtension, IExtension
         _container.AddChild(_layersContainer);
         _container.AddChild(_layersMaskButton);
         _container.AddChild(_adjacentPlaceButton);
+        _container.AddChild(_tagField);
         
         foreach (ISleekToggle toggle in _toggleToLayer.Keys)
         {
@@ -109,8 +122,10 @@ public class ExtrasExtension : UIExtension, IExtension
         }
         _layersMaskButton.onClickedButton += OnLayersMaskButtonClicked;
         _adjacentPlaceButton.onClickedButton += OnAdjacentPlaceClicked;
+        _tagField.OnTextChanged += OnTagFieldTextChanged;
+        EditorObjectsPatches.OnObjectTransformSelected += OnObjectTransformSelected;
     }
-
+    
     #region Event Handlers
     private void OnLayerToggleChanged(ISleekToggle toggle, bool state)
     {
@@ -173,17 +188,92 @@ public class ExtrasExtension : UIExtension, IExtension
         EditorObjects.clearSelection();
         EditorObjects.addSelection(transform);
     }
+    
+    private void OnTagFieldTextChanged(ISleekField field, string text)
+    {
+        if (EditorObjects.selection == null || EditorObjects.selection.Count != 1) return;
+        Transform selectedObject = EditorObjects.selection.First().transform;
+        
+        LevelObject? levelObject = LevelObjects.FindLevelObject(selectedObject.gameObject);
+        if (levelObject == null) return;
+        
+        if (_dicLevelObjects.TryGetValue(levelObject, out LevelObjectExtension extension))
+        {
+            extension?.UpdateTag(text);
+        }
+        else
+        {
+            _dicLevelObjects.Add(levelObject, new LevelObjectExtension(text));
+        }
+    }
+    
+    private void OnObjectTransformSelected(Transform obj)
+    {
+        if (EditorObjects.selection == null || EditorObjects.selection.Count != 1) return;
+        Transform selectedObject = EditorObjects.selection.First().transform;
+        
+        LevelObject? levelObject = LevelObjects.FindLevelObject(selectedObject.gameObject);
+        if (levelObject == null) return;
+        
+        string tag = string.Empty;
+        if (_dicLevelObjects.TryGetValue(levelObject, out LevelObjectExtension extension))
+        {
+            tag = extension.Tag;
+        }
+
+        _tagField.Text = tag;
+        
+        if (!InputEx.GetKey(ControlsSettings.modify) && EditorObjects.selection.Count == 1 && tag != string.Empty && selectedObject != null)
+        {
+            List<KeyValuePair<LevelObject, LevelObjectExtension>> objects = _dicLevelObjects.Where(c => c.Value.Tag == tag).ToList();
+            if (objects.Count > 1)
+            {
+                SelectSameTagObjects(objects.Select(c => c.Key.transform).ToList());
+            }
+        }
+    }
+    #endregion
+    
+    #region Extension functions
+    public void ChangeButtonsVisibility(bool visible)
+    {
+        if (_tagField.IsVisible != visible)
+        {
+            _tagField.IsVisible = visible;
+            if (visible)
+            {
+                EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y -= 40f;
+            }
+            else
+            {
+                EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y += 40f;    
+            }
+        }
+    }
+    
+    private void SelectSameTagObjects(List<Transform> selectedObjects)
+    {
+        EditorObjects.selection.Clear();
+        foreach (Transform select in selectedObjects)
+        {
+            HighlighterTool.highlight(select, Color.yellow);
+            EditorObjects.selectDecals(select, true);
+            EditorObjects.selection.Add(new EditorSelection(select, select.position, select.rotation, select.localScale));    
+        }
+        EditorObjects.calculateHandleOffsets();
+    }
     #endregion
 
     public void Dispose()
     {
         if (_container == null) return;
         
-        EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y += 40f;
+        EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y += _tagField.IsVisible ? 80f : 40f;
         
         _container.RemoveChild(_layersContainer);
         _container.RemoveChild(_layersMaskButton);
         _container.RemoveChild(_adjacentPlaceButton);
+        _container.RemoveChild(_tagField);
         
         foreach (ISleekToggle toggle in _toggleToLayer.Keys)
         {
@@ -191,5 +281,7 @@ public class ExtrasExtension : UIExtension, IExtension
         }
         _layersMaskButton.onClickedButton -= OnLayersMaskButtonClicked;
         _adjacentPlaceButton.onClickedButton -= OnAdjacentPlaceClicked;
+        _tagField.OnTextChanged -= OnTagFieldTextChanged;
+        EditorObjectsPatches.OnObjectTransformSelected -= OnObjectTransformSelected;
     }
 }

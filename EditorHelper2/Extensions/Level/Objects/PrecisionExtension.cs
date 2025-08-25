@@ -143,24 +143,6 @@ public sealed class PrecisionExtension : UIExtension, IExtension
         _objectScaleZ.Value = selectedObject.localScale.z;
     }
     
-    public void ChangeButtonsVisibility(bool visible)
-    {
-        _objectPositionLabel.IsVisible = visible;
-        _objectPositionX.IsVisible = visible;
-        _objectPositionY.IsVisible = visible;
-        _objectPositionZ.IsVisible = visible;
-
-        _objectRotationLabel.IsVisible = visible;
-        _objectRotationX.IsVisible = visible;
-        _objectRotationY.IsVisible = visible;
-        _objectRotationZ.IsVisible = visible;
-
-        _objectScaleLabel.IsVisible = visible;
-        _objectScaleX.IsVisible = visible;
-        _objectScaleY.IsVisible = visible;
-        _objectScaleZ.IsVisible = visible;
-    }
-
     private void OnPositionValueUpdated(ISleekFloat32Field field, float value)
     {
         if (EditorObjects.selection == null || EditorObjects.selection.Count != 1) return;
@@ -267,6 +249,26 @@ public sealed class PrecisionExtension : UIExtension, IExtension
         
         selectedObject.localScale = scale;
         EditorObjects.calculateHandleOffsets();
+    }
+    #endregion
+    
+    #region Extension functions
+    public void ChangeButtonsVisibility(bool visible)
+    {
+        _objectPositionLabel.IsVisible = visible;
+        _objectPositionX.IsVisible = visible;
+        _objectPositionY.IsVisible = visible;
+        _objectPositionZ.IsVisible = visible;
+
+        _objectRotationLabel.IsVisible = visible;
+        _objectRotationX.IsVisible = visible;
+        _objectRotationY.IsVisible = visible;
+        _objectRotationZ.IsVisible = visible;
+
+        _objectScaleLabel.IsVisible = visible;
+        _objectScaleX.IsVisible = visible;
+        _objectScaleY.IsVisible = visible;
+        _objectScaleZ.IsVisible = visible;
     }
     #endregion
     
