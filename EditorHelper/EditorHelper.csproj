@@ -307,6 +307,7 @@
     <Compile Include="Editor\Managers\FoliageAssetManager.cs" />
     <Compile Include="Editor\Managers\FoliageCollectionManager.cs" />
     <Compile Include="Editor\Managers\FoliageManager.cs" />
+    <Compile Include="Editor\Managers\MaterialAssetManager.cs" />
     <Compile Include="Editor\Managers\NodesManager.cs" />
     <Compile Include="Editor\Managers\ObjectsManager.cs" />
     <Compile Include="Editor\Managers\RoadsManager.cs" />
@@ -326,6 +327,7 @@
     <Compile Include="Models\EditorCopyExtension.cs" />
     <Compile Include="Models\EWorkshopMenuSubmissionModePatch.cs" />
     <Compile Include="Models\JsonWithMetadata.cs" />
+    <Compile Include="Models\LandscapeMaterialAssetExtension.cs" />
     <Compile Include="Models\LevelObjectExtension.cs" />
     <Compile Include="Models\PositionModel.cs" />
     <Compile Include="Models\ReunObjectRemoveExtension.cs" />
@@ -350,6 +352,7 @@
     <Compile Include="Patches\Editor\UI\EditorRoadsUIPatches.cs" />
     <Compile Include="Patches\Editor\UI\EditorSpawnsVehiclesUIPatches.cs" />
     <Compile Include="Patches\Editor\UI\EditorTerrainDetailsUIPatches.cs" />
+    <Compile Include="Patches\Editor\UI\EditorTerrainMaterialsUIPatches.cs" />
     <Compile Include="Patches\Foliage\FoliageEditorPatches.cs" />
     <Compile Include="Patches\Level\LevelAnimalPatches.cs" />
     <Compile Include="Patches\Level\LevelObjectsPatches.cs" />

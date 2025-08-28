@@ -9,6 +9,7 @@ using EditorHelper.Schematics;
 using HarmonyLib;
 using SDG.Framework.Modules;
 using SDG.Unturned;
+using UnityEngine;
 
 namespace EditorHelper;
 
@@ -23,6 +24,7 @@ public class EditorHelper : IModuleNexus
     public FoliageManager FoliageManager;
     public FoliageCollectionManager FoliageCollectionManager;
     public FoliageAssetManager FoliageAssetManager;
+    public MaterialAssetManager MaterialAssetManager;
     public AnimalSpawnsManager AnimalSpawnsManager;
     public VehicleSpawnsManager VehicleSpawnsManager;
     public VisibilityManager VisibilityManager;
