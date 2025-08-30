@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DanielWillett.UITools;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
 using DanielWillett.UITools.Util;
@@ -27,13 +28,11 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
     private FoliageInfoCollectionAsset _lastCollectionAsset;
         
     // Save it in variable, because I don't know how else I can make it work
-    private EditorTerrainDetailsUI _currentUIInstance;
-    
-    [ExistingMember("container")]
-    private readonly SleekFullscreenBox? _container;
+    internal static EditorTerrainDetailsUI? _currentUIInstance;
 
     public CollectionManagerExtension()
     {
+        UnturnedLog.info("COLLECTIONMANAGER CNSTRUCTOR");
         _boxToAsset = new Dictionary<ISleekBox, FoliageInfoAsset>();
             
         // Main box container
@@ -74,16 +73,19 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
             .SetSizeVertical(-440f);
         _assetScrollView = builder.BuildScrollBox<FoliageInfoAsset>(30, 1);
         _assetScrollView.onCreateElement = OnCreateElement;
+
+        Initialize();
     }
     
     public void Initialize()
     {
-        if (_container == null) return;
-        _container.AddChild(_assetScrollView);
+        UnturnedLog.info("COLLECTIONMANAGER INITIALIZE");
+        if (_currentUIInstance == null) return;
+        _currentUIInstance.AddChild(_assetScrollView);
             
-        _container.AddChild(_collectionCreateButton);
-        _container.AddChild(_collectionNameField);
-        _container.AddChild(_saveButton);
+        _currentUIInstance.AddChild(_collectionCreateButton);
+        _currentUIInstance.AddChild(_collectionNameField);
+        _currentUIInstance.AddChild(_saveButton);
 
         List<FoliageInfoAsset> foliageAssets = new();
         Assets.find(foliageAssets);
@@ -137,11 +139,11 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
     
     public void Dispose()
     {
-        if (_container == null) return;
-        _container.RemoveChild(_assetScrollView);
-        _container.RemoveChild(_collectionCreateButton);
-        _container.RemoveChild(_collectionNameField);
-        _container.RemoveChild(_saveButton);
+        if (_currentUIInstance == null) return;
+        _currentUIInstance.RemoveChild(_assetScrollView);
+        _currentUIInstance.RemoveChild(_collectionCreateButton);
+        _currentUIInstance.RemoveChild(_collectionNameField);
+        _currentUIInstance.RemoveChild(_saveButton);
     }
     
     private ISleekElement OnCreateElement(FoliageInfoAsset item)
