@@ -15,6 +15,7 @@ public static class EditorObjectsUpdate
     /// 8/12/25: Added code for <see cref="HighlightExtension"/> *postfix*
     /// 8/22/25: Added code for <see cref="IconsExtension"/> *postfix*
     /// 8/25/25: Added code for <see cref="ExtrasExtension"/> *postfix*
+    /// 8/30/25: Added code for <see cref="ObjectReplacerExtension"/> *postfix*
     public static void Update(EditorObjects editorObjectsInstance)
     {
         if (!EditorObjects.isBuilding)
@@ -407,6 +408,11 @@ public static class EditorObjectsUpdate
         #region ExtrasExtension
         ExtrasExtension? extrasExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<ExtrasExtension>();
         extrasExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
+        #endregion
+        
+        #region ObjectReplacerExtension
+        ObjectReplacerExtension? replacerExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<ObjectReplacerExtension>();
+        replacerExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
         #endregion
     }
 }

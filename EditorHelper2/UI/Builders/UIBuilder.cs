@@ -227,8 +227,8 @@ public class UIBuilder
         return buttonState;
     }
 
-    public SleekButtonIcon BuildButton(string tooltip, Texture2D icon = null!, ESleekFontSize fontSize = ESleekFontSize.Default)
-    {        
+    public SleekButtonIcon BuildButton(string tooltip, Texture2D? icon = null, ESleekFontSize fontSize = ESleekFontSize.Default)
+    {
         SleekButtonIcon button = new(icon)
         {
             tooltip = tooltip,
