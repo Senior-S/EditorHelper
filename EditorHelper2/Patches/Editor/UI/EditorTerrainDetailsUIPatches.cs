@@ -13,7 +13,6 @@ public class EditorTerrainDetailsUIPatches
     [UsedImplicitly]
     public static void PostfixUpdate()
     {
-        UnturnedLog.info("UPDATE PATCH POSTFIX CALLED");
         EditorTerrainDetailsUIUpdate.Update();
     }
 }

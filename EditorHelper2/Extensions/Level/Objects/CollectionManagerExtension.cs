@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+<<<<<<< Updated upstream
 using DanielWillett.UITools.API;
+=======
+>>>>>>> Stashed changes
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.Util;
 using EditorHelper2.common.API.Attributes;
@@ -24,19 +27,21 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
     private readonly Dictionary<ISleekBox, FoliageInfoAsset> _boxToAsset;
         
     // To not update 20 billion times every second
-    private FoliageInfoCollectionAsset _lastCollectionAsset;
+    private FoliageInfoCollectionAsset? _lastCollectionAsset;
         
     // Save it in variable, because I don't know how else I can make it work
-    internal static EditorTerrainDetailsUI? _currentUIInstance;
+    private EditorTerrainDetailsUI? _currentUIInstance;
 
-    public CollectionManagerExtension()
+    public CollectionManagerExtension(EditorTerrainDetailsUI instance)
     {
+<<<<<<< Updated upstream
+=======
+        _currentUIInstance = instance;
+>>>>>>> Stashed changes
         _boxToAsset = new Dictionary<ISleekBox, FoliageInfoAsset>();
             
-        // Main box container
-        UIBuilder builder = new(200f, 30f);
-            
         // Field
+        UIBuilder builder = new(200f, 30f);
         builder.SetAnchorVertical(0f)
             .SetAnchorHorizontal(0f)
             .SetOffsetHorizontal(-0f)
@@ -60,13 +65,19 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
             .SetOffsetVertical(-310f);
         _saveButton = builder.BuildButton("Write to file.");
         _saveButton.text = "Save";
+<<<<<<< Updated upstream
             
+=======
+        _saveButton.onClickedButton += WriteToFile;
+
+>>>>>>> Stashed changes
         // Scrollbox
-        builder.SetAnchorVertical(0f)
-            .SetAnchorHorizontal(0f)
-            .SetOffsetHorizontal(0f)
-            .SetSizeHorizontal(280f)
-            .SetSizeVertical(-440f);
+        builder = builder.ResetProperties()
+            .SetAnchorVertical(0f)      // Start from TOP
+            .SetOffsetVertical(80f)     // Start at 80px
+            .SetSizeHorizontal(280f)    // Width of scroll area
+            .SetSizeVertical(-160f)     // Move the bottom border up
+            .SetScaleVertical(1f);      // Auto-resize vertically based on elements around it
         _assetScrollView = builder.BuildScrollBox<FoliageInfoAsset>(30, 1);
         _assetScrollView.onCreateElement = OnCreateElement;
 
@@ -95,7 +106,49 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
     #region Event Handlers
     private void WriteToFile(ISleekElement button)
     {
+<<<<<<< Updated upstream
         AssetWriter.SaveFoliageInfoCollectionAsset(_currentUIInstance.tool.selectedCollectionAsset);
+=======
+        bool visibility = _currentUIInstance != null && _currentUIInstance.tool.mode != FoliageEditor.EFoliageMode.BAKE && _currentUIInstance.searchTypeButton.state == 1;
+            
+        _collectionNameField.IsVisible = visibility;
+        _collectionCreateButton.IsVisible = visibility;
+        _saveButton.IsVisible = visibility;
+        _assetScrollView.IsVisible = visibility;
+
+        // If selection changed, update the list
+        FoliageInfoCollectionAsset? current = _currentUIInstance?.tool.selectedCollectionAsset;
+        if (_lastCollectionAsset != current)
+        {
+            _lastCollectionAsset = current;
+
+            for (int i = 0; i < _assetScrollView.ElementCount; ++i)
+            {
+                ISleekElement element = _assetScrollView.GetElement(i);
+
+                if (element is ISleekBox box && _boxToAsset.TryGetValue(box, out FoliageInfoAsset? asset))
+                {
+                    using var sleekChildEnumerator = box.GetEnumerator();
+                    foreach (var child in sleekChildEnumerator)
+                    {
+                        if (child is ISleekToggle toggle)
+                        {
+                            toggle.Value = IsInsideCollection(asset);
+                        }
+                    }
+
+                    /*for (int j = 0; j < box.GetChildCount(); ++j)
+                    {
+                        ISleekElement? child = box.GetChildAtIndex(j);
+                        if (child is ISleekToggle toggle)
+                        {
+                            toggle.Value = IsInsideCollection(_currentUIInstance, asset);
+                        }
+                    }*/
+                }
+            }
+        }
+>>>>>>> Stashed changes
     }
 
     private void CreateCollection(ISleekElement button)
@@ -120,8 +173,8 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
         toggle.SizeOffset_Y = 30f;
         toggle.AddLabel(item.name, ESleekSide.RIGHT);
 
-        toggle.Value = IsInsideCollection(_currentUIInstance, item);
-        toggle.OnValueChanged += (t, value) =>
+        toggle.Value = IsInsideCollection(item);
+        toggle.OnValueChanged += (_, value) =>
         {
             OnToggleElement(item, value);
         };
@@ -142,12 +195,12 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
         if (!value)
         {
             // Remove the asset from the collection
-            selectedCollectionAsset.elements.RemoveAll(e => e.asset != null && e.asset.Find() == item);
+            selectedCollectionAsset.elements.RemoveAll(e => e.asset.Find() == item);
         }
         else
         {
             // Add the asset to the collection if not already present
-            if (!selectedCollectionAsset.elements.Exists(e => e.asset != null && e.asset.Find() == item))
+            if (!selectedCollectionAsset.elements.Exists(e => e.asset.Find() == item))
             {
                 selectedCollectionAsset.elements.Add(new FoliageInfoCollectionAsset.FoliageInfoCollectionElement
                 {
@@ -169,6 +222,7 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
         _saveButton.IsVisible = visibility;
         _assetScrollView.IsVisible = visibility;
 
+<<<<<<< Updated upstream
         // If selection changed, update the list
         FoliageInfoCollectionAsset? current = _currentUIInstance.tool.selectedCollectionAsset;
         if (_lastCollectionAsset != current)
@@ -195,18 +249,21 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
     }
     
     private bool IsInsideCollection(EditorTerrainDetailsUI uiInstance, FoliageInfoAsset item)
+=======
+    private bool IsInsideCollection(FoliageInfoAsset item)
+>>>>>>> Stashed changes
     {
         // Bunch off null checks, because it crashes your editor by default, because nothing is selected xd
-        if (uiInstance?.tool == null)
+        if (_currentUIInstance?.tool == null)
             return false;
 
-        FoliageInfoCollectionAsset? selectedCollectionAsset = uiInstance.tool.selectedCollectionAsset;
+        FoliageInfoCollectionAsset? selectedCollectionAsset = _currentUIInstance.tool.selectedCollectionAsset;
         if (selectedCollectionAsset?.elements == null)
             return false;
 
         foreach (FoliageInfoCollectionAsset.FoliageInfoCollectionElement element in selectedCollectionAsset.elements)
         {
-            if (element.asset != null && element.asset.Find() == item)
+            if (element.asset.Find() == item)
             {
                 return true;
             }
@@ -218,6 +275,7 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
     
     public void Dispose()
     {
+<<<<<<< Updated upstream
         if (_currentUIInstance == null) return;
         
         _currentUIInstance.RemoveChild(_assetScrollView);
@@ -227,5 +285,17 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
         
         _saveButton.onClickedButton -= WriteToFile;
         _collectionCreateButton.onClickedButton -= CreateCollection;
+=======
+        if (_currentUIInstance != null)
+            AssetWriter.SaveFoliageInfoCollectionAsset(_currentUIInstance.tool.selectedCollectionAsset);
+    }
+
+    private void CreateCollection(ISleekElement button)
+    {
+        AssetWriter.CreateEmptyFoliageInfoCollectionAssetFile(_collectionNameField.Text);
+        _collectionNameField.Text = "";
+
+        new FoliageInfoCollectionAsset();
+>>>>>>> Stashed changes
     }
 }
