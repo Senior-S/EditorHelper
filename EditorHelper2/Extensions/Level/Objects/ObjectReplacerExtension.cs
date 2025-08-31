@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.common.API.Attributes;
@@ -29,7 +30,9 @@ public class ObjectReplacerExtension : UIExtension, IExtension
     public ObjectReplacerExtension()
     {
         UIBuilder builder = new(200f, 250f);
-        string iconsPath = Path.Combine(Environment.CurrentDirectory, "EditorHelper2", "Assets", "Icons.unity3d");
+        
+        Assembly assembly = typeof(EditorHelper).Assembly; 
+        string iconsPath = Path.Combine(Path.GetDirectoryName(assembly.Location) ?? string.Empty, "Assets" ,"Icons.unity3d"); 
         Bundle icons = Bundles.getBundle(iconsPath, false);
 
         builder.SetAnchorHorizontal(0.5f)

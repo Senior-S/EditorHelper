@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.common.API.Attributes;
@@ -39,7 +40,8 @@ public class ExtensionsMenu : UIExtension, IExtension
             .SetOffsetVertical(-175f)
             .SetText("Extensions");
 
-		string iconsPath = Path.Combine(Environment.CurrentDirectory, "EditorHelper2", "Assets", "Icons.unity3d");
+        Assembly assembly = typeof(EditorHelper).Assembly; 
+        string iconsPath = Path.Combine(Path.GetDirectoryName(assembly.Location) ?? string.Empty, "Assets" ,"Icons.unity3d"); 
         Bundle bundle = Bundles.getBundle(iconsPath, false);
 
         _extensionsButton = builder.BuildButton("Open the extensions menu", bundle.load<Texture2D>("EditorHelper"));
