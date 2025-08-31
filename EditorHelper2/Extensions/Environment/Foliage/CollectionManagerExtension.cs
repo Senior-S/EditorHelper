@@ -11,7 +11,7 @@ using SDG.Unturned;
 namespace EditorHelper2.Extensions.Level.Objects;
 
 [UIExtension(typeof(EditorTerrainDetailsUI))]
-[EHExtension("Live Collection Manager", "JienSultan")]
+[EHExtension("Live Collection Editor", "JienSultan")]
 public sealed class CollectionManagerExtension: UIExtension, IExtension
 {
     private readonly SleekList<FoliageInfoAsset> _assetScrollView;
@@ -65,7 +65,8 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
         builder = builder.ResetProperties()
             .SetAnchorVertical(0f)      // Start from TOP
             .SetOffsetVertical(80f)     // Start at 80px
-            .SetSizeHorizontal(280f)    // Width of scroll area
+            //.SetSizeHorizontal(280f)    // Width of scroll area
+            .SetSizeHorizontal(330f)    // Width of scroll area
             .SetSizeVertical(-400f)     // Move the bottom border up
             .SetScaleVertical(1f);      // Auto-resize vertically based on elements around it
         _assetScrollView = builder.BuildScrollBox<FoliageInfoAsset>(30, 1);
@@ -119,6 +120,11 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
                         {
                             toggle.Value = IsInsideCollection(asset);
                         }
+                        
+                        if (child is ISleekFloat32Field weightField)
+                        {
+                            weightField.Value = GetAssetWeight(asset);
+                        }
                     }
 
                     /*for (int j = 0; j < box.GetChildCount(); ++j)
@@ -155,6 +161,30 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
         return false;
     }
     
+    private float GetAssetWeight(FoliageInfoAsset item)
+    {
+        // Bunch off null checks, because it crashes your editor by default, because nothing is selected xd
+        if (_currentUIInstance?.tool == null)
+            return 0f;
+
+        FoliageInfoCollectionAsset? selectedCollectionAsset = _currentUIInstance.tool.selectedCollectionAsset;
+        if (selectedCollectionAsset?.elements == null)
+            return 0f;
+
+        UnturnedLog.info("Asset: " + item.name);
+        foreach (FoliageInfoCollectionAsset.FoliageInfoCollectionElement element in selectedCollectionAsset.elements)
+        {
+            FoliageInfoAsset e = element.asset.Find();
+            if (e == item)
+            {
+                UnturnedLog.info("Weight: " + element.weight);
+                return element.weight;
+            }
+        }
+        
+        return 0f;
+    }
+    
     #endregion Extension functions
     
     public void Dispose()
@@ -169,11 +199,11 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
     #region Event Handlers
     private ISleekElement OnCreateElement(FoliageInfoAsset item)
     {
-        UIBuilder builder = new(200f, 200f);
+        UIBuilder builder = new(200f, 30f);
         builder
             .SetAnchorHorizontal(0f)
             .SetAnchorVertical(0f);
-        ISleekBox box = builder.CreateSimpleBox();
+        ISleekBox box = builder.CreateSimpleAlphaBox();
 
 
         ISleekToggle toggle = Glazier.Get().CreateToggle();
@@ -188,6 +218,18 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
         };
 
         box.AddChild(toggle);
+
+        builder
+            .SetAnchorHorizontal(0f)
+            .SetOffsetHorizontal(240f)
+            .SetSizeHorizontal(60f)
+            .SetSizeVertical(30f);
+        ISleekFloat32Field weightField = builder.BuildFloatInput();
+        weightField.Value = GetAssetWeight(item);
+        weightField.TooltipText = "Weight of the asset";
+        
+        box.AddChild(weightField);
+        
         _boxToAsset[box] = item;
 
         return box;
