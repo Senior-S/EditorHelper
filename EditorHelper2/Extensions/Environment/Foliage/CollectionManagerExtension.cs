@@ -124,6 +124,7 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
                         if (child is ISleekFloat32Field weightField)
                         {
                             weightField.Value = GetAssetWeight(asset);
+                            weightField.IsClickable = IsInsideCollection(asset);
                         }
                     }
 
@@ -210,13 +211,7 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
         toggle.SizeOffset_X = 30f;
         toggle.SizeOffset_Y = 30f;
         toggle.AddLabel(item.name, ESleekSide.RIGHT);
-
         toggle.Value = IsInsideCollection(item);
-        toggle.OnValueChanged += (_, value) =>
-        {
-            OnToggleElement(item, value);
-        };
-
         box.AddChild(toggle);
 
         builder
@@ -227,15 +222,26 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
         ISleekFloat32Field weightField = builder.BuildFloatInput();
         weightField.Value = GetAssetWeight(item);
         weightField.TooltipText = "Weight of the asset";
-        
+        weightField.IsClickable = IsInsideCollection(item);
         box.AddChild(weightField);
         
         _boxToAsset[box] = item;
+        
+        // Event handling
+        toggle.OnValueChanged += (_, value) =>
+        {
+            OnToggleElement(item, value, weightField.Value);
+        };
+        // OnValueChanged, because many people don't bother pressing enter
+        weightField.OnValueChanged += (_, value) =>
+        {
+            OnChangeWeight(item, value);
+        };
 
         return box;
     }
     
-    private void OnToggleElement(FoliageInfoAsset item, bool value)
+    private void OnToggleElement(FoliageInfoAsset item, bool value, float newWeight)
     {
         // Use the stored UI instance, because I dont know how else I can use ref in other methods
         FoliageInfoCollectionAsset? selectedCollectionAsset = _currentUIInstance?.tool?.selectedCollectionAsset;
@@ -255,8 +261,27 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
                 selectedCollectionAsset.elements.Add(new FoliageInfoCollectionAsset.FoliageInfoCollectionElement
                 {
                     asset = new AssetReference<FoliageInfoAsset>(item.GUID),
-                    weight = 1f // Default weight, maybe I will add a textBox
+                    weight = newWeight
                 });
+            }
+        }
+    }
+
+    private void OnChangeWeight(FoliageInfoAsset item, float newWeight)
+    {
+        FoliageInfoCollectionAsset? selectedCollectionAsset = _currentUIInstance?.tool?.selectedCollectionAsset;
+        if (selectedCollectionAsset?.elements == null)
+            return;
+        
+
+        for (int i = 0; i < selectedCollectionAsset.elements.Count; i++)
+        {
+            if (selectedCollectionAsset.elements[i].asset.Find() == item)
+            {
+                var element = selectedCollectionAsset.elements[i];
+                element.weight = newWeight;
+                selectedCollectionAsset.elements[i] = element;
+                break;
             }
         }
     }
