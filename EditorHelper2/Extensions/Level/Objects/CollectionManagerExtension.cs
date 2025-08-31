@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
-using DanielWillett.UITools;
+using DanielWillett.UITools.API;
 using DanielWillett.UITools.API.Extensions;
-using DanielWillett.UITools.API.Extensions.Members;
 using DanielWillett.UITools.Util;
-using EditorHelper.Writers;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
+using EditorHelper2.common.Helpers;
 using EditorHelper2.UI.Builders;
 using SDG.Framework.Foliage;
 using SDG.Unturned;
@@ -32,7 +31,6 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
 
     public CollectionManagerExtension()
     {
-        UnturnedLog.info("COLLECTIONMANAGER CNSTRUCTOR");
         _boxToAsset = new Dictionary<ISleekBox, FoliageInfoAsset>();
             
         // Main box container
@@ -54,7 +52,6 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
             .SetOffsetVertical(40f);
         _collectionCreateButton = builder.BuildButton("Create Collection.");
         _collectionCreateButton.text = "Create New Collection";
-        _collectionCreateButton.onClickedButton += CreateCollection;
             
         // Save button
         builder.SetAnchorVertical(0f)
@@ -63,7 +60,6 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
             .SetOffsetVertical(-310f);
         _saveButton = builder.BuildButton("Write to file.");
         _saveButton.text = "Save";
-        _saveButton.onClickedButton += WriteToFile;
             
         // Scrollbox
         builder.SetAnchorVertical(0f)
@@ -79,14 +75,16 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
     
     public void Initialize()
     {
-        UnturnedLog.info("COLLECTIONMANAGER INITIALIZE");
         if (_currentUIInstance == null) return;
+        
         _currentUIInstance.AddChild(_assetScrollView);
-            
         _currentUIInstance.AddChild(_collectionCreateButton);
         _currentUIInstance.AddChild(_collectionNameField);
         _currentUIInstance.AddChild(_saveButton);
-
+        
+        _saveButton.onClickedButton += WriteToFile;
+        _collectionCreateButton.onClickedButton += CreateCollection;
+        
         List<FoliageInfoAsset> foliageAssets = new();
         Assets.find(foliageAssets);
 
@@ -94,56 +92,18 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
         _assetScrollView.Update();
     }
     
-    public void CustomUpdate()
+    #region Event Handlers
+    private void WriteToFile(ISleekElement button)
     {
-        bool visibility = _currentUIInstance.tool.mode != FoliageEditor.EFoliageMode.BAKE && _currentUIInstance.searchTypeButton.state == 1;
-            
-        _collectionNameField.IsVisible = visibility;
-        _collectionCreateButton.IsVisible = visibility;
-        _saveButton.IsVisible = visibility;
-        _assetScrollView.IsVisible = visibility;
-
-        // If selection changed, update the list
-        FoliageInfoCollectionAsset? current = _currentUIInstance.tool.selectedCollectionAsset;
-        if (_lastCollectionAsset != current)
-        {
-            _lastCollectionAsset = current;
-
-            for (int i = 0; i < _assetScrollView.ElementCount; ++i)
-            {
-                ISleekElement element = _assetScrollView.GetElement(i);
-
-                if (element is ISleekBox box && _boxToAsset.TryGetValue(box, out FoliageInfoAsset? asset))
-                {
-                    using var sleekChildEnumerator = box.GetEnumerator();
-                    foreach (var child in sleekChildEnumerator)
-                    {
-                        if (child is ISleekToggle toggle)
-                        {
-                            toggle.Value = IsInsideCollection(_currentUIInstance, asset);
-                        }
-                    }
-
-                    /*for (int j = 0; j < box.GetChildCount(); ++j)
-                    {
-                        ISleekElement? child = box.GetChildAtIndex(j);
-                        if (child is ISleekToggle toggle)
-                        {
-                            toggle.Value = IsInsideCollection(_currentUIInstance, asset);
-                        }
-                    }*/
-                }
-            }
-        }
+        AssetWriter.SaveFoliageInfoCollectionAsset(_currentUIInstance.tool.selectedCollectionAsset);
     }
-    
-    public void Dispose()
+
+    private void CreateCollection(ISleekElement button)
     {
-        if (_currentUIInstance == null) return;
-        _currentUIInstance.RemoveChild(_assetScrollView);
-        _currentUIInstance.RemoveChild(_collectionCreateButton);
-        _currentUIInstance.RemoveChild(_collectionNameField);
-        _currentUIInstance.RemoveChild(_saveButton);
+        AssetWriter.CreateEmptyFoliageInfoCollectionAssetFile(_collectionNameField.Text);
+        _collectionNameField.Text = "";
+
+        new FoliageInfoCollectionAsset();
     }
     
     private ISleekElement OnCreateElement(FoliageInfoAsset item)
@@ -197,7 +157,43 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
             }
         }
     }
+    #endregion Event Handlers
+    
+    #region Extension functions
+    public void CustomUpdate()
+    {
+        bool visibility = _currentUIInstance.tool.mode != FoliageEditor.EFoliageMode.BAKE && _currentUIInstance.searchTypeButton.state == 1;
+            
+        _collectionNameField.IsVisible = visibility;
+        _collectionCreateButton.IsVisible = visibility;
+        _saveButton.IsVisible = visibility;
+        _assetScrollView.IsVisible = visibility;
 
+        // If selection changed, update the list
+        FoliageInfoCollectionAsset? current = _currentUIInstance.tool.selectedCollectionAsset;
+        if (_lastCollectionAsset != current)
+        {
+            _lastCollectionAsset = current;
+
+            for (int i = 0; i < _assetScrollView.ElementCount; ++i)
+            {
+                ISleekElement element = _assetScrollView.GetElement(i);
+
+                if (element is ISleekBox box && _boxToAsset.TryGetValue(box, out FoliageInfoAsset? asset))
+                {
+                    using SleekChildEnumerator sleekChildEnumerator = box.GetEnumerator();
+                    foreach (ISleekElement? child in sleekChildEnumerator)
+                    {
+                        if (child is ISleekToggle toggle)
+                        {
+                            toggle.Value = IsInsideCollection(_currentUIInstance, asset);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     private bool IsInsideCollection(EditorTerrainDetailsUI uiInstance, FoliageInfoAsset item)
     {
         // Bunch off null checks, because it crashes your editor by default, because nothing is selected xd
@@ -218,17 +214,18 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
 
         return false;
     }
+    #endregion Extension functions
     
-    private void WriteToFile(ISleekElement button)
+    public void Dispose()
     {
-        AssetWriter.SaveFoliageInfoCollectionAsset(_currentUIInstance.tool.selectedCollectionAsset);
-    }
-
-    private void CreateCollection(ISleekElement button)
-    {
-        AssetWriter.CreateEmptyFoliageInfoCollectionAssetFile(_collectionNameField.Text);
-        _collectionNameField.Text = "";
-
-        new FoliageInfoCollectionAsset();
+        if (_currentUIInstance == null) return;
+        
+        _currentUIInstance.RemoveChild(_assetScrollView);
+        _currentUIInstance.RemoveChild(_collectionCreateButton);
+        _currentUIInstance.RemoveChild(_collectionNameField);
+        _currentUIInstance.RemoveChild(_saveButton);
+        
+        _saveButton.onClickedButton -= WriteToFile;
+        _collectionCreateButton.onClickedButton -= CreateCollection;
     }
 }

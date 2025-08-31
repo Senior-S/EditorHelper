@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using SDG.Framework.Foliage;
 using SDG.Unturned;
 
-namespace EditorHelper.Writers;
+namespace EditorHelper2.common.Helpers;
 
 public class AssetWriter
 {
@@ -70,7 +70,7 @@ public class AssetWriter
         sb.AppendLine("\t]");
         sb.AppendLine("}");
 
-        string dir = Level.info.path + "/Bundles/Assets/Landscapes/Collections/";
+        string dir = SDG.Unturned.Level.info.path + "/Bundles/Assets/Landscapes/Collections/";
         string filePath = dir + name + ".asset";
 
         Directory.CreateDirectory(dir);
