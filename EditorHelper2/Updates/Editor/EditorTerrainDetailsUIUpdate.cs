@@ -10,6 +10,11 @@ public static class EditorTerrainDetailsUIUpdate
         #region CollectionManagerExtension
         CollectionManagerExtension? collectionManagerExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<CollectionManagerExtension>();
         collectionManagerExtension?.CustomUpdate();
-        #endregion
+        #endregion CollectionManagerExtension
+        
+        #region FoliageManagerExtension
+        FoliageManagerExtension? foliageManagerExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<FoliageManagerExtension>();
+        foliageManagerExtension?.CustomUpdate();
+        #endregion FoliageManagerExtension
     }
 }
