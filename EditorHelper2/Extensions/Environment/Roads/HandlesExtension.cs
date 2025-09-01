@@ -14,7 +14,7 @@ using UnityEngine;
 namespace EditorHelper2.Extensions.Environment.Roads;
 
 [UIExtension(typeof(EditorEnvironmentRoadsUI))]
-[EHExtension("Road handles extension", "Senior S")]
+[EHExtension("Road Handles & Selection", "Senior S & JienSultan")]
 public class HandlesExtension : UIExtension, IExtension
 {
     [ExistingMember("container")]

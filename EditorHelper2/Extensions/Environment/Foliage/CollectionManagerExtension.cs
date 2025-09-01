@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DanielWillett.UITools.API;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.Util;
 using EditorHelper2.common.API.Attributes;
@@ -113,7 +114,7 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
 
                 if (element is ISleekBox box && _boxToAsset.TryGetValue(box, out FoliageInfoAsset? asset))
                 {
-                    using var sleekChildEnumerator = box.GetEnumerator();
+                    using SleekChildEnumerator sleekChildEnumerator = box.GetEnumerator();
                     foreach (var child in sleekChildEnumerator)
                     {
                         if (child is ISleekToggle toggle)
@@ -127,15 +128,6 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
                             weightField.IsClickable = IsInsideCollection(asset);
                         }
                     }
-
-                    /*for (int j = 0; j < box.GetChildCount(); ++j)
-                    {
-                        ISleekElement? child = box.GetChildAtIndex(j);
-                        if (child is ISleekToggle toggle)
-                        {
-                            toggle.Value = IsInsideCollection(_currentUIInstance, asset);
-                        }
-                    }*/
                 }
             }
         }
@@ -230,7 +222,7 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
         // Event handling
         toggle.OnValueChanged += (_, value) =>
         {
-            OnToggleElement(item, value, weightField.Value);
+            OnToggleElement(item, value, weightField);
         };
         // OnValueChanged, because many people don't bother pressing enter
         weightField.OnValueChanged += (_, value) =>
@@ -241,7 +233,7 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
         return box;
     }
     
-    private void OnToggleElement(FoliageInfoAsset item, bool value, float newWeight)
+    private void OnToggleElement(FoliageInfoAsset item, bool value, ISleekFloat32Field weightField)
     {
         // Use the stored UI instance, because I dont know how else I can use ref in other methods
         FoliageInfoCollectionAsset? selectedCollectionAsset = _currentUIInstance?.tool?.selectedCollectionAsset;
@@ -252,16 +244,21 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
         {
             // Remove the asset from the collection
             selectedCollectionAsset.elements.RemoveAll(e => e.asset.Find() == item);
+            weightField.IsClickable = false;
+            weightField.Value = 0f;
         }
         else
         {
             // Add the asset to the collection if not already present
             if (!selectedCollectionAsset.elements.Exists(e => e.asset.Find() == item))
             {
+                // Hardcoded to default to 1f
+                weightField.Value = 1f;
+                weightField.IsClickable = true;
                 selectedCollectionAsset.elements.Add(new FoliageInfoCollectionAsset.FoliageInfoCollectionElement
                 {
                     asset = new AssetReference<FoliageInfoAsset>(item.GUID),
-                    weight = newWeight
+                    weight = weightField.Value
                 });
             }
         }
