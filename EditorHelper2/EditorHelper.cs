@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using EditorHelper2.Loader;
+﻿using EditorHelper2.Loader;
 using HarmonyLib;
 using SDG.Framework.Modules;
 using SDG.Unturned;
