@@ -10,7 +10,7 @@
 
     <!-- Publicizer -->
     <ItemGroup>
-        <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(Asset|TerrainTileLayer|UseableGun|Player|Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage|ReunObjectRemove|Menu|ItemStore|EditorInteract|GlazierResources|Utilities.TimeUtility|CullingVolume).*" />
+        <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(Asset|TerrainTileLayer|Player|Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage|ReunObjectRemove|Menu|ItemStore|EditorInteract|GlazierResources|Utilities.TimeUtility|CullingVolume|TerrainEditor).*" />
     </ItemGroup>
 
     <ItemGroup>
