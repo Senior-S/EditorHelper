@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using EditorHelper2.Extensions.Menu;
+using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.Unturned;
 using Action = System.Action;
@@ -20,5 +21,13 @@ public class MenuUIPatches
     static void PostfixEscapeMenu(EditorObjects __instance)
     {
         OnEscapePressed?.Invoke();
+    }
+    
+    [HarmonyPatch(nameof(MenuUI.customStart))]
+    [HarmonyPrefix]
+    [UsedImplicitly]
+    static void PrefixCustomStart(MenuUI __instance)
+    {
+        EditorHelper.BarnAssetManager = new BarnAssetManager();
     }
 }

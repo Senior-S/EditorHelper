@@ -85,7 +85,7 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
         _currentUIInstance.AddChild(_saveButton);
 
         List<FoliageInfoAsset> foliageAssets = new();
-        Assets.find(foliageAssets);
+        SDG.Unturned.Assets.find(foliageAssets);
 
         _assetScrollView.SetData(foliageAssets);
         _assetScrollView.Update();
