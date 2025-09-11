@@ -10,7 +10,6 @@ namespace EditorHelper2;
 public class EditorHelper : IModuleNexus
 {
     public static Harmony Harmony { get; private set; }
-    public static BarnAssetManager BarnAssetManager;
     
     public EditorHelper()
     {

@@ -37,13 +37,13 @@ namespace EditorHelper2.Extensions.Menu
             Setup();
         }
 
-        public static void Setup()
+        private static void Setup()
         {
             UnturnedLog.info("[BarnAssetManager] Setup() called.");
             LoadSceneFromSavedData();
         }
 
-        public static Guid ReadSelectedMenu()
+        private static Guid ReadSelectedMenu()
         {
             UnturnedLog.info("[BarnAssetManager] ReadSelectedMenu() called.");
 
@@ -60,9 +60,9 @@ namespace EditorHelper2.Extensions.Menu
 
                 var data = JsonConvert.DeserializeObject<Dictionary<string, string>>(dataText);
 
-                if (data != null && data.ContainsKey("Menu"))
+                if (data != null && data.TryGetValue("Menu", out var value))
                 {
-                    if (Guid.TryParse(data["Menu"], out Guid menuGuid))
+                    if (Guid.TryParse(value, out Guid menuGuid))
                     {
                         UnturnedLog.info($"[BarnAssetManager] Parsed GUID: {menuGuid}");
                         return menuGuid;
@@ -86,7 +86,7 @@ namespace EditorHelper2.Extensions.Menu
             }
         }
 
-        public static void SetupCustomScene(BarnAsset barnAsset)
+        private static void SetupCustomScene(BarnAsset? barnAsset)
         {
             if (barnAsset == null)
             {
@@ -136,7 +136,7 @@ namespace EditorHelper2.Extensions.Menu
                 return;
             }
 
-            BarnAsset sceneAsset = SDG.Unturned.Assets.find<BarnAsset>(guid);
+            BarnAsset? sceneAsset = SDG.Unturned.Assets.find<BarnAsset>(guid);
 
             if (sceneAsset != null)
             {
@@ -149,7 +149,7 @@ namespace EditorHelper2.Extensions.Menu
             }
         }
 
-        private static void CleanupPreviousScene(BarnAsset sceneAsset)
+        private static void CleanupPreviousScene(BarnAsset? sceneAsset)
         {
             UnturnedLog.info("[BarnAssetManager] Cleaning up previous scene...");
 
@@ -205,7 +205,7 @@ namespace EditorHelper2.Extensions.Menu
                 return;
             }
 
-            if (sceneAsset.BarnAudioClip != null)
+            if (sceneAsset?.BarnAudioClip != null)
             {
                 UnturnedLog.info("[BarnAssetManager] Replacing menu music with BarnAudioClip.");
                 menuMusic.clip = sceneAsset.BarnAudioClip;

@@ -22,12 +22,4 @@ public class MenuUIPatches
     {
         OnEscapePressed?.Invoke();
     }
-    
-    [HarmonyPatch(nameof(MenuUI.customStart))]
-    [HarmonyPrefix]
-    [UsedImplicitly]
-    static void PrefixCustomStart(MenuUI __instance)
-    {
-        EditorHelper.BarnAssetManager = new BarnAssetManager();
-    }
 }

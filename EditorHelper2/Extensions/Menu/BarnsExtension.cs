@@ -17,6 +17,7 @@ public class BarnsExtension : UIExtension, IExtension
 {
     private static SleekButtonIcon _barnsButton;
     private static MenuBarnsUI? _menuBarnsUI;
+    private static BarnAssetManager? _barnAssetManager;
 
     [ExistingMember("container")]
     private readonly SleekFullscreenBox? _container;
@@ -46,6 +47,7 @@ public class BarnsExtension : UIExtension, IExtension
         if (_container == null) return;
         _container.AddChild(_barnsButton);
         _menuBarnsUI = new MenuBarnsUI();
+        _barnAssetManager = new BarnAssetManager();
     }
 
     #region Event handlers
