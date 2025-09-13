@@ -43,7 +43,7 @@ public class SchematicsExtension : UIExtension, IExtension
             .SetOffsetVertical(EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y + 200f)
             .SetText("Schematics");
         
-        _schematicsButton = builder.BuildButton("Open the schematics screen");
+        _schematicsButton = builder.BuildButtonIcon("Open the schematics screen");
         
         builder.ResetProperties()
             .SetAnchorHorizontal(0.5f)
@@ -73,7 +73,7 @@ public class SchematicsExtension : UIExtension, IExtension
             .SetSizeVertical(30f)
             .SetText("Save schematic");
         
-        _saveSchematicButton = builder.BuildButton("Save schematic");
+        _saveSchematicButton = builder.BuildButtonIcon("Save schematic");
         
         builder.SetOffsetHorizontal(-210f)
             .SetOffsetVertical(80f)
@@ -81,7 +81,7 @@ public class SchematicsExtension : UIExtension, IExtension
             .SetSizeVertical(30f)
             .SetText("How to use schematics");
         
-        _schematicsHowToButton = builder.BuildButton("How to use schematics");
+        _schematicsHowToButton = builder.BuildButtonIcon("How to use schematics");
         
         builder.SetAnchorHorizontal(0.5f)
             .SetAnchorVertical(0)
@@ -100,7 +100,7 @@ public class SchematicsExtension : UIExtension, IExtension
             .SetSizeVertical(30f)
             .SetText("Reload schematics");
         
-        _schematicsReload = builder.BuildButton("Reload all schematics in the schematics folder");
+        _schematicsReload = builder.BuildButtonIcon("Reload all schematics in the schematics folder");
         
         // This shitty scroll box took like half an hour due Nelson's way of doing it sucks :>
         // So for anyone reading this and for the future me, I added comments to know how to read it and use it.

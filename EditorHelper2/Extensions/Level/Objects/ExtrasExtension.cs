@@ -38,7 +38,7 @@ public class ExtrasExtension : UIExtension, IExtension
             .SetOffsetHorizontal(360f)
             .SetOffsetVertical(-70f)
             .SetText("Place adjacent");
-        _adjacentPlaceButton = builder.BuildButton("Place the selected object adjacent to the world selected object");
+        _adjacentPlaceButton = builder.BuildButtonIcon("Place the selected object adjacent to the world selected object");
         
         builder.SetAnchorHorizontal(0.5f)
             .SetAnchorVertical(1)
@@ -93,7 +93,7 @@ public class ExtrasExtension : UIExtension, IExtension
             .SetSizeVertical(30)
             .SetText("Change layer mask");
         
-        _layersMaskButton = builder.BuildButton("Change the layer mask that determines what can be selected");
+        _layersMaskButton = builder.BuildButtonIcon("Change the layer mask that determines what can be selected");
         
         builder.SetOffsetVertical(EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y + 120f)
             .SetText("Object tag");

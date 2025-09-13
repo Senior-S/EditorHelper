@@ -49,7 +49,7 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
             .SetAnchorHorizontal(0f)
             .SetOffsetHorizontal(-0f)
             .SetOffsetVertical(40f);
-        _collectionCreateButton = builder.BuildButton("Creates a new collection in the currently edited map's folder");
+        _collectionCreateButton = builder.BuildButtonIcon("Creates a new collection in the currently edited map's folder");
         _collectionCreateButton.text = "Create New Collection";
         _collectionCreateButton.onClickedButton += CreateCollection;
             
@@ -58,7 +58,7 @@ public sealed class CollectionManagerExtension: UIExtension, IExtension
             .SetAnchorVertical(1f)
             .SetOffsetHorizontal(0f)
             .SetOffsetVertical(-310);
-        _saveButton = builder.BuildButton("Saves the changes to the collection's file");
+        _saveButton = builder.BuildButtonIcon("Saves the changes to the collection's file");
         _saveButton.text = "Save Collection";
         _saveButton.onClickedButton += WriteToFile;
 

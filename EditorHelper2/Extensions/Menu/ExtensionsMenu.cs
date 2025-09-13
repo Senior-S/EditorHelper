@@ -44,7 +44,7 @@ public class ExtensionsMenu : UIExtension, IExtension
         string iconsPath = Path.Combine(Path.GetDirectoryName(assembly.Location) ?? string.Empty, "Assets" ,"Icons.unity3d"); 
         Bundle bundle = Bundles.getBundle(iconsPath, false);
 
-        _extensionsButton = builder.BuildButton("Open the extensions menu", bundle.load<Texture2D>("EditorHelper"));
+        _extensionsButton = builder.BuildButtonIcon("Open the extensions menu", bundle.load<Texture2D>("EditorHelper"));
 
         builder.SetOffsetHorizontal(10f)
             .SetOffsetVertical(10f)
@@ -69,7 +69,7 @@ public class ExtensionsMenu : UIExtension, IExtension
             .SetScaleVertical(0f)
             .SetText("Back");
 
-        _backButton = builder.BuildButton("Back", bundle.load<Texture2D>("Exit"), ESleekFontSize.Medium);
+        _backButton = builder.BuildButtonIcon("Back", bundle.load<Texture2D>("Exit"), ESleekFontSize.Medium);
 
         builder.ResetProperties()
             .SetSizeVertical(50f)

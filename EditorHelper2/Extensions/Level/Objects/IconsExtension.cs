@@ -78,7 +78,7 @@ public class IconsExtension : UIExtension, IExtension
             .SetText("Grid View");
 
         Bundle bundle = Bundles.getBundle("/Bundles/Textures/Edit/Icons/EditorEnvironment/EditorEnvironment.unity3d");
-        _objectIconGridButton = builder.BuildButton("View objects in a grid with icons", bundle.load<Texture2D>("Navigation"));
+        _objectIconGridButton = builder.BuildButtonIcon("View objects in a grid with icons", bundle.load<Texture2D>("Navigation"));
         bundle.unload();
 
         builder.SetAnchorHorizontal(0.5f)

@@ -89,7 +89,7 @@ public class ObjectReplacerExtension : UIExtension, IExtension
             .SetSizeVertical(35f)
             .SetText("Replace");
 
-        _replaceButton = builder.BuildButton("Replace the objects");
+        _replaceButton = builder.BuildButtonIcon("Replace the objects");
         _replacerMenu.AddChild(_replaceButton);
         
         builder.SetAnchorHorizontal(1f)
@@ -99,7 +99,7 @@ public class ObjectReplacerExtension : UIExtension, IExtension
             .SetOffsetHorizontal(-30f)
             .SetOffsetVertical(-30f);
         
-        _replacerMenuButton = builder.BuildButton("Open the replacer menu", icons.load<Texture2D>("Both"));
+        _replacerMenuButton = builder.BuildButtonIcon("Open the replacer menu", icons.load<Texture2D>("Both"));
         
         icons.unload();
         Initialize();

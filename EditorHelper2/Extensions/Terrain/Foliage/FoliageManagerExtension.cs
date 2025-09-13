@@ -29,7 +29,7 @@ public class FoliageManagerExtension : UIExtension, IExtension
             .SetSizeHorizontal(200)
             .SetSizeVertical(30);
 
-        _densitySaveButton = builder.BuildButton("Write to file.");
+        _densitySaveButton = builder.BuildButtonIcon("Write to file.");
         _densitySaveButton.onClickedButton += OnClickedButton;
         _densitySaveButton.text = "Save";
 

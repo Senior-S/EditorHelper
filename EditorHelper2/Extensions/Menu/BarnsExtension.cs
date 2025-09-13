@@ -5,9 +5,9 @@ using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.common.Helpers;
+using EditorHelper2.Patches.UI;
 using EditorHelper2.UI.Builders;
 using EditorHelper2.UI.Elements;
-using HarmonyLib;
 using SDG.Unturned;
 using UnityEngine;
 
@@ -35,10 +35,9 @@ public class BarnsExtension : UIExtension, IExtension
             .SetAnchorVertical(1f)
             .SetOffsetVertical(-110f)
             .SetText("Barns");
-        _barnsButton = builder.BuildButton("Open the barns menu", bundle.load<Texture2D>("EditorHelper"));
+        _barnsButton = builder.BuildButtonIcon("Open the barns menu", bundle.load<Texture2D>("EditorHelper"));
         _barnsButton.fontSize = ESleekFontSize.Medium;
         _barnsButton.iconColor = ESleekTint.FOREGROUND;
-        _barnsButton.onClickedButton += OnBarnsButtonClicked;
         
         bundle.unload();
         Initialize();
@@ -50,43 +49,34 @@ public class BarnsExtension : UIExtension, IExtension
         _container.AddChild(_barnsButton);
         _menuBarnsUI = new MenuBarnsUI();
         _barnAssetManager = new BarnAssetManager();
+        
+        _barnsButton.onClickedButton += OnBarnsButtonClicked;
+        MenuUIPatches.OnEscapePressed += MenuUIPatchesOnEscapePressed;
     }
 
     #region Event handlers
-    
     private static void OnBarnsButtonClicked(ISleekElement button)
     {
         MenuBarnsUI.Open();
         MenuDashboardUI.close();
         MenuTitleUI.close();
     }
-
+    
+    private void MenuUIPatchesOnEscapePressed()
+    {
+        if (Provider.provider.matchmakingService.isAttemptingServerQuery || !MenuBarnsUI.Active) return;
+        
+        MenuBarnsUI.Close();
+        MenuDashboardUI.open();
+        MenuTitleUI.open();
+    }
     #endregion Event handlers
-
-    #region Extension Functions
-
-    #endregion Extension Functions
-
+    
     public void Dispose()
     {
         if (_container == null) return;
         _container.RemoveChild(_barnsButton);
         _barnsButton.onClickedButton -= OnBarnsButtonClicked;
-    }
-}
-
-[HarmonyPatch(typeof(MenuUI), "escapeMenu")]
-public class MenuUIEscapeMenuPatch
-{ 
-    [HarmonyPostfix]
-    public static void PostfixEscapeMenu()
-    {
-        if (!Provider.provider.matchmakingService.isAttemptingServerQuery)
-            if (MenuBarnsUI.Active)
-            {
-                MenuBarnsUI.Close();
-                MenuDashboardUI.open();
-                MenuTitleUI.open();
-            }
+        MenuUIPatches.OnEscapePressed -= MenuUIPatchesOnEscapePressed;
     }
 }

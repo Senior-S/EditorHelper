@@ -2,6 +2,7 @@
 using System.IO;
 using EditorHelper2.Assets;
 using EditorHelper2.common.Helpers;
+using EditorHelper2.UI.Builders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SDG.Unturned;
@@ -26,75 +27,61 @@ namespace EditorHelper2.UI.Elements
 
         public MenuBarnsUI()
         {
-            UnturnedLog.info("[MenuBarnsUI] Initializing constructor...");
-
             _localization = Localization.read("/Menu/Play/MenuPlaySingleplayer.dat");
-            UnturnedLog.info("[MenuBarnsUI] Localization loaded.");
-
-            _container = new SleekFullscreenBox();
+            
             Bundle? icons = Bundles.getBundle("/Bundles/Textures/Menu/Icons/MenuDashboard/MenuDashboard.unity3d");
-            UnturnedLog.info("[MenuBarnsUI] Container + icons loaded.");
-
-            _container.PositionOffset_X = 10f;
-            _container.PositionOffset_Y = 10f;
-            _container.PositionScale_Y = 1f;
-            _container.SizeOffset_X = -20f;
-            _container.SizeOffset_Y = -20f;
-            _container.SizeScale_X = 1f;
-            _container.SizeScale_Y = 1f;
+            _container = new SleekFullscreenBox();
+            UIBuilder builder = new(-20f, -20f);
+            builder.SetOffsetHorizontal(10f)
+                .SetOffsetVertical(10f)
+                .SetAnchorHorizontal(1f)
+                .SetSizeHorizontal(1f)
+                .SetScaleVertical(1f);
+            builder.FormatElement(ref _container);
             MenuUI.container.AddChild(_container);
             Active = false;
 
-            _backButton = new SleekButtonIcon(icons.load<Texture2D>("Exit"))
-            {
-                PositionOffset_Y = -50f,
-                PositionScale_Y = 1f,
-                SizeOffset_X = 200,
-                SizeOffset_Y = 50,
-                text = "Back"
-            };
+            builder.ResetProperties()
+                .SetOffsetVertical(-50f)
+                .SetAnchorVertical(1f)
+                .SetSizeHorizontal(200)
+                .SetSizeVertical(50)
+                .SetText("Back");
+            
+            _backButton = builder.BuildButtonIcon("Back to the main menu", icons.load<Texture2D>("Exit"));
             _backButton.onClickedButton += OnBackButtonClicked;
             _container.AddChild(_backButton);
-            UnturnedLog.info("[MenuBarnsUI] Back button initialized.");
 
             // Menu scroll box
-            _menuScrollBox = Glazier.Get().CreateScrollView();
-            _menuScrollBox.PositionOffset_X = -200f;
-            _menuScrollBox.PositionOffset_Y = 100f;
-            _menuScrollBox.PositionScale_X = 0.5f;
-            _menuScrollBox.SizeOffset_X = 400f;
-            _menuScrollBox.SizeOffset_Y = -200f;
-            _menuScrollBox.SizeScale_Y = 1f;
-            _menuScrollBox.ScaleContentToWidth = true;
+
+            builder.ResetProperties()
+                .SetOffsetHorizontal(-200f)
+                .SetOffsetVertical(100f)
+                .SetAnchorHorizontal(0.5f)
+                .SetSizeHorizontal(400f)
+                .SetSizeVertical(-200f)
+                .SetScaleVertical(1f);
+
+            _menuScrollBox = builder.BuildScrollView(scaleContentToWidth: true);
             _container.AddChild(_menuScrollBox);
-            UnturnedLog.info("[MenuBarnsUI] ScrollView initialized.");
 
             PopulateMenuList();
         }
 
         public static void Open()
         {
-            UnturnedLog.info("[MenuBarnsUI] open() called.");
-            if (!Active)
-            {
-                Active = true;
-                _container?.AnimateIntoView();
-                UnturnedLog.info("[MenuBarnsUI] Container animated into view.");
-            }
-            else
-            {
-                UnturnedLog.info("[MenuBarnsUI] Already active.");
-            }
+            if (Active) return;
+            
+            Active = true;
+            _container?.AnimateIntoView();
         }
 
         public static void Close()
         {
-            UnturnedLog.info("[MenuBarnsUI] close() called.");
-            if (Active)
-            {
-                Active = false;
-                _container?.AnimateOutOfView(0f, -1f);
-            }
+            if (!Active) return;
+            
+            Active = false;
+            _container?.AnimateOutOfView(0f, -1f);
         }
 
         private void OnBackButtonClicked(ISleekElement button)
@@ -106,10 +93,8 @@ namespace EditorHelper2.UI.Elements
 
         private void PopulateMenuList()
         {
-            UnturnedLog.info("[MenuBarnsUI] Populating menu list...");
-
             // Fetch all scene assets
-            List<BarnAsset> barnAssets = new List<BarnAsset>();
+            List<BarnAsset> barnAssets = [];
             SDG.Unturned.Assets.find(barnAssets);
             UnturnedLog.info($"[MenuBarnsUI] Found {barnAssets.Count} BarnAssets.");
 
@@ -124,7 +109,7 @@ namespace EditorHelper2.UI.Elements
             foreach (BarnAsset barnAsset in barnAssets)
             {
                 UnturnedLog.info($"[MenuBarnsUI] Adding BarnAsset: {barnAsset.BarnName} (GUID: {barnAsset.GUID})");
-                SleekBarn barn = new SleekBarn(barnAsset)
+                SleekBarn barn = new(barnAsset)
                 {
                     PositionOffset_Y = offsetY
                 };
@@ -139,34 +124,33 @@ namespace EditorHelper2.UI.Elements
             }
 
             // Manage Subscriptions button
-            ISleekButton sleekButton = Glazier.Get().CreateButton();
-            sleekButton.PositionOffset_Y = offsetY;
-            sleekButton.SizeOffset_X = 400f;
-            sleekButton.SizeOffset_Y = 30f;
-            sleekButton.Text = _localization?.format("Manage_Workshop_Label");
-            sleekButton.TooltipText = _localization?.format("Manage_Workshop_Tooltip");
+            UIBuilder builder = new(400f, 30f);
+            builder.SetOffsetVertical(offsetY)
+                .SetText(_localization?.format("Manage_Workshop_Label") ?? "");
+            ISleekButton sleekButton = builder.BuildButton(_localization?.format("Manage_Workshop_Tooltip") ?? "");
             sleekButton.OnClicked += OnClickedManageSubscriptionsButton;
             _menuScrollBox.AddChild(sleekButton);
             offsetY += 40;
 
             // Browse Workshop button
-            ISleekButton browseButton = Glazier.Get().CreateButton();
-            browseButton.PositionOffset_Y = offsetY;
-            browseButton.SizeOffset_X = 400f;
-            browseButton.SizeOffset_Y = 30f;
-            browseButton.Text = "Browse Workshop";
-            browseButton.TooltipText = "Find more barns on the workshop.";
+            builder.ResetProperties()
+                .SetOffsetVertical(offsetY)
+                .SetSizeHorizontal(400f)
+                .SetSizeVertical(30f)
+                .SetText("Browse Workshop");
+            
+            ISleekButton browseButton = builder.BuildButton("Find more barns on the workshop.");
             browseButton.OnClicked += OnClickedBrowseButton;
             _menuScrollBox.AddChild(browseButton);
             offsetY += 40;
 
             // Reset Barn button
-            ISleekButton resetButton = Glazier.Get().CreateButton();
-            resetButton.PositionOffset_Y = offsetY;
-            resetButton.SizeOffset_X = 400f;
-            resetButton.SizeOffset_Y = 30f;
-            resetButton.Text = "Reset Barn";
-            resetButton.TooltipText = "Use the default barn.";
+            builder.ResetProperties()
+                .SetOffsetVertical(offsetY)
+                .SetSizeHorizontal(400f)
+                .SetSizeVertical(30f)
+                .SetText("Reset Barn");
+            ISleekButton resetButton = builder.BuildButton("Use the default barn");
             resetButton.OnClicked += OnClickedResetButton;
             _menuScrollBox.AddChild(resetButton);
 
@@ -176,11 +160,9 @@ namespace EditorHelper2.UI.Elements
 
         private void OnMenuItemClicked(BarnAsset barnAsset)
         {
-            UnturnedLog.info($"[MenuBarnsUI] Menu '{barnAsset.BarnName}' selected! (GUID: {barnAsset.GUID})");
             SaveSelectedMenu(barnAsset);
 
             // Notify the BarnAssetManager to reload the scene
-            UnturnedLog.info("[MenuBarnsUI] Calling BarnAssetManager.LoadSceneFromSavedData...");
             BarnAssetManager.LoadSceneFromSavedData();
         }
 
@@ -188,17 +170,14 @@ namespace EditorHelper2.UI.Elements
         {
             try
             {
-                UnturnedLog.info("[MenuBarnsUI] Saving selected menu...");
-
                 // Create JSON object
-                JObject jsonData = new JObject
+                JObject jsonData = new()
                 {
                     [SelectedMenuKey] = barnAsset.GUID.ToString()
                 };
 
                 // Save to file
                 File.WriteAllText(SelectedMenuPath, JsonConvert.SerializeObject(jsonData, Formatting.Indented));
-                UnturnedLog.info($"[MenuBarnsUI] Saved selected menu: {barnAsset.BarnName} to {SelectedMenuPath}");
             }
             catch (IOException e)
             {
@@ -215,13 +194,11 @@ namespace EditorHelper2.UI.Elements
         
         private static void OnClickedResetButton(ISleekElement button)
         {
-            UnturnedLog.info("[MenuBarnsUI] Reset button clicked. Clearing saved menu...");
             try
             {
                 if (File.Exists(SelectedMenuPath))
                 {
                     File.Delete(SelectedMenuPath);
-                    UnturnedLog.info("[MenuBarnsUI] Deleted SelectedMenu.json.");
                 }
                 else
                 {

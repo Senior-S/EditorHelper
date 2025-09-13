@@ -36,7 +36,7 @@ public class TileLayersDuplicateRemoverExtension : UIExtension, IExtension
             .SetSizeHorizontal(250f)
             .SetSizeVertical(30f);
         
-        _cleanSlotsButton = builder.BuildButton("Remove duplicates to free up slots", icons.load<Texture2D>("Both"));
+        _cleanSlotsButton = builder.BuildButtonIcon("Remove duplicates to free up slots", icons.load<Texture2D>("Both"));
         _cleanSlotsButton.text = "Remove Duplicates";
         _cleanSlotsButton.onClickedButton += OnClickedRemoveDuplicates;
         

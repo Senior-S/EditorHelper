@@ -227,7 +227,7 @@ public class UIBuilder
         return buttonState;
     }
 
-    public SleekButtonIcon BuildButton(string tooltip, Texture2D? icon = null, ESleekFontSize fontSize = ESleekFontSize.Default)
+    public SleekButtonIcon BuildButtonIcon(string tooltip, Texture2D? icon = null, ESleekFontSize fontSize = ESleekFontSize.Default)
     {
         SleekButtonIcon button = new(icon)
         {
@@ -239,6 +239,22 @@ public class UIBuilder
         {
             button.text = _text;
             button.textColor = ESleekTint.FONT;
+        }
+        FormatElement(ref button);
+        
+        ApplySpacing();
+        return button;
+    }
+
+    public ISleekButton BuildButton(string tooltip, ESleekFontSize fontSize = ESleekFontSize.Default)
+    {
+        ISleekButton button = Glazier.Get().CreateButton();
+        button.FontSize = fontSize;
+        button.TooltipText = tooltip;
+        if (_text.Length > 0)
+        {
+            button.Text = _text;
+            button.TextColor = ESleekTint.FONT;
         }
         FormatElement(ref button);
         

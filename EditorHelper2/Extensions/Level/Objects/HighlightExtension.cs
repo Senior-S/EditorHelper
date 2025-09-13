@@ -53,11 +53,11 @@ public class HighlightExtension : UIExtension, IExtension
             .SetAnchorVertical(1f)
             .SetText("Highlight objects");
 
-        _highlightButton = builder.BuildButton("Highlight all objects of the selected type");
+        _highlightButton = builder.BuildButtonIcon("Highlight all objects of the selected type");
         
         builder.SetText("Highlight wrong objects");
         
-        _highlightWrongScaleButton = builder.BuildButton("Highlight all objects with a negative scale");
+        _highlightWrongScaleButton = builder.BuildButtonIcon("Highlight all objects with a negative scale");
         
         builder.SetText("Change the highlight color")
             .SetOffsetHorizontal(360f)
@@ -69,13 +69,13 @@ public class HighlightExtension : UIExtension, IExtension
         builder.SetOffsetVertical(-110f)
             .SetText("Select highlighted objects");
         
-        _selectHighlightedButton = builder.BuildButton("Select all highlighted objects");
+        _selectHighlightedButton = builder.BuildButtonIcon("Select all highlighted objects");
         
         builder.SetText("Filter objects")
             .SetAnchorVertical(1f)
             .SetOffsetHorizontal(205f)
             .SetOffsetVertical(-110f);
-        _filterByModButton = builder.BuildButton("Highlight all objects that derive from this mod.");
+        _filterByModButton = builder.BuildButtonIcon("Highlight all objects that derive from this mod.");
 
         builder.SetText("Mod ID");
         _filterByModField = builder.BuildStringField();
