@@ -76,7 +76,7 @@ public class AssetWriter
         Directory.CreateDirectory(dir);
         File.WriteAllText(filePath, sb.ToString());
         
-        Assets.reload(Path.GetDirectoryName(dir));
+        SDG.Unturned.Assets.reload(Path.GetDirectoryName(dir));
     }
 
     public static void SaveFoliageInfoAssetDensity(FoliageInfoAsset asset)

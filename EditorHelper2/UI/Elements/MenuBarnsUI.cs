@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using EditorHelper2.Assets;
-using EditorHelper2.UI.Elements;
+using EditorHelper2.common.Helpers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SDG.Unturned;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace EditorHelper2.Extensions.Menu
+namespace EditorHelper2.UI.Elements
 {
     public class MenuBarnsUI
     {

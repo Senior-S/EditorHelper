@@ -1,13 +1,13 @@
-﻿using Newtonsoft.Json;
-using SDG.Unturned;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using EditorHelper2.Assets;
+using Newtonsoft.Json;
+using SDG.Unturned;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace EditorHelper2.Extensions.Menu
+namespace EditorHelper2.common.Helpers
 {
     public class BarnAssetManager
     {
@@ -20,10 +20,10 @@ namespace EditorHelper2.Extensions.Menu
         public BarnAssetManager()
         {
             UnturnedLog.info("[BarnAssetManager] Constructor called.");
-            _instantiatedObjects = new List<GameObject>();
+            _instantiatedObjects = [];
 
-            var menu = GameObject.Find("Menu");
-            if (menu != null && menu.TryGetComponent<AudioSource>(out var audioSource))
+            GameObject? menu = GameObject.Find("Menu");
+            if (menu != null && menu.TryGetComponent<AudioSource>(out AudioSource? audioSource))
             {
                 _originalMusic = audioSource.clip;
                 UnturnedLog.info("[BarnAssetManager] Original menu music cached.");

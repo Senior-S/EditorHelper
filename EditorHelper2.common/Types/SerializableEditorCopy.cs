@@ -36,11 +36,11 @@ public class SerializableEditorCopy
         ItemAsset itemAsset = null!;
         if (ObjectAssetGuid != Guid.Empty)
         {
-            objectAsset = Assets.find<ObjectAsset>(ObjectAssetGuid);
+            objectAsset = SDG.Unturned.Assets.find<ObjectAsset>(ObjectAssetGuid);
         }
         if (ItemAssetGuid != Guid.Empty)
         {
-            itemAsset = Assets.find<ItemAsset>(ItemAssetGuid);
+            itemAsset = SDG.Unturned.Assets.find<ItemAsset>(ItemAssetGuid);
         }
         
         
