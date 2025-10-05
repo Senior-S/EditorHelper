@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using EditorHelper2.Assets;
+using EditorHelper2.Commands;
 using EditorHelper2.common.Helpers;
 using EditorHelper2.Loader;
 using HarmonyLib;
@@ -26,15 +27,30 @@ public class EditorHelper : IModuleNexus
         CommandWindow.LogFormat("Editor Helper 2 v{0}", GetType().Assembly.GetName().Version);
         
         RegisterCustomAssets();
+        RegisterCustomCommands();
         
         int loadedExtensions = ExtensionManager.LoadAllExtensions();
         CommandWindow.LogFormat("[EditorHelper2] Loaded {0} extensions.", loadedExtensions);
     }
 
-    private static void RegisterCustomAssets()
+    private void RegisterCustomAssets()
     {
         SDG.Unturned.Assets.assetTypes.addType("BarnAsset",typeof(BarnAsset));
     }
+
+    private void RegisterCustomCommands()
+    {
+        Commander.register(new CommandHeal());
+        Commander.register(new CommandMaxSkills());
+        Commander.register(new CommandResetSkills());
+        Commander.register(new CommandI());
+        Commander.register(new CommandV());
+        Commander.register(new CommandExp());
+        Commander.register(new CommandTp());
+        Commander.register(new CommandJump());
+        Commander.register(new CommandFly());
+        Commander.register(new CommandAmmo());
+    } 
 
     public void shutdown()
     {
