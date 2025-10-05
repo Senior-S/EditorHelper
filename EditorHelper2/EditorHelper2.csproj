@@ -12,6 +12,11 @@
     <ItemGroup>
         <Publicize Include="Assembly-CSharp" MemberPattern="^SDG\.(Unturned|Framework)\.(Asset|TerrainTileLayer|Player|Editor|LocationDevkitNodeSystem|Level|RuntimeGizmos|Road|Foliage|ReunObjectRemove|Menu|ItemStore|EditorInteract|GlazierResources|Utilities.TimeUtility|CullingVolume|TerrainEditor).*" />
     </ItemGroup>
+    
+    <!-- Analyzer -->
+    <ItemGroup>
+        <Analyzer Include="..\Libs\EditorHelperAnalyzers.dll" />
+    </ItemGroup>
 
     <ItemGroup>
       <Reference Include="Assembly-CSharp">

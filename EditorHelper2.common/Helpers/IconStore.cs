@@ -76,6 +76,7 @@ public class IconStore
             ObjectIconHandle++;
             QueuedItemIcons.Add(handle, itemAsset.GUID);
         }
+
         return handle;
     }
 
@@ -95,6 +96,7 @@ public class IconStore
             callback(-1, icon);
             return -1;
         }
+
         foreach (ObjectIconInfo queuedIcon in QueuedObjectIcons)
         {
             if (queuedIcon.ObjectAsset == objectAsset)
@@ -103,6 +105,7 @@ public class IconStore
                 return queuedIcon.Handle;
             }
         }
+
         if (PendingIconInfo != null && PendingIconInfo.ObjectAsset == objectAsset)
         {
             PendingIconInfo.AddCallback(callback);
@@ -117,6 +120,7 @@ public class IconStore
     }
 
     private List<Renderer> _renderers = new(4);
+
     private Bounds GetBounds(Transform transform)
     {
         _renderers.Clear();
@@ -188,6 +192,7 @@ public class IconStore
         {
             direction = (objectTransform.right + objectTransform.up).normalized;
         }
+
         float distance = Mathf.Max(bounds.size.x, bounds.size.z);
         float height = (bounds.size.y * 0.85f);
         if (bounds.size.y * 2 > Math.Abs(bounds.size.x - bounds.size.z))
@@ -209,7 +214,8 @@ public class IconStore
 
 
         int antiAliasing = SDG.Unturned.GraphicsSettings.IsItemIconAntiAliasingEnabled ? 4 : 1;
-        RenderTexture temporary = RenderTexture.GetTemporary(_width, _height, 16, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB, antiAliasing);
+        RenderTexture temporary =
+            RenderTexture.GetTemporary(_width, _height, 16, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB, antiAliasing);
         temporary.name = "Render_" + objectTransform.name;
         RenderTexture.active = temporary;
         _camera.targetTexture = temporary;
@@ -301,6 +307,7 @@ public class IconStore
                 PendingIconInfo = null;
                 return;
             }
+
             PendingObject = GameObject.Instantiate(original).transform;
 
             if (PendingIconInfo.ObjectAsset.rubble != EObjectRubble.NONE)
@@ -308,7 +315,8 @@ public class IconStore
                 InteractableObjectRubble interactableRubble = PendingObject.gameObject.AddComponent<InteractableObjectRubble>();
                 interactableRubble.updateState(PendingIconInfo.ObjectAsset, PendingIconInfo.ObjectAsset.getState());
                 Transform? editor = PendingObject.Find("Editor");
-                if (editor != null) editor.gameObject.SetActive(PendingIconInfo.ObjectAsset.rubbleEditor == EObjectRubbleEditor.DEAD && SDG.Unturned.Level.isEditor);
+                if (editor != null)
+                    editor.gameObject.SetActive(PendingIconInfo.ObjectAsset.rubbleEditor == EObjectRubbleEditor.DEAD && SDG.Unturned.Level.isEditor);
             }
 
             if (PendingIconInfo.ObjectAsset.interactability == EObjectInteractability.NPC)

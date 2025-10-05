@@ -10,9 +10,9 @@ public class ReunRoadTransform : IReun
 
     private readonly Vector3 _fromPosition;
     private readonly Vector3 _toPosition;
-    
+
     public int step { get; private set; }
-    
+
     public Transform redo()
     {
         if (_tangentIndex > -1)
@@ -23,7 +23,7 @@ public class ReunRoadTransform : IReun
         {
             EditorRoads.road.moveVertex(_vertexIndex, _toPosition);
         }
-        
+
         return null;
     }
 

@@ -14,7 +14,7 @@ using UnityEngine;
 namespace EditorHelper2.Extensions.Level.Objects;
 
 [UIExtension(typeof(EditorLevelObjectsUI))]
-[EHExtension("Object replacer extension", "Senior S")]
+[EHExtension("Object Replacer Extension", "Senior S")]
 public class ObjectReplacerExtension : UIExtension, IExtension
 {
     [ExistingMember("container")]
@@ -45,7 +45,7 @@ public class ObjectReplacerExtension : UIExtension, IExtension
         builder.ResetProperties()
             .SetAnchorHorizontal(0.5f)
             .SetOffsetVertical(10f)
-            .SetText("Object replacer")
+            .SetText("Object Replacer")
             .SetOffsetHorizontal(-80f)
             .SetSizeHorizontal(160f)
             .SetSizeVertical(20f);

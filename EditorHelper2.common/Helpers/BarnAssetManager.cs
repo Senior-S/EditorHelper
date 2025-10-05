@@ -164,6 +164,7 @@ namespace EditorHelper2.common.Helpers
                         Object.Destroy(obj);
                     }
                 }
+
                 _instantiatedObjects.Clear();
             }
 

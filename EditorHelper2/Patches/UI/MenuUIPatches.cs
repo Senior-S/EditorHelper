@@ -1,4 +1,4 @@
-﻿using EditorHelper2.Extensions.Menu;
+﻿using EditorHelper2.common.Helpers;
 using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.Unturned;
@@ -21,5 +21,13 @@ public class MenuUIPatches
     static void PostfixEscapeMenu(EditorObjects __instance)
     {
         OnEscapePressed?.Invoke();
+    }
+    
+    [HarmonyPatch(nameof(MenuUI.tickInput))]
+    [HarmonyPrefix]
+    [UsedImplicitly]
+    static bool PrefixTickInput(MenuUI __instance)
+    {
+        return !UpdaterCore.IsOutDated;
     }
 }

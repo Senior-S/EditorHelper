@@ -31,17 +31,17 @@ public class SchematicsHelper
             return null;
         }
 
-        Schematic schematic = schematicSearchValue.Length > 0 
-            ? Schematics.Where(c => c.Name.ToLower().Contains(schematicSearchValue)).ElementAt(index) 
+        Schematic schematic = schematicSearchValue.Length > 0
+            ? Schematics.Where(c => c.Name.ToLower().Contains(schematicSearchValue)).ElementAt(index)
             : Schematics[index];
 
         index = Schematics.IndexOf(schematic);
-        
+
         if (!schematic.Name.EndsWith(".json"))
         {
             return schematic;
         }
-        
+
         string text = File.ReadAllText(Path.Combine(SchematicsFolder, schematic.Name));
         JsonWithMetadata? deserializedJson = JsonConvert.DeserializeObject<JsonWithMetadata>(text);
         if (deserializedJson == null)
@@ -55,7 +55,7 @@ public class SchematicsHelper
         Schematics[index] = schematic;
         return schematic;
     }
-    
+
     public void ReloadSchematics()
     {
         string[] files = Directory.GetFiles(SchematicsFolder, "*.json");
@@ -78,11 +78,12 @@ public class SchematicsHelper
             //EditorHelper.Instance.EditorManager.DisplayAlert("Error! An schematic with this name already exists!");
             return;
         }
-        
+
         List<SerializableEditorCopy> objects = [];
         foreach (EditorCopy copy in EditorObjects.copies)
         {
-            objects.Add(new SerializableEditorCopy(copy.position, copy.rotation, copy.scale, copy.objectAsset?.GUID ?? Guid.Empty, copy.itemAsset?.GUID ?? Guid.Empty));
+            objects.Add(new SerializableEditorCopy(copy.position, copy.rotation, copy.scale, copy.objectAsset?.GUID ?? Guid.Empty,
+                copy.itemAsset?.GUID ?? Guid.Empty));
         }
 
         Schematic schematic = new(schematicName, Provider.clientName)
@@ -93,39 +94,39 @@ public class SchematicsHelper
         {
             owner = Provider.clientName
         };
-        
+
         string? json = JsonConvert.SerializeObject(new JsonWithMetadata() { _metadata = metadata, Schematic = schematic });
         if (json == null)
         {
             //EditorHelper.Instance.EditorManager.DisplayAlert("Oops, something went wrong.");
             return;
         }
-        
-        using StreamWriter writer =  File.CreateText(Path.Combine(SchematicsFolder, $"{schematicName}.json"));
+
+        using StreamWriter writer = File.CreateText(Path.Combine(SchematicsFolder, $"{schematicName}.json"));
         writer.Write(json);
         writer.Flush();
         writer.Close();
-        
+
         Schematics.Add(schematic);
     }
-    
+
     private string? GetOwnerFromJsonAsync(string filePath)
     {
         using FileStream stream = File.OpenRead(filePath);
         using StreamReader reader = new StreamReader(stream);
-    
+
         char[] buffer = new char[1024];
         reader.Read(buffer, 0, buffer.Length);
-    
+
         string partial = new(buffer);
         Match metadataMatch = Regex.Match(partial, @"""owner""\s*:\s*""([^""]+)""");
         return metadataMatch.Success ? metadataMatch.Groups[1].Value : null;
     }
-    
+
     private class JsonWithMetadata
     {
         public object _metadata { get; set; }
-    
+
         public Schematic Schematic { get; set; }
     }
 }

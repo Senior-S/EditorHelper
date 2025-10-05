@@ -1,5 +1,6 @@
 ﻿using DanielWillett.UITools;
 using EditorHelper2.Extensions.Level.Objects;
+using EditorHelper2.Loader;
 using SDG.Unturned;
 using UnityEngine;
 
@@ -391,28 +392,38 @@ public static class EditorObjectsUpdate
 		}
 		
 		#region PrecisionExtension
-		PrecisionExtension? precisionExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<PrecisionExtension>();
-		precisionExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
+		if (ExtensionManager.TryGetInstance(out PrecisionExtension precisionExtension))
+		{
+			precisionExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
+		}
 		#endregion
 		
 		#region HighlightExtension
-		HighlightExtension? highlightExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<HighlightExtension>();
-		highlightExtension?.CustomUpdate();
+		if (ExtensionManager.TryGetInstance(out HighlightExtension highlightExtension))
+		{
+			highlightExtension?.CustomUpdate();
+		}
         #endregion
 
         #region IconsExtension
-        IconsExtension? iconsExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<IconsExtension>();
-        iconsExtension?.CustomUpdate();
+        if (ExtensionManager.TryGetInstance(out IconsExtension iconsExtension))
+        {
+	        iconsExtension?.CustomUpdate();
+        }
         #endregion
         
         #region ExtrasExtension
-        ExtrasExtension? extrasExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<ExtrasExtension>();
-        extrasExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
+        if (ExtensionManager.TryGetInstance(out ExtrasExtension extrasExtension))
+        {
+	        extrasExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
+        }
         #endregion
         
         #region ObjectReplacerExtension
-        ObjectReplacerExtension? replacerExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<ObjectReplacerExtension>();
-        replacerExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
+        if (ExtensionManager.TryGetInstance(out ObjectReplacerExtension replacerExtension))
+        {
+	        replacerExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
+        }
         #endregion
     }
 }

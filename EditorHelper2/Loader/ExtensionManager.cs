@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using DanielWillett.ReflectionTools;
+using DanielWillett.UITools;
+using DanielWillett.UITools.API.Extensions;
 using EditorHelper2.common.API.Attributes;
+using EditorHelper2.common.API.Interfaces;
+using SDG.Provider;
 using SDG.Unturned;
 
 namespace EditorHelper2.Loader;
@@ -18,6 +22,24 @@ public static class ExtensionManager
     /// </summary>
     private static readonly Dictionary<EHExtensionAttribute, bool> _instanceStatus = [];
     public static IReadOnlyDictionary<EHExtensionAttribute, bool> Instances => _instanceStatus;
+
+    public static bool TryGetInstance<T>(out T? instance) where T : class, IExtension
+    {
+        UIExtensionInfo? info = UnturnedUIToolsNexus.UIExtensionManager.Extensions.FirstOrDefault(x => x.ImplementationType == typeof(T));
+        instance = null;
+        
+        if (info == null)
+        {
+            return false;
+        }
+        
+        EHExtensionAttribute? attribute = typeof(T).GetCustomAttribute<EHExtensionAttribute>();
+        if (attribute == null || !_instanceStatus[attribute]) return false; // Don't return if the extension is disabled
+        
+        instance = info.Instantiations.OfType<T>().LastOrDefault()!;
+        return true;
+
+    }
     
     public static int LoadAllExtensions()
     {
@@ -50,7 +72,7 @@ public static class ExtensionManager
 
     public static void UpdateExtensionStatus(EHExtensionAttribute extensionAttribute, bool enabled)
     {
-        if (!_instanceStatus.ContainsKey(extensionAttribute)) return;
+        //if (!_instanceStatus.ContainsKey(extensionAttribute)) return;
         _instanceStatus[extensionAttribute] = enabled;
     }
 }

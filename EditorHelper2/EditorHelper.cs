@@ -1,5 +1,6 @@
-﻿using EditorHelper2.Assets;
-using EditorHelper2.Extensions.Menu;
+﻿using System.Threading.Tasks;
+using EditorHelper2.Assets;
+using EditorHelper2.common.Helpers;
 using EditorHelper2.Loader;
 using HarmonyLib;
 using SDG.Framework.Modules;
@@ -20,15 +21,17 @@ public class EditorHelper : IModuleNexus
     {
         Harmony.PatchAll(this.GetType().Assembly);
         
-        CommandWindow.LogFormat("Editor Helper 2 v{0}", this.GetType().Assembly.GetName().Version);
+        Task.Run(UpdaterCore.Init);
+        Level.onLevelExited += () => Task.Run(UpdaterCore.Init);
+        CommandWindow.LogFormat("Editor Helper 2 v{0}", GetType().Assembly.GetName().Version);
         
         RegisterCustomAssets();
-
+        
         int loadedExtensions = ExtensionManager.LoadAllExtensions();
         CommandWindow.LogFormat("[EditorHelper2] Loaded {0} extensions.", loadedExtensions);
     }
-    
-    public static void RegisterCustomAssets()
+
+    private static void RegisterCustomAssets()
     {
         SDG.Unturned.Assets.assetTypes.addType("BarnAsset",typeof(BarnAsset));
     }

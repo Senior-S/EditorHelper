@@ -25,17 +25,20 @@ namespace EditorHelper2.Assets
             string iconPath = Path.Combine(directoryPath, "Icon.png");
 
             BarnIcon = new Texture2D(2, 2);
-            try 
+            try
             {
                 byte[] fileData = File.ReadAllBytes(iconPath);
                 BarnIcon.LoadImage(fileData);
             }
-            catch (Exception e) { UnturnedLog.info("Error loading image: " + e.Message); }
+            catch (Exception e)
+            {
+                UnturnedLog.info("Error loading image: " + e.Message);
+            }
 
             if (prefabRef.isValid) BarnPropsGameObject = prefabRef.loadAsset();
             if (skyboxRef.isValid) BarnSkyboxMaterial = skyboxRef.loadAsset();
             if (audioClipRef.isValid) BarnAudioClip = audioClipRef.loadAsset();
-            
+
             UnturnedLog.info("Populated " + BarnName + " Barn Asset.");
         }
     }

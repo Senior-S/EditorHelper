@@ -1,13 +1,14 @@
-﻿using System.IO;
+﻿/* Not enabled until Sultan provides me the required unity3d xd */
+
+/*using System.IO;
 using System.Reflection;
 using DanielWillett.UITools.API.Extensions;
-using DanielWillett.UITools.Core.Extensions;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using SDG.Unturned;
 using UnityEngine;
 
-namespace EditorHelper2.Extensions.Visibility;
+namespace EditorHelper2.Extensions.Level.Visibility;
 
 [EHExtension("Regions Extension", "JienSultan")]
 [UIExtension(typeof(EditorLevelVisibilityUI))]
@@ -48,8 +49,8 @@ public class RegionsExtension : UIExtension, IExtension
         _mainCamera = Camera.main;
     }
 
-    #region Event handlers
-
+    #region Extension Functions
+    
     internal void CustomUpdate()
     {
 
@@ -97,10 +98,6 @@ public class RegionsExtension : UIExtension, IExtension
             }
         }
     }
-
-    #endregion Event handlers
-
-    #region Extension Functions
     
     private void RegionBorders(Vector3 position, float size)
     {
@@ -127,4 +124,4 @@ public class RegionsExtension : UIExtension, IExtension
 
         _regionBorderBundle!.Unload(true);
     }
-}
+}*/

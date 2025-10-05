@@ -1,6 +1,7 @@
 ﻿using DanielWillett.UITools;
 using EditorHelper2.Extensions.Level.Objects;
 using EditorHelper2.Extensions.Terrain.Materials;
+using EditorHelper2.Loader;
 
 namespace EditorHelper2.Updates.Editor;
 
@@ -9,8 +10,10 @@ public static class EditorTerrainMaterialsUIUpdate
     public static void Update()
     {
         #region BrushExtension
-        BrushExtension? brushExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<BrushExtension>();
-        brushExtension?.CustomUpdate();
+        if (ExtensionManager.TryGetInstance(out BrushExtension brushExtension))
+        {
+            brushExtension?.CustomUpdate();
+        }
         #endregion FoliageManagerExtension
     }
 }

@@ -5,11 +5,11 @@ namespace EditorHelper2.common.Types;
 public class SerializableQuaternion
 {
     public float X { get; set; }
-    
+
     public float Y { get; set; }
-    
+
     public float Z { get; set; }
-    
+
     public float W { get; set; }
 
     public SerializableQuaternion()

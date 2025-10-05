@@ -1,4 +1,5 @@
 ﻿using EditorHelper2.Assets;
+using EditorHelper2.UI.Builders;
 using UnityEngine;
 using SDG.Unturned;
 
@@ -7,62 +8,62 @@ namespace EditorHelper2.UI.Elements
     public class SleekBarn : SleekWrapper
     {
         public delegate void ClickedMenuItem(SleekBarn item);
-        public event ClickedMenuItem onClickedItem;
+        public event ClickedMenuItem OnClickedItem;
 
-        private ISleekButton button;
-        private ISleekImage icon;
-        private ISleekLabel nameLabel;
-        private ISleekLabel infoLabel;
+        private readonly ISleekButton _button;
+        private readonly ISleekImage _icon;
 
         public SleekBarn(BarnAsset sceneAsset)
         {
             base.SizeOffset_X = 400f;
             base.SizeOffset_Y = 100f;
 
-            button = Glazier.Get().CreateButton();
-            button.SizeOffset_X = 0f;
-            button.SizeOffset_Y = 0f;
-            button.SizeScale_X = 1f;
-            button.SizeScale_Y = 1f;
-            button.OnClicked += OnClickedButton;
-            AddChild(button);
+            UIBuilder builder = new(0f, 0f);
+            builder.ResetProperties()
+                        .SetSizeHorizontal(0f)
+                        .SetSizeVertical(0f)
+                        .SetScaleHorizontal(1f)
+                        .SetScaleVertical(1f);
+            _button = builder.BuildButton();
+            _button.OnClicked += OnClickedButton;
+            AddChild(_button);
+            
+            builder.ResetProperties()
+                .SetOffsetHorizontal(10f)
+                .SetOffsetVertical(10f)
+                .SetSizeHorizontal(380f)
+                .SetSizeVertical(80f);
+            _icon = builder.BuildImage();
+            _button.AddChild(_icon);
 
-            icon = Glazier.Get().CreateImage();
-            icon.PositionOffset_X = 10f;
-            icon.PositionOffset_Y = 10f;
-            icon.SizeOffset_X = 380f;
-            icon.SizeOffset_Y = 80f;
-            button.AddChild(icon);
-
-            nameLabel = Glazier.Get().CreateLabel();
-            nameLabel.PositionOffset_Y = 10f;
-            nameLabel.SizeScale_X = 1f;
-            nameLabel.SizeOffset_Y = 50f;
-            nameLabel.Text = sceneAsset.BarnName;
-            nameLabel.TextAlignment = TextAnchor.MiddleCenter;
-            nameLabel.FontSize = ESleekFontSize.Medium;
+            builder.ResetProperties()
+                .SetOffsetVertical(10f)
+                .SetScaleHorizontal(1f)
+                .SetSizeVertical(50f)
+                .SetText(sceneAsset.BarnName);
+            ISleekLabel nameLabel = builder.BuildLabel(fontSize: ESleekFontSize.Medium);
             nameLabel.TextContrastContext = ETextContrastContext.ColorfulBackdrop;
-            button.AddChild(nameLabel);
+            _button.AddChild(nameLabel);
 
-            infoLabel = Glazier.Get().CreateLabel();
-            infoLabel.PositionOffset_X = 100;
-            infoLabel.PositionOffset_Y = 50;
-            infoLabel.SizeScale_X = 1f;
-            infoLabel.SizeOffset_Y = 30;
-            infoLabel.Text = "";
-            infoLabel.TextColor = ESleekTint.FONT;
-            button.AddChild(infoLabel);
+            builder.ResetProperties()
+                .SetOffsetHorizontal(100)
+                .SetOffsetVertical(50)
+                .SetScaleHorizontal(1f)
+                .SetSizeVertical(30)
+                .SetText("");
+            ISleekLabel infoLabel = builder.BuildLabel(fontSize: ESleekFontSize.Medium);
+            _button.AddChild(infoLabel);
         }
 
         public void SetIconTexture(Texture2D iconTexture)
         {
             if (iconTexture != null)
-                icon.Texture = iconTexture;
+                _icon.Texture = iconTexture;
         }
 
-        private void OnClickedButton(ISleekElement button)
+        private void OnClickedButton(ISleekElement btn)
         {
-            onClickedItem?.Invoke(this);
+            OnClickedItem?.Invoke(this);
         }
     }
 }

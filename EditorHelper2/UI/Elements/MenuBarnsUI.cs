@@ -117,7 +117,7 @@ namespace EditorHelper2.UI.Elements
                 if (barnAsset.BarnIcon != null)
                     barn.SetIconTexture(barnAsset.BarnIcon);
 
-                barn.onClickedItem += (_) => OnMenuItemClicked(barnAsset);
+                barn.OnClickedItem += (_) => OnMenuItemClicked(barnAsset);
                 _menuScrollBox.AddChild(barn);
 
                 offsetY += 110;  // Adjust spacing between items

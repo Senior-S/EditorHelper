@@ -1,6 +1,7 @@
 using System;
 using DanielWillett.UITools;
 using EditorHelper2.Extensions.Environment.Roads;
+using EditorHelper2.Loader;
 using SDG.Unturned;
 using UnityEngine;
 
@@ -17,8 +18,10 @@ public static class EditorRoadsUpdate
     public static void Update(EditorRoads editorRoadsInstance)
     {
         #region HandlesExtension
-        HandlesExtension? handlesExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<HandlesExtension>();
-        if (!handlesExtension?.PreCustomUpdate() ?? true) return;
+        if (ExtensionManager.TryGetInstance(out HandlesExtension? handlesExtension))
+        {
+            if (!handlesExtension!.PreCustomUpdate()) return;
+        }
         #endregion
         
         if ((InputEx.GetKeyDown(KeyCode.Delete) || InputEx.GetKeyDown(KeyCode.Backspace)) && EditorRoads.selection != null &&
@@ -52,8 +55,12 @@ public static class EditorRoadsUpdate
             }
         }
 
-        bool selectingHandle = EditorRoads.selection && (handlesExtension != null && handlesExtension.GetHandles().Raycast(EditorInteract.ray));
-        if (!InputEx.GetKeyDown(ControlsSettings.primary) || (selectingHandle && handlesExtension != null && handlesExtension.GetHandlePrioritizeValue()))
+        bool selectingHandle = EditorRoads.selection;
+        if (handlesExtension != null)
+        {
+            selectingHandle = selectingHandle && handlesExtension.GetHandles().Raycast(EditorInteract.ray) && handlesExtension.GetHandlePrioritizeValue();
+        }
+        if (!InputEx.GetKeyDown(ControlsSettings.primary) || selectingHandle)
         {
             return;
         }

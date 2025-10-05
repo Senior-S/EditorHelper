@@ -5,9 +5,9 @@ namespace EditorHelper2.common.Types;
 public class Schematic
 {
     public string Name { get; set; }
-    
+
     public string Author { get; set; }
-    
+
     public List<SerializableEditorCopy> Objects { get; set; }
 
     public Schematic()

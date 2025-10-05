@@ -8,19 +8,19 @@ namespace EditorHelper2.common.Types;
 public class SerializableEditorCopy
 {
     public SerializableVector3 Position { get; set; }
-    
+
     public SerializableQuaternion Rotation { get; set; }
-    
+
     public SerializableVector3 Scale { get; set; }
-    
+
     public Guid ObjectAssetGuid { get; set; }
-    
+
     public Guid ItemAssetGuid { get; set; }
 
     public SerializableEditorCopy()
     {
     }
-    
+
     public SerializableEditorCopy(Vector3 position, Quaternion rotation, Vector3 scale, Guid objectAssetGuid, Guid itemAssetGuid)
     {
         Position = new SerializableVector3(position);
@@ -38,12 +38,13 @@ public class SerializableEditorCopy
         {
             objectAsset = SDG.Unturned.Assets.find<ObjectAsset>(ObjectAssetGuid);
         }
+
         if (ItemAssetGuid != Guid.Empty)
         {
             itemAsset = SDG.Unturned.Assets.find<ItemAsset>(ItemAssetGuid);
         }
-        
-        
+
+
         return new EditorCopy(Position.ToVector3(), Rotation.ToQuaternion(), Scale.ToVector3(), objectAsset, itemAsset);
     }
 }

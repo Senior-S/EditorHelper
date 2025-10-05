@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿/* Disabled until Sultan fix it */
+/*using System.IO;
 using System.Reflection;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
@@ -36,8 +37,6 @@ public class BarnsExtension : UIExtension, IExtension
             .SetOffsetVertical(-110f)
             .SetText("Barns");
         _barnsButton = builder.BuildButtonIcon("Open the barns menu", bundle.load<Texture2D>("EditorHelper"));
-        _barnsButton.fontSize = ESleekFontSize.Medium;
-        _barnsButton.iconColor = ESleekTint.FOREGROUND;
         
         bundle.unload();
         Initialize();
@@ -79,4 +78,4 @@ public class BarnsExtension : UIExtension, IExtension
         _barnsButton.onClickedButton -= OnBarnsButtonClicked;
         MenuUIPatches.OnEscapePressed -= MenuUIPatchesOnEscapePressed;
     }
-}
+}*/

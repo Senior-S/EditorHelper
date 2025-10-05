@@ -6,6 +6,7 @@ using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.common.Helpers.Level.Objects;
 using EditorHelper2.common.Types;
+using EditorHelper2.Loader;
 using EditorHelper2.Patches.Editor;
 using EditorHelper2.UI.Builders;
 using SDG.Unturned;
@@ -237,17 +238,25 @@ public class ExtrasExtension : UIExtension, IExtension
     #region Extension functions
     public void ChangeButtonsVisibility(bool visible)
     {
-        if (_tagField.IsVisible != visible)
+        if (_tagField.IsVisible == visible) return;
+        
+        _tagField.IsVisible = visible;
+        bool schematicsEnabled = ExtensionManager.TryGetInstance<SchematicsExtension>(out _);
+        if (visible)
         {
-            _tagField.IsVisible = visible;
-            if (visible)
+            if (!schematicsEnabled)
             {
-                EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y -= 40f;
+                _tagField.PositionOffset_Y += 40f;
             }
-            else
+            EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y -= 40f;
+        }
+        else
+        {
+            if (!schematicsEnabled)
             {
-                EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y += 40f;    
+                _tagField.PositionOffset_Y -= 40f;
             }
+            EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y += 40f;    
         }
     }
     

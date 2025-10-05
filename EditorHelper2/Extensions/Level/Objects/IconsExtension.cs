@@ -12,6 +12,7 @@ using SDG.Unturned;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using EditorHelper2.Loader;
 using UnityEngine;
 
 namespace EditorHelper2.Extensions.Level.Objects;
@@ -161,8 +162,10 @@ public class IconsExtension : UIExtension, IExtension
             if (_assets != null) _objectIconGridScrollBox.SetData(_assets);
             _objectIconGridContainer.SizeOffset_Y = Mathf.Min(PreferredObjectIconGridHeight, _objectIconGridScrollBox.ContentHeight);
 
-            SchematicsExtension? schematicsExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<SchematicsExtension>();
-            schematicsExtension?.HideSchematicsContainer();
+            if (ExtensionManager.TryGetInstance(out SchematicsExtension schematicsExtension))
+            {
+                schematicsExtension?.HideSchematicsContainer();
+            }
         }
     }
 

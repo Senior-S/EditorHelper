@@ -1,0 +1,340 @@
+using System;
+using System.Reflection;
+using EditorHelper2.Extensions.Editor.Pause;
+using EditorHelper2.Loader;
+using HarmonyLib;
+using JetBrains.Annotations;
+using SDG.Framework.Water;
+using SDG.Unturned;
+using UnityEngine;
+using UnityEngine.Rendering;
+using GraphicsSettings = SDG.Unturned.GraphicsSettings;
+using Object = UnityEngine.Object;
+
+namespace EditorHelper2.Patches.Level;
+
+[HarmonyPatch(typeof(SDG.Unturned.Level))]
+public class LevelPatches
+{
+    [HarmonyPatch(typeof(SDG.Unturned.Level), "CaptureSatelliteImage")]
+    [HarmonyPrefix]
+    [UsedImplicitly]
+    private static bool CaptureSatelliteImage()
+    {
+        CartographyVolume mainVolume = VolumeManager<CartographyVolume, CartographyVolumeManager>.Get().GetMainVolume();
+        int width;
+        int height;
+        if (mainVolume != null)
+        {
+            mainVolume.GetSatelliteCaptureTransform(out Vector3 position, out Quaternion rotation);
+            SDG.Unturned.Level.satelliteCaptureTransform.SetPositionAndRotation(position, rotation);
+            Vector3 vector = mainVolume.CalculateLocalBounds().size;
+            width = Mathf.CeilToInt(vector.x);
+            height = Mathf.CeilToInt(vector.z);
+            if (ExtensionManager.TryGetInstance(out MapResolutionExtension? mapResolutionExtension) && mapResolutionExtension != null &&
+                mapResolutionExtension.ShouldModifyResolution)
+            {
+                int? multiplier = mapResolutionExtension.Multiplier;
+                (uint?, uint?) customResolution = mapResolutionExtension.CustomResolution;
+
+                int customWidth = (int?)customResolution.Item1 ?? width;
+                int customHeight = (int?)customResolution.Item2 ?? height;
+
+                width = multiplier != null ? width * multiplier.Value : customWidth;
+                height = multiplier != null ? height * multiplier.Value : customHeight;
+
+                mapResolutionExtension.ResetCustomResolution();
+            }
+
+            SDG.Unturned.Level.satelliteCaptureCamera.aspect = vector.x / vector.z;
+            SDG.Unturned.Level.satelliteCaptureCamera.orthographicSize = vector.z * 0.5f;
+        }
+        else
+        {
+            width = SDG.Unturned.Level.size;
+            height = SDG.Unturned.Level.size;
+            if (ExtensionManager.TryGetInstance(out MapResolutionExtension? mapResolutionExtension) && mapResolutionExtension != null &&
+                mapResolutionExtension.ShouldModifyResolution)
+            {
+                int? multiplier = mapResolutionExtension.Multiplier;
+                (uint?, uint?) customResolution = mapResolutionExtension.CustomResolution;
+
+                int customWidth = (int?)customResolution.Item1 ?? width;
+                int customHeight = (int?)customResolution.Item2 ?? height;
+
+                width = multiplier != null ? width * multiplier.Value : customWidth;
+                height = multiplier != null ? height * multiplier.Value : customHeight;
+
+                mapResolutionExtension.ResetCustomResolution();
+            }
+
+            SDG.Unturned.Level.satelliteCaptureTransform.position = new Vector3(0f, 1028f, 0f);
+            SDG.Unturned.Level.satelliteCaptureTransform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            SDG.Unturned.Level.satelliteCaptureCamera.orthographicSize = SDG.Unturned.Level.size / 2 - SDG.Unturned.Level.border;
+            SDG.Unturned.Level.satelliteCaptureCamera.aspect = 1f;
+        }
+
+        RenderTexture temporary = RenderTexture.GetTemporary(width * 2, height * 2, 32);
+        temporary.name = "Satellite";
+        temporary.filterMode = FilterMode.Bilinear;
+        SDG.Unturned.Level.satelliteCaptureCamera.targetTexture = temporary;
+        bool fog = RenderSettings.fog;
+        AmbientMode ambientMode = RenderSettings.ambientMode;
+        Color ambientSkyColor = RenderSettings.ambientSkyColor;
+        Color ambientEquatorColor = RenderSettings.ambientEquatorColor;
+        Color ambientGroundColor = RenderSettings.ambientGroundColor;
+        float lodBias = QualitySettings.lodBias;
+        float seaFloat = LevelLighting.getSeaFloat("_Shininess");
+        Color seaColor = LevelLighting.getSeaColor("_SpecularColor");
+        ERenderMode renderMode = GraphicsSettings.renderMode;
+        GraphicsSettings.renderMode = ERenderMode.FORWARD;
+        GraphicsSettings.apply("capturing satellite");
+        RenderSettings.fog = false;
+        RenderSettings.ambientMode = AmbientMode.Trilight;
+        RenderSettings.ambientSkyColor = Palette.AMBIENT;
+        RenderSettings.ambientEquatorColor = Palette.AMBIENT;
+        RenderSettings.ambientGroundColor = Palette.AMBIENT;
+        LevelLighting.setSeaFloat("_Shininess", 500f);
+        LevelLighting.setSeaColor("_SpecularColor", Color.black);
+        QualitySettings.lodBias = float.MaxValue;
+        SDG.Unturned.Level.SetAllObjectsAndTreesActiveForSatelliteCapture();
+        //Level.onSatellitePreCapture?.Invoke();
+        InvokeStaticEvent(typeof(SDG.Unturned.Level), "onSatellitePreCapture");
+        SDG.Unturned.Level.satelliteCaptureCamera.Render();
+        //Level.onSatellitePostCapture?.Invoke();
+        InvokeStaticEvent(typeof(SDG.Unturned.Level), "onSatellitePostCapture");
+        SDG.Unturned.Level.RestorePreCaptureState();
+        GraphicsSettings.renderMode = renderMode;
+        GraphicsSettings.apply("finished capturing satellite");
+        RenderSettings.fog = fog;
+        RenderSettings.ambientMode = ambientMode;
+        RenderSettings.ambientSkyColor = ambientSkyColor;
+        RenderSettings.ambientEquatorColor = ambientEquatorColor;
+        RenderSettings.ambientGroundColor = ambientGroundColor;
+        LevelLighting.setSeaFloat("_Shininess", seaFloat);
+        LevelLighting.setSeaColor("_SpecularColor", seaColor);
+        QualitySettings.lodBias = lodBias;
+        RenderTexture temporary2 = RenderTexture.GetTemporary(width, height);
+        Graphics.Blit(temporary, temporary2);
+        RenderTexture.ReleaseTemporary(temporary);
+        RenderTexture.active = temporary2;
+        Texture2D texture2D = new Texture2D(width, height);
+        texture2D.name = "Satellite";
+        texture2D.hideFlags = HideFlags.HideAndDontSave;
+        texture2D.ReadPixels(new Rect(0f, 0f, width, height), 0, 0);
+        RenderTexture.ReleaseTemporary(temporary2);
+        for (int i = 0; i < texture2D.width; i++)
+        {
+            for (int j = 0; j < texture2D.height; j++)
+            {
+                Color pixel = texture2D.GetPixel(i, j);
+                if (pixel.a < 1f)
+                {
+                    pixel.a = 1f;
+                    texture2D.SetPixel(i, j, pixel);
+                }
+            }
+        }
+
+        texture2D.Apply();
+        byte[] bytes = texture2D.EncodeToPNG();
+        ReadWrite.writeBytes(SDG.Unturned.Level.info.path + "/Map.png", useCloud: false, usePath: false, bytes);
+        Object.DestroyImmediate(texture2D);
+
+        return false;
+    }
+
+    [HarmonyPatch(typeof(SDG.Unturned.Level), "CaptureChartImage")]
+    [HarmonyPrefix]
+    [UsedImplicitly]
+    private static bool CaptureChartImage()
+    {
+        Bundle bundle = Bundles.getBundle(SDG.Unturned.Level.info.path + "/Charts.unity3d", prependRoot: false);
+        if (bundle == null)
+        {
+            UnturnedLog.error("Unable to load chart colors");
+            return true;
+        }
+
+        Texture2D heightStrip = bundle.load<Texture2D>("Height_Strip");
+        Texture2D layerStrip = bundle.load<Texture2D>("Layer_Strip");
+        bundle.unload();
+        if (heightStrip == null || layerStrip == null)
+        {
+            UnturnedLog.error("Unable to find height and layer strip textures");
+            return true;
+        }
+
+        CartographyVolume mainVolume = VolumeManager<CartographyVolume, CartographyVolumeManager>.Get().GetMainVolume();
+        float terrainMinHeight;
+        float terrainMaxHeight;
+        int imageWidth;
+        int imageHeight;
+        float captureWidth;
+        float captureHeight;
+        if (mainVolume != null)
+        {
+            mainVolume.GetSatelliteCaptureTransform(out Vector3 position, out Quaternion rotation);
+            SDG.Unturned.Level.satelliteCaptureTransform.SetPositionAndRotation(position, rotation);
+            Bounds bounds = mainVolume.CalculateWorldBounds();
+            terrainMinHeight = bounds.min.y;
+            terrainMaxHeight = bounds.max.y;
+            Vector3 vector = mainVolume.CalculateLocalBounds().size;
+            float xValue = vector.x;
+            float zValue = vector.z;
+            if (ExtensionManager.TryGetInstance(out MapResolutionExtension? mapResolutionExtension) && mapResolutionExtension != null &&
+                mapResolutionExtension.ShouldModifyResolution)
+            {
+                int? multiplier = mapResolutionExtension.Multiplier;
+                (uint?, uint?) customResolution = mapResolutionExtension.CustomResolution;
+
+                float customWidth = customResolution.Item1 ?? xValue;
+                float customHeight = customResolution.Item2 ?? zValue;
+
+                xValue = multiplier != null ? xValue * multiplier.Value : customWidth;
+                zValue = multiplier != null ? zValue * multiplier.Value : customHeight;
+
+                mapResolutionExtension.ResetCustomResolution();
+            }
+
+            imageWidth = Mathf.CeilToInt(xValue);
+            imageHeight = Mathf.CeilToInt(zValue);
+            captureWidth = vector.x;
+            captureHeight = vector.z;
+        }
+        else
+        {
+            float xValue = SDG.Unturned.Level.size;
+            float zValue = SDG.Unturned.Level.size;
+            if (ExtensionManager.TryGetInstance(out MapResolutionExtension? mapResolutionExtension) && mapResolutionExtension != null &&
+                mapResolutionExtension.ShouldModifyResolution)
+            {
+                int? multiplier = mapResolutionExtension.Multiplier;
+                (uint?, uint?) customResolution = mapResolutionExtension.CustomResolution;
+
+                float customWidth = customResolution.Item1 ?? xValue;
+                float customHeight = customResolution.Item2 ?? zValue;
+
+                xValue = multiplier != null ? xValue * multiplier.Value : customWidth;
+                zValue = multiplier != null ? zValue * multiplier.Value : customHeight;
+
+                mapResolutionExtension.ResetCustomResolution();
+            }
+
+            imageWidth = Mathf.CeilToInt(xValue);
+            imageHeight = Mathf.CeilToInt(zValue);
+            captureWidth = SDG.Unturned.Level.size - SDG.Unturned.Level.border * 2f;
+            captureHeight = SDG.Unturned.Level.size - SDG.Unturned.Level.border * 2f;
+            SDG.Unturned.Level.satelliteCaptureTransform.position = new Vector3(0f, 1028f, 0f);
+            SDG.Unturned.Level.satelliteCaptureTransform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            terrainMinHeight = WaterVolumeManager.worldSeaLevel;
+            terrainMaxHeight = SDG.Unturned.Level.TERRAIN;
+        }
+
+        Texture2D texture2D = new Texture2D(imageWidth, imageHeight);
+        texture2D.name = "Chart";
+        texture2D.hideFlags = HideFlags.HideAndDontSave;
+        SDG.Unturned.Level.SetAllObjectsAndTreesActiveForSatelliteCapture();
+        GameObject terrainGO = new GameObject();
+        terrainGO.layer = 20;
+        for (int i = 0; i < imageWidth; i++)
+        {
+            for (int j = 0; j < imageHeight; j++)
+            {
+                Color color = GetColor((float)i + 0.25f, (float)j + 0.25f) * 0.25f + GetColor((float)i + 0.25f, (float)j + 0.75f) * 0.25f +
+                              GetColor((float)i + 0.75f, (float)j + 0.25f) * 0.25f + GetColor((float)i + 0.75f, (float)j + 0.75f) * 0.25f;
+                color.a = 1f;
+                texture2D.SetPixel(i, j, color);
+            }
+        }
+
+        texture2D.Apply();
+        SDG.Unturned.Level.RestorePreCaptureState();
+        byte[] bytes = texture2D.EncodeToPNG();
+        ReadWrite.writeBytes(SDG.Unturned.Level.info.path + "/Chart.png", useCloud: false, usePath: false, bytes);
+        Object.DestroyImmediate(texture2D);
+
+        Color GetColor(float x, float y)
+        {
+            float num = x / (float)imageWidth;
+            float num2 = y / (float)imageHeight;
+            Vector3 position2 = new Vector3((num - 0.5f) * captureWidth, (num2 - 0.5f) * captureHeight, 0f);
+            Vector3 vector2 = SDG.Unturned.Level.satelliteCaptureTransform.TransformPoint(position2);
+            SDG.Unturned.Level.FindChartHit(vector2, out EObjectChart chart, out RaycastHit hit);
+            Transform transform = hit.transform;
+            Vector3 point = hit.point;
+            if (transform == null)
+            {
+                transform = terrainGO.transform;
+                point = vector2;
+                point.y = LevelGround.getHeight(vector2);
+            }
+
+            int num3 = transform.gameObject.layer;
+            switch (chart)
+            {
+                case EObjectChart.GROUND:
+                    num3 = 20;
+                    break;
+                case EObjectChart.HIGHWAY:
+                    num3 = 0;
+                    break;
+                case EObjectChart.ROAD:
+                    num3 = 1;
+                    break;
+                case EObjectChart.STREET:
+                    num3 = 2;
+                    break;
+                case EObjectChart.PATH:
+                    num3 = 3;
+                    break;
+                case EObjectChart.LARGE:
+                    num3 = 15;
+                    break;
+                case EObjectChart.MEDIUM:
+                    num3 = 16;
+                    break;
+                case EObjectChart.CLIFF:
+                    num3 = 4;
+                    break;
+            }
+
+            if (chart == EObjectChart.WATER)
+            {
+                return heightStrip.GetPixel(0, 0);
+            }
+
+            if (num3 == 20)
+            {
+                if (WaterUtility.isPointUnderwater(point))
+                {
+                    return heightStrip.GetPixel(0, 0);
+                }
+
+                float num4 = Mathf.InverseLerp(terrainMinHeight, terrainMaxHeight, point.y);
+                return heightStrip.GetPixel((int)(num4 * (float)(heightStrip.width - 1)) + 1, 0);
+            }
+
+            return layerStrip.GetPixel(num3, 0);
+        }
+
+        return false;
+    }
+
+    private static void InvokeStaticEvent(Type classType, string eventName)
+    {
+        try
+        {
+            if (classType == null) return;
+            FieldInfo? eventField = classType.GetField(eventName, BindingFlags.Static | BindingFlags.NonPublic);
+            if (eventField == null) return;
+            Delegate eventDelegate = (Delegate)eventField.GetValue(null);
+
+            eventDelegate?.DynamicInvoke();
+        }
+        catch (Exception ex)
+        {
+            UnturnedLog.error($"Error invoking event '{eventName}': {ex.Message}");
+        }
+    }
+}

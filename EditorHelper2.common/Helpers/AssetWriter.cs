@@ -30,7 +30,7 @@ public class AssetWriter
         foreach (FoliageInfoCollectionAsset.FoliageInfoCollectionElement element in asset.elements)
         {
             string assetName = element.asset.Find()?.name ?? element.asset.GUID.ToString();
-            
+
             assetsBlock.AppendLine("\t\t{");
             assetsBlock.AppendLine("\t\t\t\"Asset\"");
             assetsBlock.AppendLine("\t\t\t{");
@@ -58,7 +58,8 @@ public class AssetWriter
         sb.AppendLine("\"Metadata\"");
         sb.AppendLine("{");
         sb.AppendLine($"\t\"GUID\" \"{guid:N}\"");
-        sb.AppendLine("\t\"Type\" \"SDG.Framework.Foliage.FoliageInfoCollectionAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null\"");
+        sb.AppendLine(
+            "\t\"Type\" \"SDG.Framework.Foliage.FoliageInfoCollectionAsset, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null\"");
         sb.AppendLine("}");
 
         // Asset block
@@ -75,7 +76,7 @@ public class AssetWriter
 
         Directory.CreateDirectory(dir);
         File.WriteAllText(filePath, sb.ToString());
-        
+
         SDG.Unturned.Assets.reload(Path.GetDirectoryName(dir));
     }
 

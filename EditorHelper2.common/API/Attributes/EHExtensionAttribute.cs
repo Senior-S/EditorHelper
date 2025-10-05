@@ -11,6 +11,6 @@ public class EHExtensionAttribute(string extensionName, string author, bool alwa
     public string Name { get; } = extensionName;
 
     public string Author { get; } = author;
-    
+
     public bool AlwaysEnabled { get; } = alwaysEnabled;
 }

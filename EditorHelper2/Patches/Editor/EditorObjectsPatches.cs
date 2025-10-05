@@ -1,4 +1,6 @@
 ﻿using System;
+using EditorHelper2.Extensions.Level.Objects;
+using EditorHelper2.Loader;
 using EditorHelper2.Updates.Editor;
 using HarmonyLib;
 using JetBrains.Annotations;
@@ -35,6 +37,20 @@ public class EditorObjectsPatches
         return false;
     }
 
+    [HarmonyPatch(nameof(EditorObjects.addSelection))]
+    [HarmonyPrefix]
+    [UsedImplicitly]
+    private static bool PrefixaddSelection(Transform select)
+    {
+        bool isIncluded = true;
+        if (ExtensionManager.TryGetInstance(out ExtrasExtension? extrasExtension) && extrasExtension != null)
+        {
+            isIncluded = (extrasExtension.ObjectsLayerMask & (1 << select.gameObject.layer)) != 0;
+        }
+
+        return isIncluded;
+    }
+    
     [HarmonyPatch(nameof(EditorObjects.addSelection))]
     [HarmonyPostfix]
     [UsedImplicitly]

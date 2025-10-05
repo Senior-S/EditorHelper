@@ -227,7 +227,7 @@ public class UIBuilder
         return buttonState;
     }
 
-    public SleekButtonIcon BuildButtonIcon(string tooltip, Texture2D? icon = null, ESleekFontSize fontSize = ESleekFontSize.Default)
+    public SleekButtonIcon BuildButtonIcon(string tooltip = "", Texture2D? icon = null, ESleekFontSize fontSize = ESleekFontSize.Default)
     {
         SleekButtonIcon button = new(icon)
         {
@@ -246,7 +246,7 @@ public class UIBuilder
         return button;
     }
 
-    public ISleekButton BuildButton(string tooltip, ESleekFontSize fontSize = ESleekFontSize.Default)
+    public ISleekButton BuildButton(string tooltip = "", ESleekFontSize fontSize = ESleekFontSize.Default)
     {
         ISleekButton button = Glazier.Get().CreateButton();
         button.FontSize = fontSize;
@@ -306,12 +306,14 @@ public class UIBuilder
         return toggle;
     }
 
-    public ISleekLabel BuildLabel(TextAnchor textAnchor = TextAnchor.MiddleCenter)
+    public ISleekLabel BuildLabel(TextAnchor textAnchor = TextAnchor.MiddleCenter, ESleekFontSize fontSize = ESleekFontSize.Default)
     {
         ISleekLabel label = Glazier.Get().CreateLabel();
         label.Text = _text;
         label.TextAlignment = textAnchor;
+        label.FontSize = fontSize;
         label.TextColor = ESleekTint.FONT;
+        label.AllowRichText = true;
         FormatElement(ref label);
         
         ApplySpacing();
@@ -378,6 +380,16 @@ public class UIBuilder
         
         ApplySpacing();
         return box;
+    }
+
+    public ISleekImage BuildImage()
+    { 
+        ISleekImage image = Glazier.Get().CreateImage();
+
+        FormatElement(ref image);
+        
+        ApplySpacing();
+        return image;
     }
 
     public SleekList<T> BuildScrollBox<T>(int itemHeight, int itemPadding) where T : class

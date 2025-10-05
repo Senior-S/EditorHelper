@@ -1,15 +1,14 @@
-﻿using DanielWillett.UITools;
-using EditorHelper2.Extensions.Visibility;
-
-namespace EditorHelper2.Updates.Editor;
+﻿namespace EditorHelper2.Updates.Editor;
 
 public static class EditorLevelVisibilityUIUpdate
 {
     public static void Update()
     {
-        #region RegionsExtension
-        RegionsExtension? regionsExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<RegionsExtension>();
-        regionsExtension?.CustomUpdate();
-        #endregion FoliageManagerExtension
+        /*#region RegionsExtension
+        if (ExtensionManager.TryGetInstance(out RegionsExtension regionsExtension))
+        {
+            regionsExtension.CustomUpdate();
+        }
+        #endregion RegionsExtension*/
     }
 }

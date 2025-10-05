@@ -7,6 +7,7 @@ using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.common.Helpers;
 using EditorHelper2.common.Types;
+using EditorHelper2.Loader;
 using EditorHelper2.UI.Builders;
 using SDG.Unturned;
 using UnityEngine;
@@ -148,9 +149,10 @@ public class SchematicsExtension : UIExtension, IExtension
     private void OnSchematicsButtonClicked(ISleekElement button)
     {
         _schematicsContainer.IsVisible = !_schematicsContainer.IsVisible;
-        if (_schematicsContainer.IsVisible)
+        if (!_schematicsContainer.IsVisible) return;
+        
+        if (ExtensionManager.TryGetInstance(out IconsExtension iconsExtension))
         {
-            IconsExtension? iconsExtension = UnturnedUIToolsNexus.UIExtensionManager.GetInstance<IconsExtension>();
             iconsExtension?.HideIconGridContainer();
         }
     }
