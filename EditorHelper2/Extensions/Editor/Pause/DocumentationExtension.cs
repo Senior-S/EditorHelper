@@ -8,7 +8,7 @@ using SDG.Unturned;
 namespace EditorHelper2.Extensions.Editor.Pause;
 
 [UIExtension(typeof(EditorPauseUI))]
-[EHExtension("Documentation extension", "Senior S")]
+[EHExtension("Documentation extension", "Senior S", true)]
 public class DocumentationExtension : UIExtension, IExtension
 {
     [ExistingMember("container")]

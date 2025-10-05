@@ -1,6 +1,4 @@
-﻿/* Not enabled until Sultan provides me the required unity3d xd */
-
-/*using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using DanielWillett.UITools.API.Extensions;
 using EditorHelper2.common.API.Attributes;
@@ -50,25 +48,15 @@ public class RegionsExtension : UIExtension, IExtension
     }
 
     #region Extension Functions
-    
     internal void CustomUpdate()
     {
-
-        if (EditorLevelVisibilityUI.active == false)
-        {
-            foreach (Transform child in _regionBordersParent!)
-                Object.Destroy(child.gameObject);
-
-            return;
-        }
-
         if (_mainCamera == null) return;
 
         float regionSize = Regions.REGION_SIZE;
         Vector3 cameraPosition = _mainCamera.transform.position;
 
         // Get the current region of the camera
-        if (!Regions.tryGetCoordinate(cameraPosition, out var cameraRegionX, out var cameraRegionY))
+        if (!Regions.tryGetCoordinate(cameraPosition, out byte cameraRegionX, out byte cameraRegionY))
             return;
 
         // Remove previous clips to prevent duplicates
@@ -117,11 +105,13 @@ public class RegionsExtension : UIExtension, IExtension
 
     public void Dispose()
     {
-        foreach (Transform child in _regionBordersParent!)
+        for (int i = 0; i < _regionBordersParent!.childCount; i++)
         {
+            Transform child = _regionBordersParent.GetChild(i);
             Object.Destroy(child.gameObject);
         }
+        Object.Destroy(_regionBordersParent);
 
         _regionBorderBundle!.Unload(true);
     }
-}*/
+}
