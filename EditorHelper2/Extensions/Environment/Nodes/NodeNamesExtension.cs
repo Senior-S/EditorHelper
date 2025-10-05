@@ -16,7 +16,7 @@ public class NodeNamesExtension : UIExtension, IExtension
     {
         UIBuilder builder = new(40f, 40f);
 
-        builder.SetOffsetHorizontal(200f)
+        builder.SetOffsetHorizontal(0f)
             .SetOffsetVertical(-75f)
             .SetAnchorHorizontal(0f)
             .SetAnchorVertical(0.5f)

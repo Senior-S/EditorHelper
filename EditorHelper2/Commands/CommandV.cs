@@ -109,6 +109,6 @@ public class CommandV : Command
         _command = "V";
         _help = "/v <id/guid/name>";
         _info = "Spawns a vehicle";
-        CommandWindow.Log($"{_command} command registered correctly!");
+        UnturnedLog.info($"{_command} command registered correctly!");
     }
 }

@@ -117,6 +117,6 @@ public class CommandI : Command
         _command = "I";
         _help = "/i <id/guid/name> {amount}";
         _info = "Spawns a item";
-        CommandWindow.Log($"{_command} command registered correctly!");
+        UnturnedLog.info($"{_command} command registered correctly!");
     }
 }

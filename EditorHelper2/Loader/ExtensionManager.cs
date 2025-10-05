@@ -34,7 +34,7 @@ public static class ExtensionManager
         }
         
         EHExtensionAttribute? attribute = typeof(T).GetCustomAttribute<EHExtensionAttribute>();
-        if (attribute == null || !_instanceStatus[attribute]) return false; // Don't return if the extension is disabled
+        if (attribute == null || (_instanceStatus.ContainsKey(attribute) && !_instanceStatus[attribute])) return false; // Don't return if the extension is disabled
         
         instance = info.Instantiations.OfType<T>().LastOrDefault()!;
         return true;
@@ -72,7 +72,7 @@ public static class ExtensionManager
 
     public static void UpdateExtensionStatus(EHExtensionAttribute extensionAttribute, bool enabled)
     {
-        //if (!_instanceStatus.ContainsKey(extensionAttribute)) return;
+        if (!_instanceStatus.ContainsKey(extensionAttribute)) return;
         _instanceStatus[extensionAttribute] = enabled;
     }
 }

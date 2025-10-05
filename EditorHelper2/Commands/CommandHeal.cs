@@ -30,6 +30,6 @@ public class CommandHeal : Command
         _command = "Heal";
         _help = "/heal";
         _info = "Heals the player";
-        CommandWindow.Log($"{_command} command registered correctly!");
+        UnturnedLog.info($"{_command} command registered correctly!");
     }
 }

@@ -34,6 +34,6 @@ public class CommandJump : Command
         _command = "Jump";
         _help = "/jump";
         _info = "Jump to the position you're looking at";
-        CommandWindow.Log($"{_command} command registered correctly!");
+        UnturnedLog.info($"{_command} command registered correctly!");
     }
 }

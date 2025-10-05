@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Net;
 using EditorHelper2.common.Types;
+using SDG.Unturned;
 
 namespace EditorHelper2.common.Helpers;
 
@@ -15,6 +16,7 @@ public static class UpdaterCore
 
     public static void Init()
     {
+        UnturnedLog.info($">>> VERSION: {CurrentVersion}");
         HttpWebRequest req = WebRequest.CreateHttp(GlobalConfigURL);
         req.Method = "GET";
         req.Timeout = 2500;

@@ -23,6 +23,6 @@ public class CommandMaxSkills : Command
         _command = "MaxSkills";
         _help = "/maxskills";
         _info = "Set your skills to max level";
-        CommandWindow.Log($"{_command} command registered correctly!");
+        UnturnedLog.info($"{_command} command registered correctly!");
     }
 }

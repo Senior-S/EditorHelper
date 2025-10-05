@@ -29,6 +29,6 @@ public class CommandExp : Command
         _command = "Exp";
         _help = "/exp <amount>";
         _info = "Give experience to the player";
-        CommandWindow.Log($"{_command} command registered correctly!");
+        UnturnedLog.info($"{_command} command registered correctly!");
     }
 }

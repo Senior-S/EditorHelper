@@ -138,6 +138,6 @@ public class CommandTp : Command
         _command = "Tp";
         _help = "/tp <location>";
         _info = "Teleport to the desired location";
-        CommandWindow.Log($"{_command} command registered correctly!");
+        UnturnedLog.info($"{_command} command registered correctly!");
     }
 }

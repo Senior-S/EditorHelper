@@ -30,6 +30,6 @@ public class CommandResetSkills : Command
         _command = "ResetSkills";
         _help = "/resetskills";
         _info = "Resets your skills";
-        CommandWindow.Log($"{_command} command registered correctly!");
+        UnturnedLog.info($"{_command} command registered correctly!");
     }
 }

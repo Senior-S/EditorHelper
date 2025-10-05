@@ -27,7 +27,6 @@ public class EditorHelper : IModuleNexus
         CommandWindow.LogFormat("Editor Helper 2 v{0}", GetType().Assembly.GetName().Version);
         
         RegisterCustomAssets();
-        RegisterCustomCommands();
         
         int loadedExtensions = ExtensionManager.LoadAllExtensions();
         CommandWindow.LogFormat("[EditorHelper2] Loaded {0} extensions.", loadedExtensions);
@@ -38,7 +37,7 @@ public class EditorHelper : IModuleNexus
         SDG.Unturned.Assets.assetTypes.addType("BarnAsset",typeof(BarnAsset));
     }
 
-    private void RegisterCustomCommands()
+    public static void RegisterCustomCommands()
     {
         Commander.register(new CommandHeal());
         Commander.register(new CommandMaxSkills());
