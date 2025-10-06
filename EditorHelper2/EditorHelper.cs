@@ -1,4 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
 using EditorHelper2.Assets;
 using EditorHelper2.Commands;
 using EditorHelper2.common.Helpers;
@@ -6,12 +10,20 @@ using EditorHelper2.Loader;
 using HarmonyLib;
 using SDG.Framework.Modules;
 using SDG.Unturned;
+using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace EditorHelper2;
 
 public class EditorHelper : IModuleNexus
 {
-    public static Harmony Harmony { get; private set; }
+    private static Harmony Harmony { get; set; }
+    private static DiscordRichPresence _richPresence;
+
+    public static DiscordRichPresence GetRichPresence()
+    {
+        return _richPresence;
+    }
     
     public EditorHelper()
     {
@@ -30,6 +42,15 @@ public class EditorHelper : IModuleNexus
         
         int loadedExtensions = ExtensionManager.LoadAllExtensions();
         CommandWindow.LogFormat("[EditorHelper2] Loaded {0} extensions.", loadedExtensions);
+        
+        InitDiscordRichPresence();
+    }
+    
+    private void InitDiscordRichPresence()
+    {
+        GameObject gameObject = new("Discord");
+        Object.DontDestroyOnLoad(gameObject);
+        _richPresence = gameObject.AddComponent<DiscordRichPresence>();
     }
 
     private void RegisterCustomAssets()
@@ -54,5 +75,6 @@ public class EditorHelper : IModuleNexus
     public void shutdown()
     {
         Harmony.UnpatchAll(Harmony.Id);
+        Object.Destroy(_richPresence);
     }
 }

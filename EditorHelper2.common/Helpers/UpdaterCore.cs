@@ -16,7 +16,6 @@ public static class UpdaterCore
 
     public static void Init()
     {
-        UnturnedLog.info($">>> VERSION: {CurrentVersion}");
         HttpWebRequest req = WebRequest.CreateHttp(GlobalConfigURL);
         req.Method = "GET";
         req.Timeout = 2500;

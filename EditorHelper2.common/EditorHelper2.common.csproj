@@ -5,7 +5,7 @@
         <LangVersion>preview</LangVersion>
         <Nullable>enable</Nullable>
         <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-        <Version>1.0.0.1</Version>
+        <Version>1.0.0.2</Version>
     </PropertyGroup>
 
     <!-- Publicizer -->
@@ -28,6 +28,9 @@
       </Reference>
       <Reference Include="com.rlabrecque.steamworks.net">
         <HintPath>..\Libs\com.rlabrecque.steamworks.net.dll</HintPath>
+      </Reference>
+      <Reference Include="DiscordGameSDK">
+        <HintPath>..\Libs\DiscordGameSDK.dll</HintPath>
       </Reference>
       <Reference Include="HighlightingSystem">
         <HintPath>..\Libs\HighlightingSystem.dll</HintPath>

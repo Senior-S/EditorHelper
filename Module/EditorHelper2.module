@@ -21,6 +21,10 @@
 			"Role": "Client"
 		},
 		{
+			"Path": "/Libraries/DiscordGameSDK.dll",
+			"Role": "Client"
+		},
+		{
 			"Path": "/Libraries/0Harmony.dll",
 			"Role": "Client"
 		},
