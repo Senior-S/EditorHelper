@@ -1,12 +1,11 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using DanielWillett.UITools.API.Extensions;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.UI.Builders;
 using HarmonyLib;
 using JetBrains.Annotations;
-using SDG.Framework.Devkit;
-using SDG.Framework.Devkit.Tools;
 using SDG.Framework.Landscapes;
 using SDG.Unturned;
 using UnityEngine;
@@ -34,11 +33,8 @@ public class BrushExtension : UIExtension, IExtension
     
     public BrushExtension(EditorTerrainMaterialsUI instance)
     {
-        _instance = this;
-        
         _currentUIInstance = instance;
-        _terrainEditor = EditorInteract.instance?.terrainTool;
-
+        
         UIBuilder builder = new(200f, 30f);
 
         // Use Height Limits Toggle
@@ -50,7 +46,6 @@ public class BrushExtension : UIExtension, IExtension
             .SetSizeVertical(30f);
         _useHeightLimitsToggle = builder.BuildToggle();
         _useHeightLimitsToggle.AddLabel("Use Height Limits", ESleekSide.RIGHT);
-        _useHeightLimitsToggle.OnValueChanged += OnUseHeightLimitsChanged;
 
         // Height Min Field
         builder.SetAnchorHorizontal(1f)
@@ -62,7 +57,6 @@ public class BrushExtension : UIExtension, IExtension
         _heightMinField = builder.BuildFloatInput();
         _heightMinField.AddLabel("Min Height", ESleekSide.RIGHT);
         _heightMinField.Value = 80f; // Set default value
-        _heightMinField.OnValueChanged += OnHeightMinChanged;
 
         // Height Max Field
         builder.SetAnchorHorizontal(1f)
@@ -74,7 +68,7 @@ public class BrushExtension : UIExtension, IExtension
         _heightMaxField = builder.BuildFloatInput();
         _heightMaxField.AddLabel("Max Height", ESleekSide.RIGHT);
         _heightMaxField.Value = 110f; // Set default value
-        _heightMaxField.OnValueChanged += OnHeightMaxChanged;
+        
         
         builder.SetAnchorHorizontal(0.5f)
             .SetAnchorVertical(1f)
@@ -91,6 +85,14 @@ public class BrushExtension : UIExtension, IExtension
     public void Initialize()
     {
         if (_currentUIInstance == null) return;
+        _instance = this;
+        _terrainEditor = EditorInteract.instance?.terrainTool;
+        _useHeightLimitsToggle.Value = false;
+        
+        _useHeightLimitsToggle.OnValueChanged += OnUseHeightLimitsChanged;
+        _heightMinField.OnValueChanged += OnHeightMinChanged;
+        _heightMaxField.OnValueChanged += OnHeightMaxChanged;
+        
         _currentUIInstance.AddChild(_useHeightLimitsToggle);
         _currentUIInstance.AddChild(_heightMinField);
         _currentUIInstance.AddChild(_heightMaxField);
@@ -132,7 +134,7 @@ public class BrushExtension : UIExtension, IExtension
             if (field != null)
                 return (Vector3)field.GetValue(_terrainEditor);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             UnturnedLog.error($"Error getting brush position: {ex.Message}");
         }
