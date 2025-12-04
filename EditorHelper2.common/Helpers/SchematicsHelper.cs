@@ -13,7 +13,7 @@ public class SchematicsHelper
 {
     private readonly string SchematicsFolder;
     public List<Schematic> Schematics = [];
-
+    
     public SchematicsHelper()
     {
         SchematicsFolder = Path.Combine(Globals.ExtensionsFolder, "Schematics");
@@ -46,7 +46,6 @@ public class SchematicsHelper
         JsonWithMetadata? deserializedJson = JsonConvert.DeserializeObject<JsonWithMetadata>(text);
         if (deserializedJson == null)
         {
-            //EditorHelper.Instance.EditorManager.DisplayAlert("Oops, something went wrong.");
             return null;
         }
 

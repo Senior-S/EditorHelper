@@ -7,8 +7,10 @@ using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.common.Helpers;
 using EditorHelper2.common.Types;
+using EditorHelper2.Extensions.Editor.Dashboard;
 using EditorHelper2.Loader;
 using EditorHelper2.UI.Builders;
+using SDG.Framework.Utilities;
 using SDG.Unturned;
 using UnityEngine;
 
@@ -166,7 +168,10 @@ public class SchematicsExtension : UIExtension, IExtension
     {
         if (EditorObjects.copies.Count < 1)
         {
-            //EditorHelper.Instance.EditorManager.DisplayAlert("You need to have copied at least 1 object to create a schematic.");
+            if (ExtensionManager.TryGetInstance(out PromptsExtension? promptsExtension) && promptsExtension != null)
+            {
+                promptsExtension.DisplayAlert("You need to have copied at least 1 object to create a schematic.");    
+            }
             return;
         }
         
@@ -175,7 +180,10 @@ public class SchematicsExtension : UIExtension, IExtension
             _schematicNameValue = _schematicNameField.Text;
             if (_schematicNameValue.Length < 2)
             {
-                //EditorHelper.Instance.EditorManager.DisplayAlert("Please provide a schematic name with at least 2 letters!");
+                if (ExtensionManager.TryGetInstance(out PromptsExtension? promptsExtension) && promptsExtension != null)
+                {
+                    promptsExtension.DisplayAlert("Please provide a schematic name with at least 2 letters!");    
+                }
                 return;
             }
         }
@@ -208,7 +216,10 @@ public class SchematicsExtension : UIExtension, IExtension
         Schematic? model = _schematicsHelper.TryLoadSchematic(index, _schematicSearchValue);
         if (model == null)
         {
-            // Errors are provided by the try load method so it isn't required here
+            if (ExtensionManager.TryGetInstance(out PromptsExtension? promptsExtension) && promptsExtension != null)
+            {
+                promptsExtension.DisplayAlert("Oops, something go wrong, try again with a different schematic.");    
+            }
             return; 
         }
 

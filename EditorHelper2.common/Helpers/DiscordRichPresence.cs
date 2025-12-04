@@ -12,7 +12,7 @@ public class DiscordRichPresence : MonoBehaviour
 {
     private const string DiscordGameSDKURL = "https://ps.sshost.club/api/shares/kUfX2VaB/files/14dd844f-0fd0-4435-88b3-cb14307d753a";
     private const long DiscordAppID = 1424469500153299044;
-    
+
     private Discord.Discord _discord = null!;
     private ActivityManager _activityManager = null!;
     private Activity _activity;
@@ -105,6 +105,15 @@ public class DiscordRichPresence : MonoBehaviour
         {
             if (result != Result.Ok) UnturnedLog.error("[DRP] Failed to update presence");
         });
+    }
+
+    public void UpdateAnonymous(bool enabled)
+    {
+        _activity.State = enabled 
+            ? "Who knows what is he doing? (:" 
+            : "In the menu";
+
+        UpdateEditingPresence();
     }
 
     private void Update()

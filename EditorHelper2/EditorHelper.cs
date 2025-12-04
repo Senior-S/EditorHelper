@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using EditorHelper2.Assets;
 using EditorHelper2.Commands;
 using EditorHelper2.common.Helpers;
@@ -17,7 +13,7 @@ namespace EditorHelper2;
 
 public class EditorHelper : IModuleNexus
 {
-    private static Harmony Harmony { get; set; }
+    private static Harmony _harmony { get; set; }
     private static DiscordRichPresence _richPresence;
 
     public static DiscordRichPresence GetRichPresence()
@@ -27,12 +23,12 @@ public class EditorHelper : IModuleNexus
     
     public EditorHelper()
     {
-        Harmony = new Harmony("com.seniors.editorhelper2");
+        _harmony = new Harmony("com.seniors.editorhelper2");
     }
     
     public void initialize()
     {
-        Harmony.PatchAll(this.GetType().Assembly);
+        _harmony.PatchAll(this.GetType().Assembly);
         
         Task.Run(UpdaterCore.Init);
         Level.onLevelExited += () => Task.Run(UpdaterCore.Init);
@@ -51,6 +47,10 @@ public class EditorHelper : IModuleNexus
         GameObject gameObject = new("Discord");
         Object.DontDestroyOnLoad(gameObject);
         _richPresence = gameObject.AddComponent<DiscordRichPresence>();
+        if (!ExtensionManager.IsEnabled("Discord extension"))
+        {
+            _richPresence.UpdateAnonymous(true);
+        }
     }
 
     private void RegisterCustomAssets()
@@ -74,7 +74,7 @@ public class EditorHelper : IModuleNexus
 
     public void shutdown()
     {
-        Harmony.UnpatchAll(Harmony.Id);
+        _harmony.UnpatchAll(_harmony.Id);
         Object.Destroy(_richPresence);
     }
 }

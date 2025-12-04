@@ -6,11 +6,12 @@ using SDG.Unturned;
 namespace EditorHelper2.Extensions.Editor.Dashboard;
 
 [UIExtension(typeof(EditorDashboardUI))]
-[EHExtension("Discord extension", "Senior S", true)]
+[EHExtension("Discord extension", "Senior S")]
 public class DiscordExtension : UIExtension, IExtension
 {
     public DiscordExtension()
     {
+        EditorHelper.GetRichPresence().UpdateAnonymous(false);
         Initialize();
     }
 
