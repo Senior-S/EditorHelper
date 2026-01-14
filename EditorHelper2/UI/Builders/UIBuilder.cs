@@ -411,9 +411,19 @@ public class UIBuilder
         scrollView.ScaleContentToWidth = scaleContentToWidth;
         scrollView.ScaleContentToHeight = scaleContentToHeight;
         FormatElement(ref scrollView);
-        
+
         ApplySpacing();
         return scrollView;
+    }
+
+    public ISleekSlider BuildSlider(ESleekOrientation orientation = ESleekOrientation.HORIZONTAL)
+    {
+        ISleekSlider slider = Glazier.Get().CreateSlider();
+        slider.Orientation = orientation;
+        FormatElement(ref slider);
+
+        ApplySpacing();
+        return slider;
     }
 
     public ISleekButton CreateSimpleButton()

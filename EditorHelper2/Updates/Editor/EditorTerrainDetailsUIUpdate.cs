@@ -1,6 +1,7 @@
 ﻿using DanielWillett.UITools;
 using EditorHelper2.Extensions.Environment.Roads;
 using EditorHelper2.Extensions.Level.Objects;
+using EditorHelper2.Extensions.Terrain.Foliage;
 using EditorHelper2.Loader;
 
 namespace EditorHelper2.Updates.Editor;
@@ -15,12 +16,19 @@ public static class EditorTerrainDetailsUIUpdate
             collectionManagerExtension?.CustomUpdate();
         }
         #endregion CollectionManagerExtension
-        
+
         #region FoliageManagerExtension
         if (ExtensionManager.TryGetInstance(out FoliageManagerExtension foliageManagerExtension))
         {
             foliageManagerExtension?.CustomUpdate();
         }
         #endregion FoliageManagerExtension
+
+        #region ResourceReplacerExtension
+        if (ExtensionManager.TryGetInstance(out ResourceReplacerExtension resourceReplacerExtension))
+        {
+            resourceReplacerExtension?.CustomUpdate();
+        }
+        #endregion ResourceReplacerExtension
     }
 }

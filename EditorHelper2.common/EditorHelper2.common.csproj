@@ -5,7 +5,7 @@
         <LangVersion>preview</LangVersion>
         <Nullable>enable</Nullable>
         <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-        <Version>1.0.0.2</Version>
+        <Version>1.0.0.3</Version>
     </PropertyGroup>
 
     <!-- Publicizer -->
@@ -19,11 +19,12 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Newtonsoft.Json" Version="13.0.4-beta1" />
+      <PackageReference Include="RocketModFix.UnityEngine.Redist" Version="2022.3.62.3" />
     </ItemGroup>
 
     <ItemGroup>
       <Reference Include="Assembly-CSharp">
-        <HintPath>..\Libs\Assembly-CSharp.dll</HintPath>
+        <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Unturned\Unturned_Data\Managed\Assembly-CSharp.dll</HintPath>
       </Reference>
       <Reference Include="com.rlabrecque.steamworks.net">
         <HintPath>..\Libs\com.rlabrecque.steamworks.net.dll</HintPath>
