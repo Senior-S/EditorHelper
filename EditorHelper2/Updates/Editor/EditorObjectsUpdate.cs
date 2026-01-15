@@ -1,4 +1,4 @@
-﻿using DanielWillett.UITools;
+using DanielWillett.UITools;
 using EditorHelper2.Extensions.Level.Objects;
 using EditorHelper2.Loader;
 using SDG.Unturned;
@@ -11,12 +11,11 @@ public static class EditorObjectsUpdate
     /// <summary>
     /// Main EditorObjects update method
     /// </summary>
-    /// if you need to replace any part of the update, this method must be replaced instead and documented with date.
+    /// if you need to replace any part of the update method, this method must be replaced instead and documented with date.
     /// 8/10/25: Added code for <see cref="PrecisionExtension"/> *postfix*
     /// 8/12/25: Added code for <see cref="HighlightExtension"/> *postfix*
     /// 8/22/25: Added code for <see cref="IconsExtension"/> *postfix*
     /// 8/25/25: Added code for <see cref="ExtrasExtension"/> *postfix*
-    /// 8/30/25: Added code for <see cref="ObjectReplacerExtension"/> *postfix*
     public static void Update(EditorObjects editorObjectsInstance)
     {
         if (!EditorObjects.isBuilding)
@@ -416,13 +415,6 @@ public static class EditorObjectsUpdate
         if (ExtensionManager.TryGetInstance(out ExtrasExtension extrasExtension))
         {
 	        extrasExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
-        }
-        #endregion
-        
-        #region ObjectReplacerExtension
-        if (ExtensionManager.TryGetInstance(out ObjectReplacerExtension replacerExtension))
-        {
-	        replacerExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
         }
         #endregion
     }

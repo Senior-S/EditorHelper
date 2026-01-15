@@ -133,7 +133,7 @@ public class ResourceReplacerExtension : UIExtension, IExtension
 
         builder.ResetProperties()
             .SetAnchorHorizontal(0f)
-            .SetOffsetHorizontal(-58f)
+            .SetOffsetHorizontal(-56f)
             .SetOffsetVertical(75f)
             .SetSizeHorizontal(60f)
             .SetSizeVertical(25f)
