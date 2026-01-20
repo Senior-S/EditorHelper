@@ -13,11 +13,55 @@
 			"Role": "Client"
 		},
 		{
+			"Path": "/Libraries/Microsoft.Extensions.Configuration.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/Microsoft.Extensions.Configuration.Abstractions.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/Microsoft.Extensions.Primitives.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/System.Security.Cryptography.Xml.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/System.Security.Cryptography.Cng.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/System.Security.Cryptography.Pkcs.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/System.Security.AccessControl.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/System.Formats.Asn1.dll",
+			"Role": "Client"
+		},
+		{
 			"Path": "/Libraries/dnlib.dll",
 			"Role": "Client"
 		},
 		{
-			"Path": "/Libraries/netstandard.dll",
+			"Path": "/Libraries/EPPlus.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/EPPlus.Interfaces.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/Microsoft.IO.RecyclableMemoryStream.dll",
+			"Role": "Client"
+		},
+		{
+			"Path": "/Libraries/System.ComponentModel.Annotations.dll",
 			"Role": "Client"
 		},
 		{
