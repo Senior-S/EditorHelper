@@ -9,6 +9,7 @@ using EditorHelper2.common.Types;
 using EditorHelper2.Loader;
 using EditorHelper2.Patches.Editor;
 using EditorHelper2.UI.Builders;
+using EditorHelper2.UI.Elements;
 using SDG.Unturned;
 using UnityEngine;
 
@@ -21,7 +22,10 @@ public class ExtrasExtension : UIExtension, IExtension
     [ExistingMember("container")]
     private readonly SleekFullscreenBox? _container;
     
-    private readonly SleekButtonIcon _adjacentPlaceButton;
+    private readonly ISleekButton _adjacentPlaceButton;
+    private readonly GUIContent[] _adjacentAxisStates;
+    // Not using Vanilla SleekButtonState because SleekButtonIcon has an issue where an empty Icon still takes space
+    private readonly SleekButtonStateSimple _adjacentAxisButton;
     
     public int ObjectsLayerMask { get; private set; } = LayerMask.GetMask("Large", "Medium", "Small", "Barricade", "Structure");
     private readonly ISleekBox _layersContainer;
@@ -36,11 +40,26 @@ public class ExtrasExtension : UIExtension, IExtension
         UIBuilder builder = new(150f, 30f);
         
         builder.SetAnchorVertical(1f)
+            .SetSizeHorizontal(117.5f)
             .SetOffsetHorizontal(360f)
             .SetOffsetVertical(-70f)
             .SetText("Place adjacent");
-        _adjacentPlaceButton = builder.BuildButtonIcon("Place the selected object adjacent to the world selected object");
+        _adjacentPlaceButton = builder.BuildButton("Place the selected object adjacent to the world selected object");
         
+        _adjacentAxisStates =
+        [
+            new GUIContent("A", "Offset adjacent object by an Automatic Axis for the selected object"),
+            new GUIContent("X", "Offset adjacent object by the selected objects X-Axis"),
+            new GUIContent("Z", "Offset adjacent object by the selected objects Z-Axis")
+        ];
+
+        builder.SetSizeHorizontal(30f)
+            .SetOffsetHorizontal(480f)
+            .SetOffsetVertical(-70f)
+            .SetText("");
+        _adjacentAxisButton = builder.BuildButtonStateSimple(_adjacentAxisStates);
+        _adjacentAxisButton.UseContentTooltip = true;
+
         builder.SetAnchorHorizontal(0.5f)
             .SetAnchorVertical(1)
             .SetOffsetHorizontal(-125f)
@@ -115,6 +134,7 @@ public class ExtrasExtension : UIExtension, IExtension
         _container.AddChild(_layersContainer);
         _container.AddChild(_layersMaskButton);
         _container.AddChild(_adjacentPlaceButton);
+        _container.AddChild(_adjacentAxisButton);
         _container.AddChild(_tagField);
         
         foreach (ISleekToggle toggle in _toggleToLayer.Keys)
@@ -122,7 +142,7 @@ public class ExtrasExtension : UIExtension, IExtension
             toggle.OnValueChanged += OnLayerToggleChanged;
         }
         _layersMaskButton.onClickedButton += OnLayersMaskButtonClicked;
-        _adjacentPlaceButton.onClickedButton += OnAdjacentPlaceClicked;
+        _adjacentPlaceButton.OnClicked += OnAdjacentPlaceClicked;
         _tagField.OnTextChanged += OnTagFieldTextChanged;
         EditorObjectsPatches.OnObjectTransformSelected += OnObjectTransformSelected;
     }
@@ -159,28 +179,45 @@ public class ExtrasExtension : UIExtension, IExtension
         Vector3 point;
         if (EditorObjects.selectedObjectAsset == levelObject.asset)
         {
+            // Doesnt currently support _adjacentAxisButton.state
             float boundSize = Mathf.Abs(Vector3.Dot(chosenDirection, levelObject.transform.right)) > 0.5f
                 ? bounds.size.x
                 : bounds.size.y;
+
             Vector3 offset = chosenDirection * boundSize;
             point = levelObject.transform.position + offset;            
         }
         else
         {
-            // https://stackoverflow.com/questions/58089093/place-an-object-on-the-right-side-of-another-object-in-unity
+            // Originally based on https://stackoverflow.com/questions/58089093/place-an-object-on-the-right-side-of-another-object-in-unity but improved to support objects with origins not at the center
             float boundSize = Mathf.Abs(Vector3.Dot(chosenDirection, levelObject.transform.right)) > 0.5f
                 ? bounds.extents.x
                 : bounds.extents.y;
-            
+
+            Vector3 boundsCenter = levelObject.transform.position + (levelObject.transform.rotation * bounds.center);
+
+            Vector3 originPosition = boundsCenter + (chosenDirection * boundSize);
+            // Move along LevelObjects Origin
+            originPosition += Vector3.Cross(chosenDirection, Vector3.up) * (Quaternion.Inverse(Quaternion.LookRotation(chosenDirection)) * (originPosition - levelObject.transform.position)).x;
+            originPosition.y = levelObject.transform.position.y;
+
             Transform targetTransform = EditorObjects.selectedObjectAsset!.GetOrLoadModel().transform;
             Bounds targetBound = ObjectsHelper.GetObjectBounds(targetTransform);
-            float targetBoundSize = Mathf.Abs(Vector3.Dot(chosenDirection, targetTransform.right)) > 0.5f
-                ? targetBound.extents.x
-                : targetBound.extents.y;
-            Vector3 offset = chosenDirection * (boundSize + targetBoundSize);
-            point = levelObject.transform.position + offset;
+
+            float targetBoundSize = _adjacentAxisButton.state switch
+            {
+                0 => targetBound.extents.x > targetBound.extents.y // Automatic Axis
+                    ? targetBound.extents.y - targetBound.center.y
+                    : targetBound.extents.x - targetBound.center.x,
+                1 => targetBound.extents.x - targetBound.center.x, // X-Axis
+                2 => targetBound.extents.y - targetBound.center.y, // Z-Axis (Y-Axis? Yes, objects are rotated so Y-Axis is forward)
+                _ => targetBound.extents.y - targetBound.center.y
+            };
+
+            Vector3 offset = chosenDirection * targetBoundSize;
+            point = originPosition + offset;
         }
-        
+
         EditorObjects.handles.SetPreferredPivot(point, selectedObject.rotation);
         LevelObjects.step++;
         Transform transform = LevelObjects.registerAddObject(point, selectedObject.rotation, Vector3.one, EditorObjects.selectedObjectAsset, EditorObjects.selectedItemAsset);
@@ -282,6 +319,7 @@ public class ExtrasExtension : UIExtension, IExtension
         _container.RemoveChild(_layersContainer);
         _container.RemoveChild(_layersMaskButton);
         _container.RemoveChild(_adjacentPlaceButton);
+        _container.RemoveChild(_adjacentAxisButton);
         _container.RemoveChild(_tagField);
         
         foreach (ISleekToggle toggle in _toggleToLayer.Keys)
@@ -289,7 +327,7 @@ public class ExtrasExtension : UIExtension, IExtension
             toggle.OnValueChanged -= OnLayerToggleChanged;
         }
         _layersMaskButton.onClickedButton -= OnLayersMaskButtonClicked;
-        _adjacentPlaceButton.onClickedButton -= OnAdjacentPlaceClicked;
+        _adjacentPlaceButton.OnClicked -= OnAdjacentPlaceClicked;
         _tagField.OnTextChanged -= OnTagFieldTextChanged;
         EditorObjectsPatches.OnObjectTransformSelected -= OnObjectTransformSelected;
     }
