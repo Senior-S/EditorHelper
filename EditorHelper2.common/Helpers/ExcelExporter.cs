@@ -116,7 +116,6 @@ public static class ExcelExporter
         worksheet.Cells[1, 3].Value = "Legacy ID";
 
         int row = 2;
-        // LevelObjects.buildables is List<LevelBuildableObject>[,]
         for (byte x = 0; x < LevelObjects.buildables.GetLength(0); x++)
         {
             for (byte y = 0; y < LevelObjects.buildables.GetLength(1); y++)
@@ -138,7 +137,6 @@ public static class ExcelExporter
                     }
                     else
                     {
-                        // LevelBuildableObject does not have a GUID property for the instance
                         worksheet.Cells[row, 1].Value = "N/A";
                         worksheet.Cells[row, 2].Value = "MISSING ASSET";
                         worksheet.Cells[row, 3].Value = obj.id;
@@ -398,7 +396,7 @@ public static class ExcelExporter
 
             string materialName = "Unknown";
             if (road._roadAsset != null)
-                materialName = road._roadAsset.name; // Use generic Asset name
+                materialName = road._roadAsset.FriendlyName;
             else if (road.material < LevelRoads.materials.Length)
                 materialName = "Material_" + road.material;
 

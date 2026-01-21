@@ -53,7 +53,6 @@ public class ExcelExportExtension : UIExtension, IExtension
 
     private void OnExportClicked(ISleekElement button)
     {
-        // Start the export process using the DiscordRichPresence MonoBehaviour to run the coroutine
         DiscordRichPresence? drp = EditorHelper.GetRichPresence();
         if (drp != null)
         {
@@ -61,7 +60,6 @@ public class ExcelExportExtension : UIExtension, IExtension
         }
         else
         {
-            // Fallback if DRP is not available for some reason (shouldn't happen in normal flow)
             UnturnedLog.warn("EditorHelper2: Could not find DiscordRichPresence to start coroutine. Running synchronously.");
             ExportSynchronous();
         }
@@ -86,7 +84,6 @@ public class ExcelExportExtension : UIExtension, IExtension
 
     private IEnumerator ExportRoutine()
     {
-        // 1. Show Loading UI
         _statusBox.Text = "Exporting...";
         _statusBox.IsVisible = true;
         _exportButton.IsClickable = false;
@@ -110,8 +107,7 @@ public class ExcelExportExtension : UIExtension, IExtension
 
         _statusBox.Text = error != null ? "Export Failed!" : "Exported to Desktop!";
 
-        // Hide status after a few seconds
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSeconds(3f);
         _statusBox.IsVisible = false;
     }
 
