@@ -13,9 +13,10 @@ public class DiscordRichPresence : MonoBehaviour
     private const string DiscordGameSDKURL = "https://ps.sshost.club/api/shares/kUfX2VaB/files/14dd844f-0fd0-4435-88b3-cb14307d753a";
     private const long DiscordAppID = 1424469500153299044;
 
-    private Discord.Discord _discord = null!;
-    private ActivityManager _activityManager = null!;
+    private Discord.Discord? _discord;
+    private ActivityManager? _activityManager;
     private Activity _activity;
+    private bool _isInitialized;
 
     private long _startTime;
 
@@ -71,16 +72,19 @@ public class DiscordRichPresence : MonoBehaviour
         
         try
         {
-            _discord = new Discord.Discord(DiscordAppID, (long)CreateFlags.Default);
+            _discord = new Discord.Discord(DiscordAppID, (long)CreateFlags.NoRequireDiscord);
             _activityManager = _discord.GetActivityManager();
         }
         catch (Exception e)
         {
-            UnturnedLog.error(e.ToString());
+            UnturnedLog.error($"[DRP] Failed to initialize Discord: {e.Message}");
+            _discord = null;
+            _activityManager = null;
             yield break;
         }
-        
+
         _discord.SetLogHook(LogLevel.Info, (logLevel, msg) => { UnturnedLog.info($"[DRP-{logLevel.ToString()}] {msg}"); });
+        _isInitialized = true;
         UpdateEditingPresence();
     }
 
@@ -101,10 +105,20 @@ public class DiscordRichPresence : MonoBehaviour
 
     public void UpdateEditingPresence()
     {
-        _activityManager.UpdateActivity(_activity, (result) =>
+        if (_activityManager == null) return;
+
+        try
         {
-            if (result != Result.Ok) UnturnedLog.error("[DRP] Failed to update presence");
-        });
+            _activityManager.UpdateActivity(_activity, (result) =>
+            {
+                if (result != Result.Ok) UnturnedLog.error($"[DRP] Failed to update presence: {result}");
+            });
+        }
+        catch (Exception e)
+        {
+            UnturnedLog.error($"[DRP] Error updating presence: {e.Message}");
+            HandleDiscordDisconnect();
+        }
     }
 
     public void UpdateAnonymous(bool enabled)
@@ -118,11 +132,63 @@ public class DiscordRichPresence : MonoBehaviour
 
     private void Update()
     {
-        _discord.RunCallbacks();
+        if (_discord == null || !_isInitialized) return;
+
+        try
+        {
+            _discord.RunCallbacks();
+        }
+        catch (Exception)
+        {
+            HandleDiscordDisconnect();
+        }
     }
-    
+
+    private void HandleDiscordDisconnect()
+    {
+        _isInitialized = false;
+        _activityManager = null;
+
+        try
+        {
+            _discord?.Dispose();
+        }
+        catch { }
+
+        _discord = null;
+        StartCoroutine(RetryConnection());
+    }
+
+    private IEnumerator RetryConnection()
+    {
+        yield return new WaitForSeconds(5f);
+
+        if (_discord != null) yield break;
+
+        try
+        {
+            _discord = new Discord.Discord(DiscordAppID, (long)CreateFlags.NoRequireDiscord);
+            _activityManager = _discord.GetActivityManager();
+            _discord.SetLogHook(LogLevel.Info, (logLevel, msg) => { UnturnedLog.info($"[DRP-{logLevel.ToString()}] {msg}"); });
+            _isInitialized = true;
+            UpdateEditingPresence();
+            UnturnedLog.info("[DRP] Reconnected to Discord");
+        }
+        catch (Exception)
+        {
+            StartCoroutine(RetryConnection());
+        }
+    }
+
     private void OnDestroy()
     {
-        _discord.Dispose();
+        _isInitialized = false;
+        try
+        {
+            _discord?.Dispose();
+        }
+        catch { }
+        _discord = null;
+        _activityManager = null;
     }
 }
