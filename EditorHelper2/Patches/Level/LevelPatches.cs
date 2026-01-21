@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using EditorHelper2.Extensions.Editor.Pause;
 using EditorHelper2.Loader;
+using EditorHelper2.common.Types;
 using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.Framework.Water;
@@ -35,13 +36,23 @@ public class LevelPatches
                 mapResolutionExtension.ShouldModifyResolution)
             {
                 int? multiplier = mapResolutionExtension.Multiplier;
-                (uint?, uint?) customResolution = mapResolutionExtension.CustomResolution;
+                MapResolution defaultResolution = new((uint)width, (uint)height);
+                MapResolution customResolution = mapResolutionExtension.CustomResolution;
 
-                int customWidth = (int?)customResolution.Item1 ?? width;
-                int customHeight = (int?)customResolution.Item2 ?? height;
+                width = (int)(
+                    customResolution.Width > 0 ? customResolution.Width :
+                    customResolution.Height > 0 ? customResolution.GetAspectWidth(defaultResolution) :
+                    defaultResolution.Width);
+                height = (int)(
+                    customResolution.Height > 0 ? customResolution.Height :
+                    customResolution.Width > 0 ? customResolution.GetAspectHeight(defaultResolution) :
+                    defaultResolution.Height);
 
-                width = multiplier != null ? width * multiplier.Value : customWidth;
-                height = multiplier != null ? height * multiplier.Value : customHeight;
+                if (multiplier != null)
+                {
+                    width *= multiplier.Value;
+                    height *= multiplier.Value;
+                }
 
                 mapResolutionExtension.ResetCustomResolution();
             }
@@ -57,13 +68,23 @@ public class LevelPatches
                 mapResolutionExtension.ShouldModifyResolution)
             {
                 int? multiplier = mapResolutionExtension.Multiplier;
-                (uint?, uint?) customResolution = mapResolutionExtension.CustomResolution;
+                MapResolution defaultResolution = new((uint)width, (uint)height);
+                MapResolution customResolution = mapResolutionExtension.CustomResolution;
 
-                int customWidth = (int?)customResolution.Item1 ?? width;
-                int customHeight = (int?)customResolution.Item2 ?? height;
+                width = (int)(
+                    customResolution.Width > 0 ? customResolution.Width :
+                    customResolution.Height > 0 ? customResolution.GetAspectWidth(defaultResolution) :
+                    defaultResolution.Width);
+                height = (int)(
+                    customResolution.Height > 0 ? customResolution.Height :
+                    customResolution.Width > 0 ? customResolution.GetAspectHeight(defaultResolution) :
+                    defaultResolution.Height);
 
-                width = multiplier != null ? width * multiplier.Value : customWidth;
-                height = multiplier != null ? height * multiplier.Value : customHeight;
+                if (multiplier != null)
+                {
+                    width *= multiplier.Value;
+                    height *= multiplier.Value;
+                }
 
                 mapResolutionExtension.ResetCustomResolution();
             }
@@ -180,49 +201,65 @@ public class LevelPatches
             terrainMinHeight = bounds.min.y;
             terrainMaxHeight = bounds.max.y;
             Vector3 vector = mainVolume.CalculateLocalBounds().size;
-            float xValue = vector.x;
-            float zValue = vector.z;
+            imageWidth = Mathf.CeilToInt(vector.x);
+            imageHeight = Mathf.CeilToInt(vector.z);
             if (ExtensionManager.TryGetInstance(out MapResolutionExtension? mapResolutionExtension) && mapResolutionExtension != null &&
                 mapResolutionExtension.ShouldModifyResolution)
             {
                 int? multiplier = mapResolutionExtension.Multiplier;
-                (uint?, uint?) customResolution = mapResolutionExtension.CustomResolution;
+                MapResolution defaultResolution = new((uint)imageWidth, (uint)imageHeight);
+                MapResolution customResolution = mapResolutionExtension.CustomResolution;
 
-                float customWidth = customResolution.Item1 ?? xValue;
-                float customHeight = customResolution.Item2 ?? zValue;
+                imageWidth = (int)(
+                    customResolution.Width > 0 ? customResolution.Width :
+                    customResolution.Height > 0 ? customResolution.GetAspectWidth(defaultResolution) :
+                    defaultResolution.Width);
+                imageHeight = (int)(
+                    customResolution.Height > 0 ? customResolution.Height :
+                    customResolution.Width > 0 ? customResolution.GetAspectHeight(defaultResolution) :
+                    defaultResolution.Height);
 
-                xValue = multiplier != null ? xValue * multiplier.Value : customWidth;
-                zValue = multiplier != null ? zValue * multiplier.Value : customHeight;
+                if (multiplier != null)
+                {
+                    imageWidth *= multiplier.Value;
+                    imageHeight *= multiplier.Value;
+                }
 
                 mapResolutionExtension.ResetCustomResolution();
             }
 
-            imageWidth = Mathf.CeilToInt(xValue);
-            imageHeight = Mathf.CeilToInt(zValue);
             captureWidth = vector.x;
             captureHeight = vector.z;
         }
         else
         {
-            float xValue = SDG.Unturned.Level.size;
-            float zValue = SDG.Unturned.Level.size;
+            imageWidth = SDG.Unturned.Level.size;
+            imageHeight = SDG.Unturned.Level.size;
             if (ExtensionManager.TryGetInstance(out MapResolutionExtension? mapResolutionExtension) && mapResolutionExtension != null &&
                 mapResolutionExtension.ShouldModifyResolution)
             {
                 int? multiplier = mapResolutionExtension.Multiplier;
-                (uint?, uint?) customResolution = mapResolutionExtension.CustomResolution;
+                MapResolution defaultResolution = new((uint)imageWidth, (uint)imageHeight);
+                MapResolution customResolution = mapResolutionExtension.CustomResolution;
 
-                float customWidth = customResolution.Item1 ?? xValue;
-                float customHeight = customResolution.Item2 ?? zValue;
+                imageWidth = (int)(
+                    customResolution.Width > 0 ? customResolution.Width :
+                    customResolution.Height > 0 ? customResolution.GetAspectWidth(defaultResolution) :
+                    defaultResolution.Width);
+                imageHeight = (int)(
+                    customResolution.Height > 0 ? customResolution.Height :
+                    customResolution.Width > 0 ? customResolution.GetAspectHeight(defaultResolution) :
+                    defaultResolution.Height);
 
-                xValue = multiplier != null ? xValue * multiplier.Value : customWidth;
-                zValue = multiplier != null ? zValue * multiplier.Value : customHeight;
+                if (multiplier != null)
+                {
+                    imageWidth *= multiplier.Value;
+                    imageHeight *= multiplier.Value;
+                }
 
                 mapResolutionExtension.ResetCustomResolution();
             }
 
-            imageWidth = Mathf.CeilToInt(xValue);
-            imageHeight = Mathf.CeilToInt(zValue);
             captureWidth = SDG.Unturned.Level.size - SDG.Unturned.Level.border * 2f;
             captureHeight = SDG.Unturned.Level.size - SDG.Unturned.Level.border * 2f;
             SDG.Unturned.Level.satelliteCaptureTransform.position = new Vector3(0f, 1028f, 0f);
