@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 
 namespace EditorHelper2.common.Types;
+
 public struct MapResolution(uint width, uint height)
 {
     /// <summary>
