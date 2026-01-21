@@ -1,4 +1,5 @@
-﻿using SDG.Unturned;
+﻿using EditorHelper2.UI.Elements;
+using SDG.Unturned;
 using UnityEngine;
 
 namespace EditorHelper2.UI.Builders;
@@ -218,6 +219,18 @@ public class UIBuilder
     public SleekButtonState BuildButtonState(params GUIContent[] states)
     {
         SleekButtonState buttonState = new(states)
+        {
+            tooltip = _text
+        };
+        FormatElement(ref buttonState);
+
+        ApplySpacing();
+        return buttonState;
+    }
+
+    public SleekButtonStateSimple BuildButtonStateSimple(params GUIContent[] states)
+    {
+        SleekButtonStateSimple buttonState = new(states)
         {
             tooltip = _text
         };
