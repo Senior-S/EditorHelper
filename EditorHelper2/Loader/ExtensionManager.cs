@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -10,7 +11,6 @@ using EditorHelper2.common;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using Newtonsoft.Json;
-using SDG.Provider;
 using SDG.Unturned;
 
 namespace EditorHelper2.Loader;
@@ -29,7 +29,7 @@ public static class ExtensionManager
     private static readonly string DisabledExtensionsFile = Path.Combine(Globals.ExtensionsFolder, "disabled_extensions.json");
     private static readonly HashSet<string> _disabledExtensionNames = [];
     
-    public static bool TryGetInstance<T>(out T? instance) where T : class, IExtension
+    public static bool TryGetInstance<T>([NotNullWhen(true)] out T? instance) where T : class, IExtension
     {
         UIExtensionInfo? info = UnturnedUIToolsNexus.UIExtensionManager.Extensions.FirstOrDefault(x => x.ImplementationType == typeof(T));
         instance = null;
@@ -41,9 +41,9 @@ public static class ExtensionManager
         
         EHExtensionAttribute? attribute = typeof(T).GetCustomAttribute<EHExtensionAttribute>();
         if (attribute == null || (_instanceStatus.ContainsKey(attribute) && !_instanceStatus[attribute])) return false; // Don't return if the extension is disabled
-        
-        instance = info.Instantiations.OfType<T>().LastOrDefault()!;
-        return true;
+
+        instance = info.Instantiations.OfType<T>().LastOrDefault();
+        return instance != null;
     }
 
     public static bool IsEnabled(string extensionName)

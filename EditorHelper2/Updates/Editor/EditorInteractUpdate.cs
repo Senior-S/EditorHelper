@@ -22,7 +22,7 @@ public static class EditorInteractUpdate
         EditorInteract._ray = MainCamera.instance.ScreenPointToRay(Input.mousePosition);
         Physics.Raycast(EditorInteract.ray, out EditorInteract._worldHit, 2048f, RayMasks.EDITOR_WORLD);
         int raymasks = RayMasks.EDITOR_INTERACT;
-        if (ExtensionManager.TryGetInstance(out ExtrasExtension? extrasExtension) && extrasExtension != null)
+        if (ExtensionManager.TryGetInstance(out ExtrasExtension? extrasExtension))
         {
             raymasks = extrasExtension.ObjectsLayerMask;
         }

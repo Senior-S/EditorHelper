@@ -8,7 +8,7 @@ public static class EditorLevelVisibilityUIUpdate
     public static void Update()
     {
         #region RegionsExtension
-        if (ExtensionManager.TryGetInstance(out RegionsExtension? regionsExtension) && regionsExtension != null)
+        if (ExtensionManager.TryGetInstance(out RegionsExtension? regionsExtension))
         {
             regionsExtension.CustomUpdate();
         }

@@ -1,4 +1,3 @@
-using DanielWillett.UITools;
 using EditorHelper2.Extensions.Level.Objects;
 using EditorHelper2.Loader;
 using SDG.Unturned;
@@ -391,28 +390,28 @@ public static class EditorObjectsUpdate
 		}
 		
 		#region PrecisionExtension
-		if (ExtensionManager.TryGetInstance(out PrecisionExtension precisionExtension))
+		if (ExtensionManager.TryGetInstance(out PrecisionExtension? precisionExtension))
 		{
 			precisionExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
 		}
 		#endregion
 		
 		#region HighlightExtension
-		if (ExtensionManager.TryGetInstance(out HighlightExtension highlightExtension))
+		if (ExtensionManager.TryGetInstance(out HighlightExtension? highlightExtension))
 		{
 			highlightExtension?.CustomUpdate();
 		}
         #endregion
 
         #region IconsExtension
-        if (ExtensionManager.TryGetInstance(out IconsExtension iconsExtension))
+        if (ExtensionManager.TryGetInstance(out IconsExtension? iconsExtension))
         {
 	        iconsExtension?.CustomUpdate();
         }
         #endregion
         
         #region ExtrasExtension
-        if (ExtensionManager.TryGetInstance(out ExtrasExtension extrasExtension))
+        if (ExtensionManager.TryGetInstance(out ExtrasExtension? extrasExtension))
         {
 	        extrasExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
         }
