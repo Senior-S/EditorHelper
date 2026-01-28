@@ -2,6 +2,7 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace EditorHelper2.common.Types;
@@ -19,6 +20,8 @@ public struct CreateRaycastsJob : IJobParallelFor
 
     public float X;
 
+    public float4x4 LocalToWorldMatrix;
+
     public void Execute(int y)
     {
         Commands[4 * y + 0] = CreateCommand((float)X + 0.25f, (float)y + 0.25f);
@@ -31,9 +34,9 @@ public struct CreateRaycastsJob : IJobParallelFor
     {
         float widthOffset = x / ImageWidth;
         float heightOffset = y / ImageHeight;
-        Vector3 position = new((widthOffset - 0.5f) * CaptureWidth, (heightOffset - 0.5f) * CaptureHeight, 0f);
-        Vector3 origin = Level.satelliteCaptureTransform.TransformPoint(position);
+        float3 position = new((widthOffset - 0.5f) * CaptureWidth, (heightOffset - 0.5f) * CaptureHeight, 0f);
+        float3 origin = math.transform(LocalToWorldMatrix, position);  
 
-        return new RaycastCommand(origin, Vector3.down, new QueryParameters(RayMasks.CHART), Level.HEIGHT);
+        return new RaycastCommand(origin, math.down(), new QueryParameters(RayMasks.CHART), Level.HEIGHT);
     }
 }

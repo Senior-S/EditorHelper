@@ -7,6 +7,7 @@ using SDG.Framework.Water;
 using SDG.Unturned;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
 using Unity.Collections;
@@ -200,6 +201,9 @@ public class LevelPatches
             return true;
         }
 
+        Stopwatch stopwatch = new();
+        stopwatch.Start();
+
         Texture2D heightStrip = bundle.load<Texture2D>("Height_Strip");
         Texture2D layerStrip = bundle.load<Texture2D>("Layer_Strip");
         bundle.unload();
@@ -318,6 +322,7 @@ public class LevelPatches
             var results = new NativeArray<RaycastHit>(imageHeight * 4, Allocator.TempJob);
             try
             {
+                Matrix4x4 matrix = SDG.Unturned.Level.satelliteCaptureTransform.localToWorldMatrix;
                 for (int x = 0; x < imageWidth; x++)
                 {
                     var createCommandsJob = new CreateRaycastsJob()
@@ -330,7 +335,9 @@ public class LevelPatches
                         CaptureWidth = captureWidth,
                         CaptureHeight = captureHeight,
 
-                        X = x
+                        X = x,
+                        
+                        LocalToWorldMatrix = matrix
                     };
 
                     createCommandsJob.Schedule(imageHeight, 16).Complete();
@@ -468,6 +475,9 @@ public class LevelPatches
         byte[] bytes = texture2D.EncodeToPNG();
         ReadWrite.writeBytes(SDG.Unturned.Level.info.path + "/Chart.png", useCloud: false, usePath: false, bytes);
         Object.DestroyImmediate(texture2D);
+        
+        stopwatch.Stop();
+        UnturnedLog.info($"[Chart] Unity.mathematics use: {stopwatch.ElapsedMilliseconds} ms");
 
         Color GetColor(float x, float y)
         {
