@@ -1,12 +1,16 @@
-using System;
-using System.Reflection;
+using EditorHelper2.common.Types;
 using EditorHelper2.Extensions.Editor.Pause;
 using EditorHelper2.Loader;
-using EditorHelper2.common.Types;
 using HarmonyLib;
 using JetBrains.Annotations;
 using SDG.Framework.Water;
 using SDG.Unturned;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Threading.Tasks;
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Rendering;
 using GraphicsSettings = SDG.Unturned.GraphicsSettings;
@@ -32,6 +36,7 @@ public class LevelPatches
             Vector3 vector = mainVolume.CalculateLocalBounds().size;
             width = Mathf.CeilToInt(vector.x);
             height = Mathf.CeilToInt(vector.z);
+            #region Satellite Dimensions Patch
             if (ExtensionManager.TryGetInstance(out MapResolutionExtension? mapResolutionExtension) && mapResolutionExtension != null &&
                 mapResolutionExtension.ShouldModifyResolution)
             {
@@ -56,6 +61,7 @@ public class LevelPatches
 
                 mapResolutionExtension.ResetCustomResolution();
             }
+            #endregion
 
             SDG.Unturned.Level.satelliteCaptureCamera.aspect = vector.x / vector.z;
             SDG.Unturned.Level.satelliteCaptureCamera.orthographicSize = vector.z * 0.5f;
@@ -64,6 +70,7 @@ public class LevelPatches
         {
             width = SDG.Unturned.Level.size;
             height = SDG.Unturned.Level.size;
+            #region Satellite Dimensions Patch
             if (ExtensionManager.TryGetInstance(out MapResolutionExtension? mapResolutionExtension) && mapResolutionExtension != null &&
                 mapResolutionExtension.ShouldModifyResolution)
             {
@@ -88,6 +95,7 @@ public class LevelPatches
 
                 mapResolutionExtension.ResetCustomResolution();
             }
+            #endregion
 
             SDG.Unturned.Level.satelliteCaptureTransform.position = new Vector3(0f, 1028f, 0f);
             SDG.Unturned.Level.satelliteCaptureTransform.rotation = Quaternion.Euler(90f, 0f, 0f);
@@ -136,7 +144,19 @@ public class LevelPatches
         LevelLighting.setSeaColor("_SpecularColor", seaColor);
         QualitySettings.lodBias = lodBias;
         RenderTexture temporary2 = RenderTexture.GetTemporary(width, height);
-        Graphics.Blit(temporary, temporary2);
+        #region Shader Performance Patch
+        bool shouldCPUWriteAlpha = true;
+        if (ExtensionManager.TryGetInstance(out MapPerformanceExtension? mapPerformanceExtension) &&
+            mapPerformanceExtension.SatelliteImageShader != null)
+        {
+            Graphics.Blit(temporary, temporary2, mapPerformanceExtension.SatelliteImageShader);
+            shouldCPUWriteAlpha = false; // SatelliteImageShader has already applied this
+        }
+        else
+        {
+            Graphics.Blit(temporary, temporary2);
+        }
+        #endregion
         RenderTexture.ReleaseTemporary(temporary);
         RenderTexture.active = temporary2;
         Texture2D texture2D = new Texture2D(width, height);
@@ -144,15 +164,18 @@ public class LevelPatches
         texture2D.hideFlags = HideFlags.HideAndDontSave;
         texture2D.ReadPixels(new Rect(0f, 0f, width, height), 0, 0);
         RenderTexture.ReleaseTemporary(temporary2);
-        for (int i = 0; i < texture2D.width; i++)
+        if (shouldCPUWriteAlpha)
         {
-            for (int j = 0; j < texture2D.height; j++)
+            for (int i = 0; i < texture2D.width; i++)
             {
-                Color pixel = texture2D.GetPixel(i, j);
-                if (pixel.a < 1f)
+                for (int j = 0; j < texture2D.height; j++)
                 {
-                    pixel.a = 1f;
-                    texture2D.SetPixel(i, j, pixel);
+                    Color pixel = texture2D.GetPixel(i, j);
+                    if (pixel.a < 1f)
+                    {
+                        pixel.a = 1f;
+                        texture2D.SetPixel(i, j, pixel);
+                    }
                 }
             }
         }
@@ -203,6 +226,7 @@ public class LevelPatches
             Vector3 vector = mainVolume.CalculateLocalBounds().size;
             imageWidth = Mathf.CeilToInt(vector.x);
             imageHeight = Mathf.CeilToInt(vector.z);
+            #region Chart Dimensions Patch
             if (ExtensionManager.TryGetInstance(out MapResolutionExtension? mapResolutionExtension) && mapResolutionExtension != null &&
                 mapResolutionExtension.ShouldModifyResolution)
             {
@@ -227,6 +251,7 @@ public class LevelPatches
 
                 mapResolutionExtension.ResetCustomResolution();
             }
+            #endregion
 
             captureWidth = vector.x;
             captureHeight = vector.z;
@@ -235,6 +260,7 @@ public class LevelPatches
         {
             imageWidth = SDG.Unturned.Level.size;
             imageHeight = SDG.Unturned.Level.size;
+            #region Chart Dimensions Patch
             if (ExtensionManager.TryGetInstance(out MapResolutionExtension? mapResolutionExtension) && mapResolutionExtension != null &&
                 mapResolutionExtension.ShouldModifyResolution)
             {
@@ -259,6 +285,7 @@ public class LevelPatches
 
                 mapResolutionExtension.ResetCustomResolution();
             }
+            #endregion
 
             captureWidth = SDG.Unturned.Level.size - SDG.Unturned.Level.border * 2f;
             captureHeight = SDG.Unturned.Level.size - SDG.Unturned.Level.border * 2f;
@@ -274,16 +301,167 @@ public class LevelPatches
         SDG.Unturned.Level.SetAllObjectsAndTreesActiveForSatelliteCapture();
         GameObject terrainGO = new GameObject();
         terrainGO.layer = 20;
-        for (int i = 0; i < imageWidth; i++)
+        #region Chart Performance Patch
+        if (ExtensionManager.TryGetInstance<MapPerformanceExtension>(out _))
         {
-            for (int j = 0; j < imageHeight; j++)
+            // Could be GetPixelData<Color32>() to be even faster but I am not sure if all textures will support that
+            Color[] heightPixels = heightStrip.GetPixels();
+            Color[] layerPixels = layerStrip.GetPixels();
+
+            Color[] pixels = new Color[imageHeight];
+
+            // Yes, this is faster because Unturned does has to loop through every object in a region when finding the ObjectAsset so caching is really helpful for Big Objects
+            Dictionary<Transform, ObjectAsset?> transformObjectAsset = new(4096);
+            Dictionary<Transform, ResourceAsset?> transformResourceAsset = new(4096); // Seems to also be faster
+
+            var commands = new NativeArray<RaycastCommand>(imageHeight * 4, Allocator.TempJob);
+            var results = new NativeArray<RaycastHit>(imageHeight * 4, Allocator.TempJob);
+            try
             {
-                Color color = GetColor((float)i + 0.25f, (float)j + 0.25f) * 0.25f + GetColor((float)i + 0.25f, (float)j + 0.75f) * 0.25f +
-                              GetColor((float)i + 0.75f, (float)j + 0.25f) * 0.25f + GetColor((float)i + 0.75f, (float)j + 0.75f) * 0.25f;
-                color.a = 1f;
-                texture2D.SetPixel(i, j, color);
+                for (int x = 0; x < imageWidth; x++)
+                {
+                    var createCommandsJob = new CreateRaycastsJob()
+                    {
+                        Commands = commands,
+
+                        ImageWidth = imageWidth,
+                        ImageHeight = imageHeight,
+
+                        CaptureWidth = captureWidth,
+                        CaptureHeight = captureHeight,
+
+                        X = x
+                    };
+
+                    createCommandsJob.Schedule(imageHeight, 16).Complete();
+
+                    RaycastCommand.ScheduleBatch(commands, results, 64).Complete();
+
+                    for (int y = 0; y < imageHeight; y++)
+                    {
+                        RaycastHit hit1 = results[4 * y + 0];
+                        RaycastHit hit2 = results[4 * y + 1];
+                        RaycastHit hit3 = results[4 * y + 2];
+                        RaycastHit hit4 = results[4 * y + 3];
+
+                        Color color =
+                            GetColorFromHit(ref hit1) * 0.25f +
+                            GetColorFromHit(ref hit2) * 0.25f +
+                            GetColorFromHit(ref hit3) * 0.25f +
+                            GetColorFromHit(ref hit4) * 0.25f;
+
+                        color.a = 1f;
+                        pixels[y] = color;
+                    }
+                    texture2D.SetPixels(x, 0, 1, imageWidth, pixels);
+                }
+            }
+            finally
+            {
+                commands.Dispose();
+                results.Dispose();
+            }
+
+            Color GetColorFromHit(ref RaycastHit hit)
+            {
+                EObjectChart objectChart = GetObjectChartFromHit(ref hit);
+
+                Transform? transform = hit.transform;
+                Vector3 point = hit.point;
+                int layerIndex = LayerMasks.GROUND;
+                if (transform != null) layerIndex = transform.gameObject.layer;
+                else point.y = LevelGround.getHeight(point);
+
+                switch (objectChart)
+                {
+                    case EObjectChart.GROUND:
+                        layerIndex = LayerMasks.GROUND;
+                        break;
+                    case EObjectChart.HIGHWAY:
+                        layerIndex = 0;
+                        break;
+                    case EObjectChart.ROAD:
+                        layerIndex = 1;
+                        break;
+                    case EObjectChart.STREET:
+                        layerIndex = 2;
+                        break;
+                    case EObjectChart.PATH:
+                        layerIndex = 3;
+                        break;
+                    case EObjectChart.LARGE:
+                        layerIndex = 15;
+                        break;
+                    case EObjectChart.MEDIUM:
+                        layerIndex = 16;
+                        break;
+                    case EObjectChart.CLIFF:
+                        layerIndex = 4;
+                        break;
+                    case EObjectChart.WATER:
+                        return heightPixels[0];
+                }
+
+                if (layerIndex == LayerMasks.GROUND)
+                {
+                    if (WaterUtility.isPointUnderwater(point)) return heightPixels[0];
+
+                    float num4 = Mathf.InverseLerp(terrainMinHeight, terrainMaxHeight, point.y);
+                    return heightPixels[(int)(num4 * (float)(heightStrip.width - 1)) + 1];
+                }
+
+                return layerPixels[layerIndex];
+            }
+
+            EObjectChart GetObjectChartFromHit(ref RaycastHit hit)
+            {
+                EObjectChart objectChart = EObjectChart.NONE;
+                Transform? transform = hit.transform;
+                if (transform == null) return objectChart;
+                
+                if (!transformObjectAsset.TryGetValue(transform.root, out ObjectAsset? objectAsset))
+                {
+                    objectAsset = LevelObjects.getAsset(transform);
+                    if (objectAsset != null) transformObjectAsset.Add(transform.root, objectAsset);
+                }
+                if (objectAsset != null) objectChart = objectAsset.chart;
+                else
+                {
+                    if (!transformResourceAsset.TryGetValue(transform.root, out ResourceAsset? resourceAsset))
+                    {
+                        resourceAsset = LevelGround.FindResourceSpawnpointByTransform(transform)?.asset;
+                        if (resourceAsset != null) transformResourceAsset.Add(transform.root, resourceAsset);
+                    }
+                    if (resourceAsset != null) objectChart = resourceAsset.chart;
+                    else if (transform.gameObject.layer == LayerMasks.ENVIRONMENT)
+                    {
+                        Road? road = LevelRoads.FindRoadByRootTransform(transform.root);
+                        if (road != null) objectChart = road.GetChartMode();
+                    }
+                }
+
+                if (objectChart == EObjectChart.IGNORE)
+                {
+                    SDG.Unturned.Level.FindChartHit(hit.point + new Vector3(0f, -0.01f, 0f), out objectChart, out hit);
+                }
+
+                return objectChart;
             }
         }
+        else
+        {
+            for (int i = 0; i < imageWidth; i++)
+            {
+                for (int j = 0; j < imageHeight; j++)
+                {
+                    Color color = GetColor((float)i + 0.25f, (float)j + 0.25f) * 0.25f + GetColor((float)i + 0.25f, (float)j + 0.75f) * 0.25f +
+                                  GetColor((float)i + 0.75f, (float)j + 0.25f) * 0.25f + GetColor((float)i + 0.75f, (float)j + 0.75f) * 0.25f;
+                    color.a = 1f;
+                    texture2D.SetPixel(i, j, color);
+                }
+            }
+        }
+        #endregion
 
         texture2D.Apply();
         SDG.Unturned.Level.RestorePreCaptureState();
