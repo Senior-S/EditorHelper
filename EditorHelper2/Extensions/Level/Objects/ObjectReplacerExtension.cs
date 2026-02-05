@@ -237,8 +237,6 @@ public class ObjectReplacerExtension : UIExtension, IExtension
 
         icons.unload();
 
-        LoadObjectAssets();
-
         Initialize();
     }
 
@@ -248,6 +246,11 @@ public class ObjectReplacerExtension : UIExtension, IExtension
 
         _container.AddChild(_menuPanel);
         _container.AddChild(_toggleButton);
+
+        if (_allObjectAssets.Count == 0)
+        {
+            LoadObjectAssets();
+        }
 
         RefreshAssetList();
     }
@@ -527,5 +530,7 @@ public class ObjectReplacerExtension : UIExtension, IExtension
         _searchButton.OnClicked -= OnSearchButtonClicked;
         _replaceButton.OnClicked -= OnReplaceButtonClicked;
         _pickNearestButton.OnClicked -= OnPickNearestButtonClicked;
+        
+        _allObjectAssets.Clear();
     }
 }
