@@ -8,20 +8,25 @@ using UnityEngine;
 
 namespace EditorHelper2.Extensions.Level.Visibility;
 
-[EHExtension("Regions Extension", "JienSultan")]
+[EHExtension("Regions Extension", "JienSultan & Gamingtoday093")]
 [UIExtension(typeof(EditorLevelVisibilityUI))]
 public class RegionsExtension : UIExtension, IExtension
 {
+    /// <summary>
+    /// Size of the area of Regions shown with a RegionBorder. Vanilla uses 7x7 for Region Labels but 1x1 looks better for RegionBorders
+    /// </summary>
     private const int DebugSize = 1;
-    private Camera? _mainCamera;
-    private readonly Transform? _regionBordersParent;
+
+    private readonly Transform?[] _regionBorders;
     private readonly AssetBundle? _regionBorderBundle;
     private readonly GameObject? _regionBorderPrefab;
     
     public RegionsExtension()
     {
         Assembly assembly = Assembly.GetExecutingAssembly();
-        string bundlePath = Path.Combine(Path.GetDirectoryName(assembly.Location) ?? string.Empty, "Assets" ,"RegionBorder.unity3d"); 
+        string bundlePath = Path.Combine(Path.GetDirectoryName(assembly.Location) ?? string.Empty, "Assets" ,"RegionBorder.unity3d");
+
+        _regionBorders = new Transform[DebugSize * DebugSize];
 
         _regionBorderBundle = AssetBundle.LoadFromFile(bundlePath);
         if (_regionBorderBundle == null)
@@ -37,33 +42,31 @@ public class RegionsExtension : UIExtension, IExtension
             return;
         }
 
-        _regionBordersParent = new GameObject("RegionBorders").transform; // Create a parent for clips
-        
         Initialize();
     }
 
     public void Initialize()
     {
-        _mainCamera = Camera.main;
+        if (_regionBorderPrefab == null) return;
+
+        const float REGION_HEIGHT = 1024f / 4f; // Doesn't seem to change anything, ask Sultan
+
+        for (int i = 0; i < _regionBorders.Length; i++)
+        {
+            Transform regionBorder = Object.Instantiate(_regionBorderPrefab).transform;
+            regionBorder.name = "EditorHelper:RegionBorder";
+            regionBorder.localScale = new Vector3(Regions.REGION_SIZE, REGION_HEIGHT, Regions.REGION_SIZE);
+            regionBorder.gameObject.SetActive(false);
+
+            _regionBorders[i] = regionBorder;
+        }
     }
 
-    #region Extension Functions
-    internal void CustomUpdate()
+    internal void CustomUpdateRegion(int cameraRegionX, int cameraRegionY)
     {
-        if (_mainCamera == null) return;
+        if (_regionBorderPrefab == null || DebugSize < 1) return;
 
-        float regionSize = Regions.REGION_SIZE;
-        Vector3 cameraPosition = _mainCamera.transform.position;
-
-        // Get the current region of the camera
-        if (!Regions.tryGetCoordinate(cameraPosition, out byte cameraRegionX, out byte cameraRegionY))
-            return;
-
-        // Remove previous clips to prevent duplicates
-        foreach (Transform child in _regionBordersParent!)
-            Object.Destroy(child.gameObject);
-
-        // Loop through the 7x7 grid around the camera's current region
+        // Loop through the grid around the camera's current region
         for (int i = -DebugSize / 2; i <= DebugSize / 2; i++)
         {
             for (int j = -DebugSize / 2; j <= DebugSize / 2; j++)
@@ -74,44 +77,45 @@ public class RegionsExtension : UIExtension, IExtension
                 // Make sure we are within valid region bounds
                 if (x < Regions.WORLD_SIZE && y < Regions.WORLD_SIZE)
                 {
-                    Vector3 regionPosition = new Vector3(
-                        (x * regionSize) + (regionSize / 2) - (Regions.WORLD_SIZE * (regionSize / 2)),
+                    Vector3 regionPosition = new(
+                        (x * Regions.REGION_SIZE) + (Regions.REGION_SIZE / 2) - (Regions.WORLD_SIZE * (Regions.REGION_SIZE / 2)),
                         0,
-                        (y * regionSize) + (regionSize / 2) - (Regions.WORLD_SIZE * (regionSize / 2))
+                        (y * Regions.REGION_SIZE) + (Regions.REGION_SIZE / 2) - (Regions.WORLD_SIZE * (Regions.REGION_SIZE / 2))
                     );
 
-                    // Create and configure the world border
-                    RegionBorders(regionPosition, regionSize);
+                    Transform? regionBorder = _regionBorders[((i + (DebugSize / 2)) * DebugSize) + j + (DebugSize / 2)];
+                    if (regionBorder == null)
+                    {
+                        UnturnedLog.info($"RegionsExtension: {nameof(regionBorder)} is somehow null? This should never happen");
+                        // This isn't a continue because this should be treated as an NullReferenceException
+                        // It would also spam the Logs if the entire _regionBorders is null
+                        return;
+                    }
+
+                    regionBorder.position = regionPosition;
+                    regionBorder.gameObject.SetActive(true);
                 }
             }
         }
     }
-    
-    private void RegionBorders(Vector3 position, float size)
-    {
-        float height = 1024;
 
-        if (_regionBorderPrefab != null)
+    protected override void Closed()
+    {
+        foreach (Transform? regionBorder in _regionBorders)
         {
-            Transform wall = (Object.Instantiate(_regionBorderPrefab)).transform;
-            wall.position = position;
-            wall.localScale = new Vector3(size, height / 4f, size);
-            wall.name = "RegionBorder";
-            wall.parent = _regionBordersParent;
+            if (regionBorder == null) continue;
+            regionBorder.gameObject.SetActive(false);
         }
     }
 
-    #endregion Extension Functions
-
     public void Dispose()
     {
-        for (int i = 0; i < _regionBordersParent!.childCount; i++)
+        foreach (Transform? regionBorder in _regionBorders)
         {
-            Transform child = _regionBordersParent.GetChild(i);
-            Object.Destroy(child.gameObject);
+            if (regionBorder == null) continue;
+            Object.Destroy(regionBorder.gameObject);
         }
-        Object.Destroy(_regionBordersParent);
 
-        _regionBorderBundle!.Unload(true);
+        _regionBorderBundle?.Unload(true);
     }
 }
