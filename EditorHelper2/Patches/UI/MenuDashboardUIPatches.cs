@@ -12,7 +12,7 @@ public class MenuDashboardUIPatches
     [UsedImplicitly]
     private static bool OnClickedBattlEyeButton(ISleekElement element)
     {
-        Provider.provider.browserService.open("https://discord.gg/Y3jD5K2Q8C");
+        SDG.Unturned.Provider.provider.browserService.open("https://discord.gg/Y3jD5K2Q8C");
 
         return false;
     }

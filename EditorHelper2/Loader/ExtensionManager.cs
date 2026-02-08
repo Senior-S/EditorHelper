@@ -40,7 +40,7 @@ public static class ExtensionManager
         }
         
         EHExtensionAttribute? attribute = typeof(T).GetCustomAttribute<EHExtensionAttribute>();
-        if (attribute == null || (_instanceStatus.ContainsKey(attribute) && !_instanceStatus[attribute])) return false; // Don't return if the extension is disabled
+        if (attribute == null || (_instanceStatus.TryGetValue(attribute, out bool isEnabled) && !isEnabled)) return false; // Don't return if the extension is disabled
 
         instance = info.Instantiations.OfType<T>().LastOrDefault();
         return instance != null;
@@ -50,6 +50,14 @@ public static class ExtensionManager
     {
         return _instanceStatus.Any(c => c.Key.Name.Equals(extensionName, StringComparison.OrdinalIgnoreCase)) 
                && _instanceStatus.First(c => c.Key.Name.Equals(extensionName, StringComparison.OrdinalIgnoreCase)).Value;
+    }
+
+    public static bool IsEnabled<TExtension>() where TExtension : class
+    {
+        EHExtensionAttribute? attribute = typeof(TExtension).GetCustomAttribute<EHExtensionAttribute>();
+        if (attribute == null) return false;
+
+        return !_instanceStatus.TryGetValue(attribute, out bool isEnabled) || isEnabled; // Always enabled extensions are not in _instanceStatus
     }
     
     public static int LoadAllExtensions()

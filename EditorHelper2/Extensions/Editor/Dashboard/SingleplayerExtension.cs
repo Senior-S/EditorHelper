@@ -59,6 +59,7 @@ public class SingleplayerExtension : UIExtension, IExtension
                 {
                     SingleplayerSharedClass.LevelInfo = SDG.Unturned.Level.info;
                     SingleplayerSharedClass.CameraPosition = MainCamera.instance.transform.parent.position;
+                    SingleplayerSharedClass.CameraRotation = MainCamera.instance.transform.parent.eulerAngles.y;
                     TimeUtility.singleton.StartCoroutine(SendToSingleplayer());
                 });    
         }
@@ -73,7 +74,7 @@ public class SingleplayerExtension : UIExtension, IExtension
         yield return new WaitForEndOfFrame();
         yield return new WaitForEndOfFrame();
         yield return new WaitForEndOfFrame();
-        Provider.map = SingleplayerSharedClass.LevelInfo.name;
+        Provider.map = SingleplayerSharedClass.LevelInfo!.name;
         Provider.singleplayer(EGameMode.EASY, true);
         yield break;
     }

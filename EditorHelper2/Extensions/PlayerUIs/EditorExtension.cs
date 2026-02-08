@@ -43,8 +43,6 @@ public class EditorExtension : UIExtension, IExtension
         _editorButton.OnClicked += OnEditorClicked;
         
         _container.AddChild(_editorButton);
-
-        TimeUtility.singleton.StartCoroutine(TeleportPlayer(Player.LocalPlayer));
     }
 
     #region Event handlers
@@ -55,24 +53,15 @@ public class EditorExtension : UIExtension, IExtension
     #endregion Event handlers
 
     #region Extension Functions
-    private IEnumerator TeleportPlayer(Player player)
-    { 
-        yield return new WaitForEndOfFrame();
-        yield return new WaitForEndOfFrame();
-        yield return new WaitForEndOfFrame();
-        player.teleportToLocation(SingleplayerSharedClass.CameraPosition, 0f);
-        
-        yield break;
-    }
-    
     private IEnumerator SendToEditor()
     {
+        LevelInfo levelInfo = SingleplayerSharedClass.LevelInfo!;
         Provider.RequestDisconnect("Going back to editor");
         yield return new WaitUntil(() => SDG.Unturned.Level.isExiting == false);
         yield return new WaitForEndOfFrame();
         yield return new WaitForEndOfFrame();
         yield return new WaitForEndOfFrame();
-        SDG.Unturned.Level.edit(SingleplayerSharedClass.LevelInfo);
+        SDG.Unturned.Level.edit(levelInfo);
         yield break;
     }
     #endregion Extension Functions
@@ -84,5 +73,7 @@ public class EditorExtension : UIExtension, IExtension
         _editorButton.OnClicked -= OnEditorClicked;
 
         _container.RemoveChild(_editorButton);
+
+        SingleplayerSharedClass.LevelInfo = null;
     }
 }
