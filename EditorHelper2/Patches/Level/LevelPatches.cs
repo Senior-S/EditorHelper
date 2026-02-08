@@ -360,7 +360,7 @@ public class LevelPatches
                         color.a = 1f;
                         pixels[y] = color;
                     }
-                    texture2D.SetPixels(x, 0, 1, imageWidth, pixels);
+                    texture2D.SetPixels(x, 0, 1, imageHeight, pixels);
                 }
             }
             finally
