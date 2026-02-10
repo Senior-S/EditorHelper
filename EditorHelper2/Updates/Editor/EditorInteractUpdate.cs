@@ -1,3 +1,4 @@
+using EditorHelper2.common.Keybinds;
 using EditorHelper2.Extensions.Level.Objects;
 using EditorHelper2.Loader;
 using SDG.Framework.Devkit.Transactions;
@@ -29,60 +30,60 @@ public static class EditorInteractUpdate
 
         Physics.Raycast(EditorInteract.ray, out EditorInteract._objectHit, 2048f, raymasks);
         Physics.Raycast(EditorInteract.ray, out EditorInteract._logicHit, 2048f, RayMasks.EDITOR_LOGIC);
-        if (InputEx.GetKeyDown(KeyCode.S) && InputEx.GetKey(KeyCode.LeftControl))
+        if (KeybindManager.IsDown(KeybindIds.EditorSave))
         {
             SDG.Unturned.Level.save();
         }
 
-        if (InputEx.GetKeyDown(KeyCode.F1))
+        if (KeybindManager.IsDown(KeybindIds.VisibilityRoads))
         {
             LevelVisibility.roadsVisible = !LevelVisibility.roadsVisible;
             EditorLevelVisibilityUI.roadsToggle.Value = LevelVisibility.roadsVisible;
         }
 
-        if (InputEx.GetKeyDown(KeyCode.F2))
+        if (KeybindManager.IsDown(KeybindIds.VisibilityNavigation))
         {
             LevelVisibility.navigationVisible = !LevelVisibility.navigationVisible;
             EditorLevelVisibilityUI.navigationToggle.Value = LevelVisibility.navigationVisible;
         }
 
-        if (InputEx.GetKeyDown(KeyCode.F3))
+        if (KeybindManager.IsDown(KeybindIds.VisibilityNodes))
         {
             LevelVisibility.nodesVisible = !LevelVisibility.nodesVisible;
             EditorLevelVisibilityUI.nodesToggle.Value = LevelVisibility.nodesVisible;
         }
 
-        if (InputEx.GetKeyDown(KeyCode.F4))
+        if (KeybindManager.IsDown(KeybindIds.VisibilityItems))
         {
             LevelVisibility.itemsVisible = !LevelVisibility.itemsVisible;
             EditorLevelVisibilityUI.itemsToggle.Value = LevelVisibility.itemsVisible;
         }
 
-        if (InputEx.GetKeyDown(KeyCode.F5))
+        if (KeybindManager.IsDown(KeybindIds.VisibilityPlayers))
         {
             LevelVisibility.playersVisible = !LevelVisibility.playersVisible;
             EditorLevelVisibilityUI.playersToggle.Value = LevelVisibility.playersVisible;
         }
 
-        if (InputEx.GetKeyDown(KeyCode.F6))
+        if (KeybindManager.IsDown(KeybindIds.VisibilityZombies))
         {
             LevelVisibility.zombiesVisible = !LevelVisibility.zombiesVisible;
             EditorLevelVisibilityUI.zombiesToggle.Value = LevelVisibility.zombiesVisible;
         }
 
-        if (InputEx.GetKeyDown(KeyCode.F7))
+        if (KeybindManager.IsDown(KeybindIds.VisibilityVehicles))
         {
             LevelVisibility.vehiclesVisible = !LevelVisibility.vehiclesVisible;
             EditorLevelVisibilityUI.vehiclesToggle.Value = LevelVisibility.vehiclesVisible;
         }
 
-        if (InputEx.GetKeyDown(KeyCode.F8))
+        if (KeybindManager.IsDown(KeybindIds.VisibilityBorder))
         {
             LevelVisibility.borderVisible = !LevelVisibility.borderVisible;
             EditorLevelVisibilityUI.borderToggle.Value = LevelVisibility.borderVisible;
         }
 
-        if (InputEx.GetKeyDown(KeyCode.F9))
+        if (KeybindManager.IsDown(KeybindIds.VisibilityAnimals))
         {
             LevelVisibility.animalsVisible = !LevelVisibility.animalsVisible;
             EditorLevelVisibilityUI.animalsToggle.Value = LevelVisibility.animalsVisible;
@@ -94,16 +95,13 @@ public static class EditorInteractUpdate
         }
 
         __instance.activeTool.update();
-        if (InputEx.GetKeyDown(KeyCode.Z) && InputEx.GetKey(KeyCode.LeftControl))
+        if (KeybindManager.IsDown(KeybindIds.EditorRedo))
         {
-            if (InputEx.GetKey(KeyCode.LeftShift))
-            {
-                DevkitTransactionManager.redo();
-            }
-            else
-            {
-                DevkitTransactionManager.undo();
-            }
+            DevkitTransactionManager.redo();
+        }
+        else if (KeybindManager.IsDown(KeybindIds.EditorUndo))
+        {
+            DevkitTransactionManager.undo();
         }
     }
 }

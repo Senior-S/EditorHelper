@@ -4,6 +4,7 @@ using System.Linq;
 using DanielWillett.UITools.API.Extensions;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
+using EditorHelper2.common.Keybinds;
 using EditorHelper2.common.Types;
 using EditorHelper2.UI.Builders;
 using SDG.Framework.Devkit.Transactions;
@@ -733,12 +734,12 @@ public class ResourceReplacerExtension : UIExtension, IExtension
 
     public void CustomUpdate()
     {
-        if (!_menuActive || !Input.GetKey(KeyCode.LeftControl)) return;
-        if (Input.GetKeyDown(KeyCode.X))
+        if (!_menuActive) return;
+        if (KeybindManager.IsDown(KeybindIds.ResourceReplacerRedo))
         {
             DevkitTransactionManager.redo();
         }
-        if (Input.GetKeyDown(KeyCode.Z))
+        if (KeybindManager.IsDown(KeybindIds.ResourceReplacerUndo))
         {
             DevkitTransactionManager.undo();
         }

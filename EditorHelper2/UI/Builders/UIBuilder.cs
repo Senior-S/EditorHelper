@@ -377,6 +377,23 @@ public class UIBuilder
         ApplySpacing();
         return box;
     }
+
+    public ISleekBox BuildColoredBox(SleekColor backgroundColor, TextAnchor textAnchor = TextAnchor.MiddleCenter)
+    {
+        ISleekBox box = Glazier.Get().CreateBox();
+        box.BackgroundColor = backgroundColor;
+        if (_text.Length > 0)
+        {
+            box.Text = _text;
+            box.TextAlignment = textAnchor;
+            box.AllowRichText = true;
+            box.TextColor = ESleekTint.FONT;
+        }
+        FormatElement(ref box);
+        
+        ApplySpacing();
+        return box;
+    }
     
     public ISleekBox BuildAlphaBox(TextAnchor textAnchor = TextAnchor.MiddleCenter)
     {

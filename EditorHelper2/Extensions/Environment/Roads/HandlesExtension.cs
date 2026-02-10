@@ -3,6 +3,7 @@ using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
+using EditorHelper2.common.Keybinds;
 using EditorHelper2.common.Types;
 using EditorHelper2.Patches.Editor;
 using EditorHelper2.UI.Builders;
@@ -407,7 +408,7 @@ public class HandlesExtension : UIExtension, IExtension
         if (LevelVisibility.roadsVisible && Input.GetMouseButtonDown(2) && !_isSelecting)
         {
             _startScreenPos = Input.mousePosition;
-            _isAddingToSelection = Input.GetKey(KeyCode.LeftShift);
+            _isAddingToSelection = KeybindManager.IsHeld(KeybindIds.RoadsAddToSelection);
             _isSelecting = true;
         }
 
@@ -419,7 +420,7 @@ public class HandlesExtension : UIExtension, IExtension
         }
 
         // Handle deletion of selected joints when pressing Delete
-        if (_selectedJoints.Count > 0 && Input.GetKeyDown(KeyCode.Delete))
+        if (_selectedJoints.Count > 0 && (KeybindManager.IsDown(KeybindIds.RoadsDelete) || KeybindManager.IsDown(KeybindIds.RoadsDeleteAlt)))
         {
             // Group joints by road so we can delete them in batches
             Dictionary<Road, List<RoadJointCustom>> jointsByRoad = new();
@@ -511,12 +512,12 @@ public class HandlesExtension : UIExtension, IExtension
             _dragMode = EDragMode.ROTATE;
         }
 
-        if (InputEx.GetKeyDown(KeyCode.Z) && InputEx.GetKey(KeyCode.LeftControl))
+        if (KeybindManager.IsDown(KeybindIds.RoadsUndo))
         {
             Undo();
         }
 
-        if (InputEx.GetKeyDown(KeyCode.X) && InputEx.GetKey(KeyCode.LeftControl))
+        if (KeybindManager.IsDown(KeybindIds.RoadsRedo))
         {
             Redo();
         }
@@ -600,12 +601,12 @@ public class HandlesExtension : UIExtension, IExtension
 
             if (EditorRoads.selection != null)
             {
-                if (InputEx.GetKeyDown(KeyCode.B) && InputEx.GetKey(KeyCode.LeftControl))
+                if (KeybindManager.IsDown(KeybindIds.RoadsCopyTransform))
                 {
                     _copyPosition = _handles.GetPivotPosition();
                 }
 
-                if (InputEx.GetKeyDown(KeyCode.N) && _copyPosition != Vector3.zero && InputEx.GetKey(KeyCode.LeftControl))
+                if (KeybindManager.IsDown(KeybindIds.RoadsPasteTransform) && _copyPosition != Vector3.zero)
                 {
                     if (EditorRoads.road != null)
                     {

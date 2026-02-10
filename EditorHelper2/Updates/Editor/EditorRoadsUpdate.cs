@@ -1,4 +1,5 @@
 using System;
+using EditorHelper2.common.Keybinds;
 using EditorHelper2.Extensions.Environment.Roads;
 using EditorHelper2.Loader;
 using SDG.Unturned;
@@ -23,7 +24,7 @@ public static class EditorRoadsUpdate
         }
         #endregion
         
-        if ((InputEx.GetKeyDown(KeyCode.Delete) || InputEx.GetKeyDown(KeyCode.Backspace)) && EditorRoads.selection != null &&
+        if ((KeybindManager.IsDown(KeybindIds.RoadsDelete) || KeybindManager.IsDown(KeybindIds.RoadsDeleteAlt)) && EditorRoads.selection != null &&
             EditorRoads.road != null)
         {
             if (InputEx.GetKey(ControlsSettings.other))

@@ -1,3 +1,4 @@
+using EditorHelper2.common.Keybinds;
 using EditorHelper2.Extensions.Level.Objects;
 using EditorHelper2.Loader;
 using SDG.Unturned;
@@ -109,7 +110,7 @@ public static class EditorObjectsUpdate
 					EditorObjects.wantsBoundsEditor = !EditorObjects.wantsBoundsEditor;
 				}
 			}
-			if ((InputEx.GetKeyDown(KeyCode.Delete) || InputEx.GetKeyDown(KeyCode.Backspace)) && EditorObjects.selection.Count > 0)
+			if ((KeybindManager.IsDown(KeybindIds.ObjectsDelete) || KeybindManager.IsDown(KeybindIds.ObjectsDeleteAlt)) && EditorObjects.selection.Count > 0)
 			{
 				LevelObjects.step++;
 				for (int i = 0; i < EditorObjects.selection.Count; i++)
@@ -119,17 +120,17 @@ public static class EditorObjectsUpdate
 				EditorObjects.selection.Clear();
 				EditorObjects.calculateHandleOffsets();
 			}
-			if (InputEx.GetKeyDown(KeyCode.Z) && InputEx.GetKey(KeyCode.LeftControl))
+			if (KeybindManager.IsDown(KeybindIds.ObjectsUndo))
 			{
 				EditorObjects.clearSelection();
 				LevelObjects.undo();
 			}
-			if (InputEx.GetKeyDown(KeyCode.X) && InputEx.GetKey(KeyCode.LeftControl))
+			if (KeybindManager.IsDown(KeybindIds.ObjectsRedo))
 			{
 				EditorObjects.clearSelection();
 				LevelObjects.redo();
 			}
-			if (InputEx.GetKeyDown(KeyCode.B) && EditorObjects.selection.Count > 0 && InputEx.GetKey(KeyCode.LeftControl))
+			if (KeybindManager.IsDown(KeybindIds.ObjectsCopyTransform) && EditorObjects.selection.Count > 0)
 			{
 				EditorObjects.copyPosition = EditorObjects.handles.GetPivotPosition();
 				EditorObjects.copyRotation = EditorObjects.handles.GetPivotRotation();
@@ -145,7 +146,7 @@ public static class EditorObjectsUpdate
 					EditorObjects.hasCopyScale = false;
 				}
 			}
-			if (InputEx.GetKeyDown(KeyCode.N) && EditorObjects.selection.Count > 0 && EditorObjects.copyPosition != Vector3.zero && InputEx.GetKey(KeyCode.LeftControl))
+			if (KeybindManager.IsDown(KeybindIds.ObjectsPasteTransform) && EditorObjects.selection.Count > 0 && EditorObjects.copyPosition != Vector3.zero)
 			{
 				EditorObjects.pointSelection();
 				if (EditorObjects.selection.Count == 1)
@@ -167,7 +168,7 @@ public static class EditorObjectsUpdate
 				}
 				EditorObjects.applySelection();
 			}
-			if (InputEx.GetKeyDown(KeyCode.C) && EditorObjects.selection.Count > 0 && InputEx.GetKey(KeyCode.LeftControl))
+			if (KeybindManager.IsDown(KeybindIds.ObjectsCopy) && EditorObjects.selection.Count > 0)
 			{
 				EditorObjects.copies.Clear();
 				for (int j = 0; j < EditorObjects.selection.Count; j++)
@@ -179,7 +180,7 @@ public static class EditorObjectsUpdate
 					}
 				}
 			}
-			if (InputEx.GetKeyDown(KeyCode.V) && EditorObjects.copies.Count > 0 && InputEx.GetKey(KeyCode.LeftControl))
+			if (KeybindManager.IsDown(KeybindIds.ObjectsPaste) && EditorObjects.copies.Count > 0)
 			{
 				EditorObjects.clearSelection();
 				LevelObjects.step++;

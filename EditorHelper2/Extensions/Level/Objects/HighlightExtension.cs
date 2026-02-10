@@ -5,6 +5,7 @@ using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.common.Helpers.Level.Objects;
+using EditorHelper2.common.Keybinds;
 using EditorHelper2.Patches.Editor;
 using EditorHelper2.UI.Builders;
 using HighlightingSystem;
@@ -176,7 +177,7 @@ public class HighlightExtension : UIExtension, IExtension
         _selectHighlightedButton.IsVisible = _highlightedTransforms.Count > 0; 
         if (_highlightedTransforms.Count < 1 && EditorObjects.selection.Count != 1) return;
         
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        if (KeybindManager.IsDown(KeybindIds.HighlightPrev))
         {
             _focusHighlightIndex -= 1;
                 
@@ -192,7 +193,7 @@ public class HighlightExtension : UIExtension, IExtension
             EditorObjects.calculateHandleOffsets();
             MainCamera.instance.transform.parent.position = EditorObjects.handles.GetPivotPosition() - 15f * MainCamera.instance.transform.forward;
         }
-        if (Input.GetKeyDown(KeyCode.RightArrow))
+        if (KeybindManager.IsDown(KeybindIds.HighlightNext))
         {
             _focusHighlightIndex += 1;
             if (_focusHighlightIndex >= _highlightedTransforms.Count)

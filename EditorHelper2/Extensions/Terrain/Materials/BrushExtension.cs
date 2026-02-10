@@ -3,6 +3,7 @@ using System.Reflection;
 using DanielWillett.UITools.API.Extensions;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
+using EditorHelper2.common.Keybinds;
 using EditorHelper2.UI.Builders;
 using HarmonyLib;
 using JetBrains.Annotations;
@@ -188,12 +189,12 @@ public class BrushExtension : UIExtension, IExtension
             }
         }
 
-        if (InputEx.GetKey(KeyCode.Mouse3))
+        if (KeybindManager.IsHeld(KeybindIds.BrushSetMinHeight))
         {
             _heightMinField.Value = GetBrushWorldPosition().Value.y;
         }
         
-        if (InputEx.GetKey(KeyCode.Mouse4))
+        if (KeybindManager.IsHeld(KeybindIds.BrushSetMaxHeight))
         {
             _heightMaxField.Value = GetBrushWorldPosition().Value.y;
         }

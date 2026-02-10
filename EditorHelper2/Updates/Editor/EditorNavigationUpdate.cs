@@ -1,4 +1,5 @@
-﻿using EditorHelper2.Extensions.Environment.Navigation;
+﻿using EditorHelper2.common.Keybinds;
+using EditorHelper2.Extensions.Environment.Navigation;
 using EditorHelper2.Loader;
 using SDG.Unturned;
 using UnityEngine;
@@ -23,7 +24,7 @@ public static class EditorNavigationUpdate
             EditorNavigation.marker.position = EditorInteract.worldHit.point;
         }
 
-        if ((InputEx.GetKeyDown(KeyCode.Delete) || InputEx.GetKeyDown(KeyCode.Backspace)) && EditorNavigation.selection != null)
+        if ((KeybindManager.IsDown(KeybindIds.NavigationDelete) || KeybindManager.IsDown(KeybindIds.NavigationDeleteAlt)) && EditorNavigation.selection != null)
         {
             Transform selection = EditorNavigation.selection;
             EditorNavigation.select(null);

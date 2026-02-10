@@ -2,6 +2,7 @@
 using EditorHelper2.Assets;
 using EditorHelper2.Commands;
 using EditorHelper2.common.Helpers;
+using EditorHelper2.common.Keybinds;
 using EditorHelper2.Loader;
 using HarmonyLib;
 using SDG.Framework.Modules;
@@ -35,6 +36,8 @@ public class EditorHelper : IModuleNexus
         CommandWindow.LogFormat("Editor Helper 2 v{0}", GetType().Assembly.GetName().Version);
         
         RegisterCustomAssets();
+
+        KeybindManager.Initialize();
         
         int loadedExtensions = ExtensionManager.LoadAllExtensions();
         CommandWindow.LogFormat("[EditorHelper2] Loaded {0} extensions.", loadedExtensions);
