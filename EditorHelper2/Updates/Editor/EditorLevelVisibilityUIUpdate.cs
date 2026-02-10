@@ -14,4 +14,14 @@ public static class EditorLevelVisibilityUIUpdate
         }
         #endregion RegionsExtension
     }
+
+    public static void UpdateRegion(int x, int y)
+    {
+        #region RegionsExtension
+        if (ExtensionManager.TryGetInstance(out RegionsExtension? regionsExtension))
+        {
+            regionsExtension.CustomUpdateRegion(x, y);
+        }
+        #endregion RegionsExtension
+    }
 }
