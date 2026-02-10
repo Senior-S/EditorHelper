@@ -25,11 +25,11 @@ public class PromptsExtension : UIExtension, IExtension
     /// <summary>
     /// Action executed if the answer is positive
     /// </summary>
-    private Action _questionAction;
+    private Action? _questionAction;
     /// <summary>
     /// Action executed after the user answer.
     /// </summary>
-    private Action _questionPostAction;
+    private Action? _questionPostAction;
     
     public PromptsExtension()
     {
@@ -100,7 +100,7 @@ public class PromptsExtension : UIExtension, IExtension
     
     private void OnNoButtonClicked(ISleekElement button)
     {
-        _questionAction?.Invoke();
+        _questionPostAction?.Invoke();
     }
     #endregion Event handlers
 
