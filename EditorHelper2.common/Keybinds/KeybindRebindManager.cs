@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using SDG.Unturned;
 using UnityEngine;
 
@@ -10,7 +11,7 @@ public static class KeybindRebindManager
 
     private static int _suppressFrame = -1;
     private static bool _isMenuOpen;
-    private static KeyCode _pendingModifier = KeyCode.None;
+    private static List<KeyCode> _pendingModifiers = new(3);
 
     public static string? ActiveActionId { get; private set; }
     public static bool IsRebinding => !string.IsNullOrEmpty(ActiveActionId);
@@ -28,7 +29,7 @@ public static class KeybindRebindManager
     public static void BeginRebind(string actionId)
     {
         ActiveActionId = actionId;
-        _pendingModifier = KeyCode.None;
+        _pendingModifiers.Clear();
         ActiveRebindChanged?.Invoke(ActiveActionId);
     }
 
@@ -36,7 +37,7 @@ public static class KeybindRebindManager
     {
         ActiveActionId = null;
         _suppressFrame = Time.frameCount;
-        _pendingModifier = KeyCode.None;
+        _pendingModifiers.Clear();
         ActiveRebindChanged?.Invoke(ActiveActionId);
     }
 
@@ -62,23 +63,20 @@ public static class KeybindRebindManager
 
             if (IsModifierKey(Event.current.keyCode))
             {
-                _pendingModifier = Event.current.keyCode;
+                _pendingModifiers = BuildModifierKeys(Event.current.control, Event.current.shift, Event.current.alt);
                 return;
             }
 
-            KeybindManager.SetBinding(ActiveActionId!, new Keybind(
-                Event.current.keyCode,
-                ctrl: Event.current.control,
-                shift: Event.current.shift,
-                alt: Event.current.alt
-            ));
+            List<KeyCode> keys = BuildModifierKeys(Event.current.control, Event.current.shift, Event.current.alt);
+            keys.Add(Event.current.keyCode);
+            KeybindManager.SetBinding(ActiveActionId!, new Keybind(keys));
             CancelRebind();
         }
         else if (Event.current.type == EventType.KeyUp)
         {
-            if (_pendingModifier != KeyCode.None && Event.current.keyCode == _pendingModifier)
+            if (_pendingModifiers.Count > 0 && IsModifierKey(Event.current.keyCode))
             {
-                KeybindManager.SetBinding(ActiveActionId!, new Keybind(_pendingModifier));
+                KeybindManager.SetBinding(ActiveActionId!, new Keybind(_pendingModifiers));
                 CancelRebind();
             }
         }
@@ -98,12 +96,9 @@ public static class KeybindRebindManager
 
             if (key != KeyCode.None)
             {
-                KeybindManager.SetBinding(ActiveActionId!, new Keybind(
-                    key,
-                    ctrl: Event.current.control,
-                    shift: Event.current.shift,
-                    alt: Event.current.alt
-                ));
+                List<KeyCode> keys = BuildModifierKeys(Event.current.control, Event.current.shift, Event.current.alt);
+                keys.Add(key);
+                KeybindManager.SetBinding(ActiveActionId!, new Keybind(keys));
                 CancelRebind();
             }
         }
@@ -116,22 +111,30 @@ public static class KeybindRebindManager
 
         if (Input.GetKeyDown(KeyCode.Mouse3))
         {
-            KeybindManager.SetBinding(ActiveActionId!, new Keybind(KeyCode.Mouse3, ctrl: IsCtrl(), shift: IsShift(), alt: IsAlt()));
+            List<KeyCode> keys = BuildModifierKeys(IsCtrl(), IsShift(), IsAlt());
+            keys.Add(KeyCode.Mouse3);
+            KeybindManager.SetBinding(ActiveActionId!, new Keybind(keys));
             CancelRebind();
         }
         else if (Input.GetKeyDown(KeyCode.Mouse4))
         {
-            KeybindManager.SetBinding(ActiveActionId!, new Keybind(KeyCode.Mouse4, ctrl: IsCtrl(), shift: IsShift(), alt: IsAlt()));
+            List<KeyCode> keys = BuildModifierKeys(IsCtrl(), IsShift(), IsAlt());
+            keys.Add(KeyCode.Mouse4);
+            KeybindManager.SetBinding(ActiveActionId!, new Keybind(keys));
             CancelRebind();
         }
         else if (Input.GetKeyDown(KeyCode.Mouse5))
         {
-            KeybindManager.SetBinding(ActiveActionId!, new Keybind(KeyCode.Mouse5, ctrl: IsCtrl(), shift: IsShift(), alt: IsAlt()));
+            List<KeyCode> keys = BuildModifierKeys(IsCtrl(), IsShift(), IsAlt());
+            keys.Add(KeyCode.Mouse5);
+            KeybindManager.SetBinding(ActiveActionId!, new Keybind(keys));
             CancelRebind();
         }
         else if (Input.GetKeyDown(KeyCode.Mouse6))
         {
-            KeybindManager.SetBinding(ActiveActionId!, new Keybind(KeyCode.Mouse6, ctrl: IsCtrl(), shift: IsShift(), alt: IsAlt()));
+            List<KeyCode> keys = BuildModifierKeys(IsCtrl(), IsShift(), IsAlt());
+            keys.Add(KeyCode.Mouse6);
+            KeybindManager.SetBinding(ActiveActionId!, new Keybind(keys));
             CancelRebind();
         }
     }
@@ -142,8 +145,15 @@ public static class KeybindRebindManager
 
     private static bool IsModifierKey(KeyCode key)
     {
-        return key is KeyCode.LeftControl or KeyCode.RightControl or
-               KeyCode.LeftShift or KeyCode.RightShift or
-               KeyCode.LeftAlt or KeyCode.RightAlt;
+        return Keybind.IsModifierKey(key);
+    }
+
+    private static List<KeyCode> BuildModifierKeys(bool ctrl, bool shift, bool alt)
+    {
+        List<KeyCode> keys = new(3);
+        if (ctrl) keys.Add(KeyCode.LeftControl);
+        if (shift) keys.Add(KeyCode.LeftShift);
+        if (alt) keys.Add(KeyCode.LeftAlt);
+        return keys;
     }
 }

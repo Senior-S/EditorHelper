@@ -78,35 +78,41 @@ public static class KeybindManager
         SaveBindings();
     }
 
+    // Not work using Stringbuilder as it will probably end up allocating more memory
+    // and the performance gain won't be noticeable as it isn't a high called function 
     public static string FormatKeybind(Keybind binding)
     {
-        if (binding.Key == KeyCode.None) return "Unassigned";
+        if (binding.IsNone) return "Unassigned";
 
-        string keyText = MenuConfigurationControlsUI.getKeyCodeText(binding.Key);
-        List<string> parts = [];
-        if (binding.Ctrl) parts.Add("Ctrl");
-        if (binding.Shift) parts.Add("Shift");
-        if (binding.Alt) parts.Add("Alt");
-        parts.Add(keyText);
-        return string.Join("+", parts);
+        List<string> parts = new(binding.Keys.Count);
+        foreach (KeyCode key in binding.Keys)
+        {
+            parts.Add(GetKeyDisplayText(key));
+        }
+
+        return parts.Count == 0 ? "Unassigned" : string.Join("+", parts);
     }
 
     public static bool IsDown(Keybind binding)
     {
-        if (binding.Key == KeyCode.None) return false;
-        return InputEx.GetKeyDown(binding.Key) && AreModifiersExact(binding);
+        if (binding.IsNone) return false;
+        KeyCode primary = binding.PrimaryKey;
+        if (primary == KeyCode.None) return false;
+        return IsKeyDown(primary) && AreModifiersExact(binding) && AreOtherKeysHeld(binding, primary);
     }
 
     public static bool IsHeld(Keybind binding)
     {
-        if (binding.Key == KeyCode.None) return false;
-        return InputEx.GetKey(binding.Key) && AreModifiersExact(binding);
+        if (binding.IsNone) return false;
+        return AreModifiersExact(binding) && AreAllNonModifierKeysHeld(binding);
     }
 
     public static bool IsUp(Keybind binding)
     {
-        if (binding.Key == KeyCode.None) return false;
-        return InputEx.GetKeyUp(binding.Key) && AreModifiersExact(binding);
+        if (binding.IsNone) return false;
+        KeyCode primary = binding.PrimaryKey;
+        if (primary == KeyCode.None) return false;
+        return IsKeyUp(primary) && AreModifiersExact(binding) && AreOtherKeysHeld(binding, primary);
     }
 
     private static bool AreModifiersExact(Keybind binding)
@@ -115,20 +121,93 @@ public static class KeybindManager
         bool shift = InputEx.GetKey(KeyCode.LeftShift) || InputEx.GetKey(KeyCode.RightShift);
         bool alt = InputEx.GetKey(KeyCode.LeftAlt) || InputEx.GetKey(KeyCode.RightAlt);
 
-        if (binding.Ctrl != ctrl) return false;
-        if (binding.Shift != shift) return false;
-        if (binding.Alt != alt) return false;
+        bool expectsCtrl = binding.Keys.Any(Keybind.IsCtrlKey);
+        bool expectsShift = binding.Keys.Any(Keybind.IsShiftKey);
+        bool expectsAlt = binding.Keys.Any(Keybind.IsAltKey);
+
+        if (expectsCtrl != ctrl) return false;
+        if (expectsShift != shift) return false;
+        if (expectsAlt != alt) return false;
         return true;
+    }
+
+    private static bool AreAllNonModifierKeysHeld(Keybind binding)
+    {
+        foreach (KeyCode key in binding.Keys)
+        {
+            if (Keybind.IsModifierKey(key)) continue;
+            if (!InputEx.GetKey(key)) return false;
+        }
+        return true;
+    }
+
+    private static bool AreOtherKeysHeld(Keybind binding, KeyCode primary)
+    {
+        foreach (KeyCode key in binding.Keys)
+        {
+            if (key == primary) continue;
+            if (Keybind.IsModifierKey(key)) continue;
+            if (!InputEx.GetKey(key)) return false;
+        }
+        return true;
+    }
+
+    private static bool IsKeyDown(KeyCode key)
+    {
+        if (Keybind.IsCtrlKey(key))
+        {
+            return InputEx.GetKeyDown(KeyCode.LeftControl) || InputEx.GetKeyDown(KeyCode.RightControl);
+        }
+
+        if (Keybind.IsShiftKey(key))
+        {
+            return InputEx.GetKeyDown(KeyCode.LeftShift) || InputEx.GetKeyDown(KeyCode.RightShift);
+        }
+
+        if (Keybind.IsAltKey(key))
+        {
+            return InputEx.GetKeyDown(KeyCode.LeftAlt) || InputEx.GetKeyDown(KeyCode.RightAlt);
+        }
+
+        return InputEx.GetKeyDown(key);
+    }
+
+    private static bool IsKeyUp(KeyCode key)
+    {
+        if (Keybind.IsCtrlKey(key))
+        {
+            return InputEx.GetKeyUp(KeyCode.LeftControl) || InputEx.GetKeyUp(KeyCode.RightControl);
+        }
+
+        if (Keybind.IsShiftKey(key))
+        {
+            return InputEx.GetKeyUp(KeyCode.LeftShift) || InputEx.GetKeyUp(KeyCode.RightShift);
+        }
+
+        if (Keybind.IsAltKey(key))
+        {
+            return InputEx.GetKeyUp(KeyCode.LeftAlt) || InputEx.GetKeyUp(KeyCode.RightAlt);
+        }
+
+        return InputEx.GetKeyUp(key);
+    }
+
+    private static string GetKeyDisplayText(KeyCode key)
+    {
+        if (Keybind.IsCtrlKey(key)) return "Ctrl";
+        if (Keybind.IsShiftKey(key)) return "Shift";
+        if (Keybind.IsAltKey(key)) return "Alt";
+        return MenuConfigurationControlsUI.getKeyCodeText(key);
     }
 
     private static void RegisterDefaults()
     {
         Register(new KeybindAction(KeybindIds.EditorSave, "Save Level", "Save the current level", "Editor",
-            new Keybind(KeyCode.S, ctrl: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.S)));
         Register(new KeybindAction(KeybindIds.EditorUndo, "Undo", "Undo last transaction", "Editor",
-            new Keybind(KeyCode.Z, ctrl: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.Z)));
         Register(new KeybindAction(KeybindIds.EditorRedo, "Redo", "Redo last transaction", "Editor",
-            new Keybind(KeyCode.Z, ctrl: true, shift: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.LeftShift, KeyCode.Z)));
 
         Register(new KeybindAction(KeybindIds.VisibilityRoads, "Toggle Roads Visibility", "Show/hide roads", "Visibility",
             new Keybind(KeyCode.F1)));
@@ -154,17 +233,17 @@ public static class KeybindManager
         Register(new KeybindAction(KeybindIds.ObjectsDeleteAlt, "Delete Selected Objects (Alt)", "Alternate delete key", "Objects",
             new Keybind(KeyCode.Backspace)));
         Register(new KeybindAction(KeybindIds.ObjectsUndo, "Undo Object Edit", "Undo object changes", "Objects",
-            new Keybind(KeyCode.Z, ctrl: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.Z)));
         Register(new KeybindAction(KeybindIds.ObjectsRedo, "Redo Object Edit", "Redo object changes", "Objects",
-            new Keybind(KeyCode.X, ctrl: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.X)));
         Register(new KeybindAction(KeybindIds.ObjectsCopyTransform, "Copy Transform", "Copy position/rotation/scale", "Objects",
-            new Keybind(KeyCode.B, ctrl: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.B)));
         Register(new KeybindAction(KeybindIds.ObjectsPasteTransform, "Paste Transform", "Paste position/rotation/scale", "Objects",
-            new Keybind(KeyCode.N, ctrl: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.N)));
         Register(new KeybindAction(KeybindIds.ObjectsCopy, "Copy Selection", "Copy selected objects", "Objects",
-            new Keybind(KeyCode.C, ctrl: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.C)));
         Register(new KeybindAction(KeybindIds.ObjectsPaste, "Paste Selection", "Paste copied objects", "Objects",
-            new Keybind(KeyCode.V, ctrl: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.V)));
 
         Register(new KeybindAction(KeybindIds.NavigationDelete, "Delete Navigation Flag", "Delete selected navigation flag", "Navigation",
             new Keybind(KeyCode.Delete)));
@@ -178,13 +257,13 @@ public static class KeybindManager
         Register(new KeybindAction(KeybindIds.RoadsAddToSelection, "Add To Selection", "Add to selection while dragging", "Roads",
             new Keybind(KeyCode.LeftShift)));
         Register(new KeybindAction(KeybindIds.RoadsUndo, "Undo Road Edit", "Undo road changes", "Roads",
-            new Keybind(KeyCode.Z, ctrl: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.Z)));
         Register(new KeybindAction(KeybindIds.RoadsRedo, "Redo Road Edit", "Redo road changes", "Roads",
-            new Keybind(KeyCode.X, ctrl: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.X)));
         Register(new KeybindAction(KeybindIds.RoadsCopyTransform, "Copy Road Transform", "Copy road handle transform", "Roads",
-            new Keybind(KeyCode.B, ctrl: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.B)));
         Register(new KeybindAction(KeybindIds.RoadsPasteTransform, "Paste Road Transform", "Paste road handle transform", "Roads",
-            new Keybind(KeyCode.N, ctrl: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.N)));
 
         Register(new KeybindAction(KeybindIds.HighlightPrev, "Previous Highlight", "Focus previous highlighted object", "Highlight",
             new Keybind(KeyCode.LeftArrow)));
@@ -197,9 +276,9 @@ public static class KeybindManager
             new Keybind(KeyCode.Mouse4)));
 
         Register(new KeybindAction(KeybindIds.ResourceReplacerUndo, "Resource Replacer Undo", "Undo resource replacement", "Foliage",
-            new Keybind(KeyCode.Z, ctrl: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.Z)));
         Register(new KeybindAction(KeybindIds.ResourceReplacerRedo, "Resource Replacer Redo", "Redo resource replacement", "Foliage",
-            new Keybind(KeyCode.X, ctrl: true)));
+            new Keybind(KeyCode.LeftControl, KeyCode.X)));
     }
 
     private static void Register(KeybindAction action)
@@ -243,7 +322,7 @@ public static class KeybindManager
                 pair => new KeybindData(pair.Value.Current)
             );
 
-            string json = JsonConvert.SerializeObject(data, Formatting.Indented);
+            string json = JsonConvert.SerializeObject(data);
             File.WriteAllText(KeybindsFile, json);
         }
         catch (Exception ex)
@@ -254,10 +333,7 @@ public static class KeybindManager
 
     private sealed class KeybindData
     {
-        public string Key { get; set; } = KeyCode.None.ToString();
-        public bool Ctrl { get; set; }
-        public bool Shift { get; set; }
-        public bool Alt { get; set; }
+        public string[] Keys { get; set; } = Array.Empty<string>();
 
         public KeybindData()
         {
@@ -265,19 +341,25 @@ public static class KeybindManager
 
         public KeybindData(Keybind binding)
         {
-            Key = binding.Key.ToString();
-            Ctrl = binding.Ctrl;
-            Shift = binding.Shift;
-            Alt = binding.Alt;
+            Keys = binding.Keys.Select(key => key.ToString()).ToArray();
         }
 
         public Keybind ToKeybind()
         {
-            if (!Enum.TryParse(Key, out KeyCode parsed))
+            if (Keys.Length == 0) return Keybind.None;
+
+            List<KeyCode> parsedKeys = new(Keys.Length);
+            foreach (string key in Keys)
             {
-                parsed = KeyCode.None;
+                if (!Enum.TryParse(key, out KeyCode parsed))
+                {
+                    continue;
+                }
+                if (parsed == KeyCode.None) continue;
+                parsedKeys.Add(parsed);
             }
-            return new Keybind(parsed, Ctrl, Shift, Alt);
+
+            return parsedKeys.Count == 0 ? Keybind.None : new Keybind(parsedKeys);
         }
     }
 }
