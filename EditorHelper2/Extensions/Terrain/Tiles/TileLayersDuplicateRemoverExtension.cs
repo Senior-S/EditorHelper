@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using DanielWillett.UITools.API.Extensions;
@@ -11,7 +10,7 @@ using SDG.Framework.Landscapes;
 using SDG.Unturned;
 using UnityEngine;
 
-namespace EditorHelper2.Extensions.Environment.Tiles;
+namespace EditorHelper2.Extensions.Terrain.Tiles;
 
 [UIExtension(typeof(EditorTerrainTilesUI))]
 [EHExtension("Tile Layers Duplicate Remover Extension", "JienSultan")]

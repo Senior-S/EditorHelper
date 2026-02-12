@@ -22,6 +22,13 @@ public static class EditorTerrainDetailsUIUpdate
         }
         #endregion FoliageManagerExtension
 
+        #region FoliageIconsExtension
+        if (ExtensionManager.TryGetInstance(out FoliageIconsExtension? foliageIconsExtension))
+        {
+            foliageIconsExtension?.CustomUpdate();
+        }
+        #endregion FoliageIconsExtension
+
         #region ResourceReplacerExtension
         if (ExtensionManager.TryGetInstance(out ResourceReplacerExtension? resourceReplacerExtension))
         {

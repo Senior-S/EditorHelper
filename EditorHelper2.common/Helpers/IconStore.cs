@@ -1,4 +1,5 @@
-﻿using SDG.Unturned;
+using SDG.Unturned;
+using SDG.Framework.Foliage;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -52,9 +53,9 @@ public class IconStore
         _transparentTexture.SetPixels(_transparent);
         _transparentTexture.Apply(updateMipmaps: false, makeNoLongerReadable: true);
 
-        GameObject cameraObject = new GameObject("IconStore:Camera");
+        GameObject cameraObject = new("IconStore:Camera");
         _camera = cameraObject.AddComponent<Camera>();
-        _camera.cullingMask = RayMasks.SMALL | RayMasks.MEDIUM | RayMasks.LARGE | RayMasks.ENEMY;
+        _camera.cullingMask = RayMasks.DEFAULT | RayMasks.RESOURCE | RayMasks.SMALL | RayMasks.MEDIUM | RayMasks.LARGE | RayMasks.ENEMY;
         _camera.clearFlags = CameraClearFlags.Nothing;
         _camera.orthographic = true;
         _camera.enabled = false; // Disable Rendering and use Camera.Render() instead
@@ -119,6 +120,80 @@ public class IconStore
         return iconInfo.Handle;
     }
 
+    public int RequestIcon(ResourceAsset resourceAsset, ItemIconReady callback)
+    {
+        if (CachedIcons.TryGetValue(resourceAsset.GUID, out Texture2D? icon))
+        {
+            callback(-1, icon);
+            return -1;
+        }
+
+        GameObject? original = resourceAsset.modelGameObject;
+        if (original == null)
+        {
+            callback(-1, _transparentTexture);
+            CachedIcons[resourceAsset.GUID] = _transparentTexture;
+            return -1;
+        }
+
+        Transform pendingResource = GameObject.Instantiate(original).transform;
+        pendingResource.position = new Vector3(256f, -256f, 0f);
+        pendingResource.rotation = Quaternion.identity;
+
+        Texture2D resourceIcon = CaptureModelIcon(
+            resourceAsset.FriendlyName,
+            pendingResource,
+            isNpc: false,
+            disableLevelLighting: false,
+            repairAlphaFromColor: true,
+            isResource: true
+        );
+        callback(-1, resourceIcon);
+        CachedIcons[resourceAsset.GUID] = resourceIcon;
+        return -1;
+    }
+    public int RequestIcon(FoliageInstancedMeshInfoAsset foliageAsset, ItemIconReady callback)
+    {
+        if (CachedIcons.TryGetValue(foliageAsset.GUID, out Texture2D? icon))
+        {
+            callback(-1, icon);
+            return -1;
+        }
+
+        Mesh? mesh = SDG.Unturned.Assets.load(foliageAsset.mesh);
+        Material? material = SDG.Unturned.Assets.load(foliageAsset.material);
+        if (mesh == null || material == null)
+        {
+            callback(-1, _transparentTexture);
+            CachedIcons[foliageAsset.GUID] = _transparentTexture;
+            return -1;
+        }
+
+        GameObject previewObject = new("IconStore:FoliageInstancedMesh")
+        {
+            layer = LayerMasks.LARGE
+        };
+        MeshFilter meshFilter = previewObject.AddComponent<MeshFilter>();
+        meshFilter.sharedMesh = mesh;
+        MeshRenderer meshRenderer = previewObject.AddComponent<MeshRenderer>();
+        meshRenderer.sharedMaterial = material;
+
+        Transform previewTransform = previewObject.transform;
+        previewTransform.position = new Vector3(256f, -256f, 0f);
+        previewTransform.rotation = Quaternion.identity;
+
+        Texture2D foliageIcon = CaptureModelIcon(
+            foliageAsset.name,
+            previewTransform,
+            isNpc: false,
+            disableLevelLighting: false,
+            repairAlphaFromColor: true,
+            isResource: true
+        );
+        callback(-1, foliageIcon);
+        CachedIcons[foliageAsset.GUID] = foliageIcon;
+        return -1;
+    }
     private List<Renderer> _renderers = new(4);
 
     private Bounds GetBounds(Transform transform)
@@ -154,7 +229,7 @@ public class IconStore
 
         Transform cameraTransform = _camera.transform;
 
-        Bounds bounds2 = new Bounds(cameraTransform.InverseTransformVector(extents), Vector3.zero);
+        Bounds bounds2 = new(cameraTransform.InverseTransformVector(extents), Vector3.zero);
         bounds2.Encapsulate(cameraTransform.InverseTransformVector(-extents));
         bounds2.Encapsulate(cameraTransform.InverseTransformVector(new Vector3(0f - extents.x, extents.y, extents.z)));
         bounds2.Encapsulate(cameraTransform.InverseTransformVector(new Vector3(extents.x, 0f - extents.y, extents.z)));
@@ -179,12 +254,19 @@ public class IconStore
         return num2 * num6;
     }
 
-    private Texture2D CaptureObjectIcon(ObjectAsset objectAsset, Transform objectTransform)
+    private Texture2D CaptureModelIcon(
+        string friendlyName,
+        Transform objectTransform,
+        bool isNpc,
+        bool disableLevelLighting = true,
+        bool repairAlphaFromColor = false,
+        bool isResource = false
+    )
     {
         Bounds bounds = GetBounds(objectTransform);
 
         Vector3 direction;
-        if (objectAsset.FriendlyName.ToLower().Contains("billboard") || objectAsset.interactability == EObjectInteractability.NPC)
+        if (friendlyName.ToLower().Contains("billboard") || isNpc)
         {
             direction = (objectTransform.right - objectTransform.up).normalized;
         }
@@ -207,7 +289,7 @@ public class IconStore
         }
         else
         {
-            _camera.transform.position = bounds.center + direction * distance + Vector3.up * height;
+            _camera.transform.position =  (isResource ? objectTransform.position : bounds.center) + direction * distance + Vector3.up * height;
         }
 
         _camera.transform.rotation = Quaternion.LookRotation((bounds.center - _camera.transform.position).normalized);
@@ -219,7 +301,7 @@ public class IconStore
         temporary.name = "Render_" + objectTransform.name;
         RenderTexture.active = temporary;
         _camera.targetTexture = temporary;
-        _camera.orthographicSize = objectAsset.interactability == EObjectInteractability.NPC ? 1.4f : CalculateOrthographicSize(bounds);
+        _camera.orthographicSize = isNpc ? 1.4f : CalculateOrthographicSize(bounds);
         _camera.farClipPlane = (bounds.center - _camera.transform.position).magnitude * 2f;
 
         bool fog = RenderSettings.fog;
@@ -235,13 +317,13 @@ public class IconStore
         RenderSettings.ambientEquatorColor = Color.white;
         RenderSettings.ambientGroundColor = Color.white;
         RenderSettings.customReflectionTexture = null;
-        if (Provider.isConnected)
+        if (disableLevelLighting && Provider.isConnected)
             LevelLighting.setEnabled(isEnabled: false);
 
         GL.Clear(clearDepth: true, clearColor: true, ColorEx.BlackZeroAlpha);
         _camera.Render();
 
-        if (Provider.isConnected)
+        if (disableLevelLighting && Provider.isConnected)
             LevelLighting.setEnabled(isEnabled: true);
         RenderSettings.fog = fog;
         RenderSettings.ambientMode = ambientMode;
@@ -258,6 +340,29 @@ public class IconStore
             filterMode = FilterMode.Point
         };
         objectIcon.ReadPixels(new Rect(0f, 0f, _width, _height), 0, 0);
+
+        if (repairAlphaFromColor)
+        {
+            Color32[] pixels = objectIcon.GetPixels32();
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                Color32 pixel = pixels[i];
+                if (pixel.a > 5) continue;
+
+                byte maxChannel = pixel.r;
+                if (pixel.g > maxChannel) maxChannel = pixel.g;
+                if (pixel.b > maxChannel) maxChannel = pixel.b;
+
+                if (maxChannel > 10)
+                {
+                    pixel.a = 255;
+                    pixels[i] = pixel;
+                }
+            }
+
+            objectIcon.SetPixels32(pixels);
+        }
+
         objectIcon.Apply(updateMipmaps: false, makeNoLongerReadable: true);
 
         RenderTexture.active = null;
@@ -265,6 +370,11 @@ public class IconStore
         GameObject.Destroy(objectTransform.gameObject);
 
         return objectIcon;
+    }
+
+    private Texture2D CaptureObjectIcon(ObjectAsset objectAsset, Transform objectTransform)
+    {
+        return CaptureModelIcon(objectAsset.FriendlyName, objectTransform, objectAsset.interactability == EObjectInteractability.NPC);
     }
 
     private Texture2D ResizeTexture(Texture2D texture, int newWidth, int newHeight)

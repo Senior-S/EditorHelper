@@ -9,7 +9,7 @@ using EditorHelper2.UI.Builders;
 using SDG.Framework.Foliage;
 using SDG.Unturned;
 
-namespace EditorHelper2.Extensions.Level.Objects;
+namespace EditorHelper2.Extensions.Terrain.Foliage;
 
 [UIExtension(typeof(EditorTerrainDetailsUI))]
 [EHExtension("Live Collection Editor", "JienSultan")]

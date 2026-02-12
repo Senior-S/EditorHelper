@@ -1,12 +1,11 @@
-﻿using System;
-using DanielWillett.UITools.API.Extensions;
+﻿using DanielWillett.UITools.API.Extensions;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.common.Helpers;
 using EditorHelper2.UI.Builders;
 using SDG.Unturned;
 
-namespace EditorHelper2.Extensions.Level.Objects;
+namespace EditorHelper2.Extensions.Terrain.Foliage;
 
 [UIExtension(typeof(EditorTerrainDetailsUI))]
 [EHExtension("Live Foliage Editor", "JienSultan")]
