@@ -1,4 +1,4 @@
-﻿using EditorHelper2.Extensions.Terrain.Materials;
+using EditorHelper2.Extensions.Terrain.Materials;
 using EditorHelper2.Loader;
 
 namespace EditorHelper2.Updates.Editor;
@@ -12,6 +12,6 @@ public static class EditorTerrainMaterialsUIUpdate
         {
             brushExtension?.CustomUpdate();
         }
-        #endregion FoliageManagerExtension
+        #endregion BrushExtension
     }
 }

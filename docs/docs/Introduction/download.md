@@ -7,7 +7,7 @@ slug: /Download
 
 ## Latest version
 
-You can download the latest version by **[clicking here](https://ps.sshost.club/s/Fv8fTXum)**.
+You can download the latest version by **[clicking here](https://ps.sshost.club/share/D6gOu1E6)**.
 
 ## How to install
 
