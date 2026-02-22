@@ -419,9 +419,27 @@ public class HandlesExtension : UIExtension, IExtension
             _isAddingToSelection = false;
         }
 
+        if (TryDeleteWholeSelectedRoad())
+        {
+            return false;
+        }
+
         // Handle deletion of selected joints when pressing Delete
         if (_selectedJoints.Count > 0 && (KeybindManager.IsDown(KeybindIds.RoadsDelete) || KeybindManager.IsDown(KeybindIds.RoadsDeleteAlt)))
         {
+            if (_selectedJoints.Count == 1)
+            {
+                RoadJointCustom selectedJoint = _selectedJoints[0];
+                if (selectedJoint.Index >= 0 && selectedJoint.Index < selectedJoint.Road.joints.Count)
+                {
+                    _step++;
+                    selectedJoint.Road.removeVertex(selectedJoint.Index);
+                }
+
+                Clear();
+                return false;
+            }
+
             // Group joints by road so we can delete them in batches
             Dictionary<Road, List<RoadJointCustom>> jointsByRoad = new();
             foreach (RoadJointCustom joint in _selectedJoints)
@@ -625,6 +643,8 @@ public class HandlesExtension : UIExtension, IExtension
 
                 if (InputEx.GetKeyDown(ControlsSettings.tool_2) && EditorInteract.worldHit.transform != null)
                 {
+                    Vector3 fromPosition = GetCurrentSelectedPointPosition();
+
                     Select();
                     Vector3 point = EditorInteract.worldHit.point;
                     if (InputEx.GetKey(ControlsSettings.snap))
@@ -634,6 +654,15 @@ public class HandlesExtension : UIExtension, IExtension
 
                     Quaternion pivotRotation = _handles.GetPivotRotation();
                     _handles.ExternallyTransformPivot(point, pivotRotation, modifyRotation: false);
+
+                    Vector3 toPosition = GetCurrentSelectedPointPosition();
+                    if ((toPosition - fromPosition).sqrMagnitude > 0.0001f)
+                    {
+                        _step++;
+                        Register(new ReunRoadTransform(_step, fromPosition, toPosition, EditorRoads.vertexIndex, EditorRoads.tangentIndex));
+                    }
+
+                    return false;
                 }
 
                 if (InputEx.GetKeyDown(ControlsSettings.focus))
@@ -738,6 +767,36 @@ public class HandlesExtension : UIExtension, IExtension
         _otherOffsets.Clear();
 
         EditorRoads.deselect();
+    }
+
+    private bool TryDeleteWholeSelectedRoad()
+    {
+        if (!KeybindManager.IsDown(KeybindIds.RoadsDeleteRoad) || EditorRoads.road == null)
+        {
+            return false;
+        }
+
+        _step++;
+        Register(new ReunRoadDelete(_step, EditorRoads.road));
+        LevelRoads.removeRoad(EditorRoads.road);
+        Clear();
+        return true;
+    }
+
+    private Vector3 GetCurrentSelectedPointPosition()
+    {
+        if (EditorRoads.road == null || EditorRoads.vertexIndex < 0 || EditorRoads.vertexIndex >= EditorRoads.road.joints.Count)
+        {
+            return Vector3.zero;
+        }
+
+        RoadJoint joint = EditorRoads.road.joints[EditorRoads.vertexIndex];
+        if (EditorRoads.tangentIndex > -1)
+        {
+            return joint.tangents[EditorRoads.tangentIndex];
+        }
+
+        return joint.vertex;
     }
     
     private void Register(IReun newReun)

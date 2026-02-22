@@ -30,6 +30,7 @@ public static class KeybindIds
 
     public const string RoadsDelete = "roads.delete";
     public const string RoadsDeleteAlt = "roads.delete_alt";
+    public const string RoadsDeleteRoad = "roads.delete_road";
     public const string RoadsAddToSelection = "roads.add_to_selection";
     public const string RoadsUndo = "roads.undo";
     public const string RoadsRedo = "roads.redo";

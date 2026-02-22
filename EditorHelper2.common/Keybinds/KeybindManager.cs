@@ -254,6 +254,8 @@ public static class KeybindManager
             new Keybind(KeyCode.Delete)));
         Register(new KeybindAction(KeybindIds.RoadsDeleteAlt, "Delete Road Selection (Alt)", "Alternate delete key", "Roads",
             new Keybind(KeyCode.Backspace)));
+        Register(new KeybindAction(KeybindIds.RoadsDeleteRoad, "Delete Whole Road", "Delete the entire selected road", "Roads",
+            new Keybind(KeyCode.LeftControl, KeyCode.Delete)));
         Register(new KeybindAction(KeybindIds.RoadsAddToSelection, "Add To Selection", "Add to selection while dragging", "Roads",
             new Keybind(KeyCode.LeftShift)));
         Register(new KeybindAction(KeybindIds.RoadsUndo, "Undo Road Edit", "Undo road changes", "Roads",
