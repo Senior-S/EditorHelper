@@ -5,7 +5,7 @@
         <LangVersion>preview</LangVersion>
         <Nullable>enable</Nullable>
         <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-        <Version>1.0.0.4</Version>
+        <Version>1.0.4.2</Version>
     </PropertyGroup>
 
     <!-- Publicizer -->
@@ -25,7 +25,7 @@
 
     <ItemGroup>
       <Reference Include="Assembly-CSharp">
-        <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Unturned\Unturned_Data\Managed\Assembly-CSharp.dll</HintPath>
+        <HintPath>..\..\..\..\SteamLibrary\steamapps\common\Unturned\Unturned_Data\Managed\Assembly-CSharp.dll</HintPath>
       </Reference>
       <Reference Include="com.rlabrecque.steamworks.net">
         <HintPath>..\Libs\com.rlabrecque.steamworks.net.dll</HintPath>

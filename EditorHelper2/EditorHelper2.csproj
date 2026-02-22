@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>preview</LangVersion>
         <Nullable>enable</Nullable>
-        <Version>1.0.0.4</Version>
+        <Version>1.0.4.2</Version>
         <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     </PropertyGroup>
 
@@ -20,10 +20,10 @@
 
     <ItemGroup>
       <Reference Include="Assembly-CSharp">
-        <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Unturned\Unturned_Data\Managed\Assembly-CSharp.dll</HintPath>
+        <HintPath>..\..\..\..\SteamLibrary\steamapps\common\Unturned\Unturned_Data\Managed\Assembly-CSharp.dll</HintPath>
       </Reference>
       <Reference Include="com.rlabrecque.steamworks.net">
-        <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Unturned\Unturned_Data\Managed\com.rlabrecque.steamworks.net.dll</HintPath>
+        <HintPath>..\..\..\..\SteamLibrary\steamapps\common\Unturned\Unturned_Data\Managed\com.rlabrecque.steamworks.net.dll</HintPath>
       </Reference>
       <Reference Include="HighlightingSystem">
         <HintPath>..\Libs\HighlightingSystem.dll</HintPath>
@@ -38,7 +38,7 @@
         <HintPath>..\Libs\SDG.NetTransport.dll</HintPath>
       </Reference>
       <Reference Include="UnityEx">
-        <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Unturned\Unturned_Data\Managed\UnityEx.dll</HintPath>
+        <HintPath>..\..\..\..\SteamLibrary\steamapps\common\Unturned\Unturned_Data\Managed\UnityEx.dll</HintPath>
       </Reference>
       <Reference Include="UnturnedDat">
         <HintPath>..\Libs\UnturnedDat.dll</HintPath>

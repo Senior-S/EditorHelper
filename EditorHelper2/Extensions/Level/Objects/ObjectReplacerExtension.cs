@@ -24,6 +24,8 @@ public class ObjectReplacerExtension : UIExtension, IExtension
     private const float MaxRadius = 1500f;
     private const float DefaultRadius = 5f;
     private const int WarningThreshold = 500;
+    private const int MaxRenderedAssetRows = 250;
+    private const int NearbyPickRegionRadius = 2;
 
     private bool _menuActive;
 
@@ -269,9 +271,10 @@ public class ObjectReplacerExtension : UIExtension, IExtension
         float offsetY = 0f;
 
         UIBuilder itemBuilder = new(0f, 25f);
-
-        foreach (ObjectAsset asset in _filteredAssets)
+        int displayedCount = Math.Min(_filteredAssets.Count, MaxRenderedAssetRows);
+        for (int i = 0; i < displayedCount; i++)
         {
+            ObjectAsset asset = _filteredAssets[i];
             itemBuilder.ResetProperties()
                 .SetAnchorHorizontal(0f)
                 .SetOffsetVertical(offsetY)
@@ -286,6 +289,10 @@ public class ObjectReplacerExtension : UIExtension, IExtension
         }
 
         _assetScrollView.ContentSizeOffset = new Vector2(0f, offsetY);
+        if (_filteredAssets.Count > MaxRenderedAssetRows)
+        {
+            _statusLabel.Text = $"Showing first {MaxRenderedAssetRows} of {_filteredAssets.Count} assets. Use search to narrow down.";
+        }
     }
 
     private void UpdateReplaceButtonState()
@@ -385,19 +392,50 @@ public class ObjectReplacerExtension : UIExtension, IExtension
         float closestDistanceSquared = float.MaxValue;
         ObjectAsset? closestAsset = null;
 
-        for (byte x = 0; x < Regions.WORLD_SIZE; x++)
+        bool searchedNearby = false;
+        if (Regions.tryGetCoordinate(cameraPosition, out byte cameraX, out byte cameraY))
         {
-            for (byte y = 0; y < Regions.WORLD_SIZE; y++)
-            {
-                foreach (LevelObject levelObject in LevelObjects.objects[x, y])
-                {
-                    if (levelObject.asset == null) continue;
+            searchedNearby = true;
+            int minX = Math.Max(0, cameraX - NearbyPickRegionRadius);
+            int maxX = Math.Min(Regions.WORLD_SIZE - 1, cameraX + NearbyPickRegionRadius);
+            int minY = Math.Max(0, cameraY - NearbyPickRegionRadius);
+            int maxY = Math.Min(Regions.WORLD_SIZE - 1, cameraY + NearbyPickRegionRadius);
 
-                    float distSq = (levelObject.transform.position - cameraPosition).sqrMagnitude;
-                    if (distSq < closestDistanceSquared)
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    foreach (LevelObject levelObject in LevelObjects.objects[x, y])
                     {
-                        closestDistanceSquared = distSq;
-                        closestAsset = levelObject.asset;
+                        if (levelObject.asset == null) continue;
+
+                        float distSq = (levelObject.transform.position - cameraPosition).sqrMagnitude;
+                        if (distSq < closestDistanceSquared)
+                        {
+                            closestDistanceSquared = distSq;
+                            closestAsset = levelObject.asset;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!searchedNearby || closestAsset == null)
+        {
+            for (byte x = 0; x < Regions.WORLD_SIZE; x++)
+            {
+                for (byte y = 0; y < Regions.WORLD_SIZE; y++)
+                {
+                    foreach (LevelObject levelObject in LevelObjects.objects[x, y])
+                    {
+                        if (levelObject.asset == null) continue;
+
+                        float distSq = (levelObject.transform.position - cameraPosition).sqrMagnitude;
+                        if (distSq < closestDistanceSquared)
+                        {
+                            closestDistanceSquared = distSq;
+                            closestAsset = levelObject.asset;
+                        }
                     }
                 }
             }
@@ -438,34 +476,50 @@ public class ObjectReplacerExtension : UIExtension, IExtension
 
     private List<LevelObject> GetMatchingObjects()
     {
-        List<LevelObject> allObjects = [];
-
-        for (byte x = 0; x < Regions.WORLD_SIZE; x++)
-        {
-            for (byte y = 0; y < Regions.WORLD_SIZE; y++)
-            {
-                allObjects.AddRange(LevelObjects.objects[x, y]);
-            }
-        }
-
+        List<LevelObject> matchingObjects = [];
         Vector3 cameraPosition = MainCamera.instance?.transform.position ?? Vector3.zero;
         bool wholeMap = _wholeMapToggle.Value;
         float radiusSquared = _currentRadius * _currentRadius;
+        Guid sourceGuid = _sourceAsset!.GUID;
 
-        return allObjects.Where(obj =>
+        int minX = 0;
+        int maxX = Regions.WORLD_SIZE - 1;
+        int minY = 0;
+        int maxY = Regions.WORLD_SIZE - 1;
+
+        if (!wholeMap)
         {
-            if (obj.asset == null || obj.asset.GUID != _sourceAsset!.GUID)
-                return false;
+            Regions.GetCoordinateBoundsVector2Int(cameraPosition, _currentRadius, out Vector2Int minCoord, out Vector2Int maxCoord);
+            minX = Math.Max(0, minCoord.x);
+            maxX = Math.Min(Regions.WORLD_SIZE - 1, maxCoord.x);
+            minY = Math.Max(0, minCoord.y);
+            maxY = Math.Min(Regions.WORLD_SIZE - 1, maxCoord.y);
+        }
 
-            if (!wholeMap)
+        for (int x = minX; x <= maxX; x++)
+        {
+            for (int y = minY; y <= maxY; y++)
             {
-                float distanceSquared = (obj.transform.position - cameraPosition).sqrMagnitude;
-                if (distanceSquared > radiusSquared)
-                    return false;
-            }
+                List<LevelObject> regionObjects = LevelObjects.objects[x, y];
+                for (int i = 0; i < regionObjects.Count; i++)
+                {
+                    LevelObject obj = regionObjects[i];
+                    if (obj.asset == null || obj.asset.GUID != sourceGuid)
+                        continue;
 
-            return true;
-        }).ToList();
+                    if (!wholeMap)
+                    {
+                        float distanceSquared = (obj.transform.position - cameraPosition).sqrMagnitude;
+                        if (distanceSquared > radiusSquared)
+                            continue;
+                    }
+
+                    matchingObjects.Add(obj);
+                }
+            }
+        }
+
+        return matchingObjects;
     }
 
     private void ExecuteReplacement(List<LevelObject> objectsToReplace)
@@ -481,22 +535,41 @@ public class ObjectReplacerExtension : UIExtension, IExtension
             Vector3 scale = levelObject.transform.localScale;
             AssetReference<MaterialPaletteAsset> customMaterial = levelObject.customMaterialOverride;
             int materialIndex = levelObject.materialIndexOverride;
+            bool hasMaterialOverride = materialIndex != -1 || customMaterial.GUID != Guid.Empty;
             
             LevelObjects.registerRemoveObject(levelObject.transform);
             Transform newTransform = LevelObjects.registerAddObject(position, rotation, scale, _targetAsset, null);
             
-            if (newTransform != null && Regions.tryGetCoordinate(newTransform.position, out byte newX, out byte newY))
+            if (!hasMaterialOverride || newTransform == null || !Regions.tryGetCoordinate(newTransform.position, out byte newX, out byte newY))
             {
-                for (int i = 0; i < LevelObjects.objects[newX, newY].Count; i++)
+                replacedCount++;
+                continue;
+            }
+
+            List<LevelObject> regionObjects = LevelObjects.objects[newX, newY];
+            LevelObject? addedObject = null;
+            int lastIndex = regionObjects.Count - 1;
+
+            if (lastIndex >= 0 && regionObjects[lastIndex].transform == newTransform)
+            {
+                addedObject = regionObjects[lastIndex];
+            }
+            else
+            {
+                for (int i = 0; i < regionObjects.Count; i++)
                 {
-                    if (LevelObjects.objects[newX, newY][i].transform == newTransform)
+                    if (regionObjects[i].transform == newTransform)
                     {
-                        LevelObject obj = LevelObjects.objects[newX, newY][i];
-                        obj.customMaterialOverride = customMaterial;
-                        obj.materialIndexOverride = materialIndex;
+                        addedObject = regionObjects[i];
                         break;
                     }
                 }
+            }
+
+            if (addedObject != null)
+            {
+                addedObject.customMaterialOverride = customMaterial;
+                addedObject.materialIndexOverride = materialIndex;
             }
 
             replacedCount++;
