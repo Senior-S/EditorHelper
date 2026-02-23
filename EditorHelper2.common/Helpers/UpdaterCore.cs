@@ -9,7 +9,7 @@ namespace EditorHelper2.common.Helpers;
 // https://github.com/ShimmyMySherbet/ShimmysAdminTools/blob/master/ShimmysAdminTools/Components/UpdaterCore.cs
 public static class UpdaterCore
 {
-    private const string GlobalConfigURL = "https://gist.sshost.club/seniors/b855c981b37940c69fc6e3c8ea63f032/raw/HEAD/gistfile1.txt";
+    private const string GlobalConfigURL = "https://gist.sshost.club/seniors/b855c981b37940c69fc6e3c8ea63f032/raw/HEAD/gistfile1.ini";
     private static IniFile _globalConfig;
     private static readonly Version CurrentVersion = typeof(UpdaterCore).Assembly.GetName().Version;
     private static bool _hasConfig;

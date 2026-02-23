@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>preview</LangVersion>
         <Nullable>enable</Nullable>
-        <Version>1.0.4.2</Version>
+        <Version>1.0.4.3</Version>
         <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     </PropertyGroup>
 
