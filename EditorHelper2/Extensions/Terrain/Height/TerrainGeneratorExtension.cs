@@ -12,7 +12,7 @@ using UnityEngine;
 namespace EditorHelper2.Extensions.Terrain.Height;
 
 [UIExtension(typeof(EditorTerrainHeightUI))]
-[EHExtension("Terrain Generator Extension", "Codex")]
+[EHExtension("Terrain Generator Extension", "Senior S")]
 public class TerrainGeneratorExtension : UIExtension, IExtension
 {
     private enum EGeneratorAlgorithm

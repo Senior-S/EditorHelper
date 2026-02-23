@@ -13,7 +13,7 @@ using UnityEngine;
 namespace EditorHelper2.Extensions.Terrain.Foliage;
 
 [UIExtension(typeof(EditorTerrainDetailsUI))]
-[EHExtension("Foliage Icons Extension", "Gamingtoday093")]
+[EHExtension("Foliage Icons Extension", "Senior S & Gamingtoday093")]
 public class FoliageIconsExtension : UIExtension, IExtension
 {
     private readonly EditorTerrainDetailsUI _currentUIInstance;
