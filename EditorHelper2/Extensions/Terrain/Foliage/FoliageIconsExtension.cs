@@ -189,6 +189,7 @@ public class FoliageIconsExtension : UIExtension, IExtension
         }
 
         _previewIconContainer.Text = "No Preview";
+        _previewIconImage.UpdateTexture(null);
     }
 
     private void OnFoliageIconReady(int handle, Texture2D texture)

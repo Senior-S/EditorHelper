@@ -15,9 +15,9 @@ public class IconStore
 
     private readonly Camera _camera;
 
-    private class ObjectIconInfo(ObjectAsset objectAsset, int handle, ItemIconReady callback)
+    private class AssetIconInfo(Asset asset, int handle, ItemIconReady callback)
     {
-        public readonly ObjectAsset ObjectAsset = objectAsset;
+        public readonly Asset Asset = asset;
 
         public readonly int Handle = handle;
         public ItemIconReady Callback = callback;
@@ -27,32 +27,14 @@ public class IconStore
             Callback = (ItemIconReady)Delegate.Combine(Callback, callback);
         }
     }
-    private class ModelIconInfo(Guid assetGuid, string friendlyName, int handle, ItemIconReady callback, Func<Transform?> createModel, bool repairAlphaFromColor, bool isResource)
-    {
-        public readonly Guid AssetGuid = assetGuid;
-        public readonly string FriendlyName = friendlyName;
-        public readonly int Handle = handle;
-        public readonly Func<Transform?> CreateModel = createModel;
-        public readonly bool RepairAlphaFromColor = repairAlphaFromColor;
-        public readonly bool IsResource = isResource;
-        public ItemIconReady Callback = callback;
 
-        public void AddCallback(ItemIconReady callback)
-        {
-            Callback = (ItemIconReady)Delegate.Combine(Callback, callback);
-        }
-    }
-
-    private Stack<ObjectIconInfo> QueuedObjectIcons = []; // Stack to make newer requests higher priority
-    private Stack<ModelIconInfo> QueuedModelIcons = []; // Stack to make newer requests higher priority
+    private Stack<AssetIconInfo> QueuedAssetIcons = []; // Stack to make newer requests higher priority
     private Dictionary<int, Guid> QueuedItemIcons = [];
     private Dictionary<Guid, Texture2D> CachedIcons = [];
 
-    private int ObjectIconHandle = 1000;
+    private static int AssetIconHandle = 1000;
 
-    private ObjectIconInfo? PendingIconInfo;
-    private Transform? PendingObject;
-    private ModelIconInfo? PendingModelInfo;
+    private AssetIconInfo? PendingIconInfo;
     private Transform? PendingModel;
 
     public IconStore(int width, int height)
@@ -73,7 +55,7 @@ public class IconStore
 
         GameObject cameraObject = new("IconStore:Camera");
         _camera = cameraObject.AddComponent<Camera>();
-        _camera.cullingMask = RayMasks.RESOURCE | RayMasks.SMALL | RayMasks.MEDIUM | RayMasks.LARGE | RayMasks.ENEMY;
+        _camera.cullingMask = RayMasks.WATER | RayMasks.RESOURCE | RayMasks.SMALL | RayMasks.MEDIUM | RayMasks.LARGE | RayMasks.ENEMY;
         _camera.clearFlags = CameraClearFlags.Nothing;
         _camera.orthographic = true;
         _camera.enabled = false; // Disable Rendering and use Camera.Render() instead
@@ -92,150 +74,155 @@ public class IconStore
 
         if (handle != -1)
         {
-            ObjectIconHandle++;
+            AssetIconHandle++;
             QueuedItemIcons.Add(handle, itemAsset.GUID);
         }
 
         return handle;
+
+        void CacheItemIcon(int handle, Texture2D icon)
+        {
+            if (!QueuedItemIcons.TryGetValue(handle, out Guid itemGuid)) return;
+            if (!CachedIcons.TryAdd(itemGuid, icon)) return;
+
+            QueuedItemIcons.Remove(handle);
+        }
     }
 
-    private void CacheItemIcon(int handle, Texture2D icon)
-    {
-        if (!QueuedItemIcons.TryGetValue(handle, out Guid itemGuid)) return;
-        if (!CachedIcons.TryAdd(itemGuid, icon)) return;
+    public int RequestIcon(ObjectAsset objectAsset, ItemIconReady callback) => RequestIconInternal(objectAsset, callback);
+    public int RequestIcon(ResourceAsset resourceAsset, ItemIconReady callback) => RequestIconInternal(resourceAsset, callback);
+    public int RequestIcon(FoliageInstancedMeshInfoAsset foliageAsset, ItemIconReady callback) => RequestIconInternal(foliageAsset, callback);
 
-        QueuedItemIcons.Remove(handle);
-    }
-
-    public int RequestIcon(ObjectAsset objectAsset, ItemIconReady callback)
+    private int RequestIconInternal(Asset asset, ItemIconReady callback)
     {
-        if (CachedIcons.TryGetValue(objectAsset.GUID, out Texture2D? icon))
+        if (CachedIcons.TryGetValue(asset.GUID, out Texture2D? icon))
         {
             callback(-1, icon);
             return -1;
         }
 
-        foreach (ObjectIconInfo queuedIcon in QueuedObjectIcons)
+        foreach (var queuedIcon in QueuedAssetIcons)
         {
-            if (queuedIcon.ObjectAsset == objectAsset)
-            {
-                queuedIcon.AddCallback(callback);
-                return queuedIcon.Handle;
-            }
+            if (queuedIcon.Asset.GUID != asset.GUID) continue;
+
+            queuedIcon.AddCallback(callback);
+            return queuedIcon.Handle;
         }
 
-        if (PendingIconInfo != null && PendingIconInfo.ObjectAsset == objectAsset)
+        if (PendingIconInfo != null && PendingIconInfo.Asset.GUID == asset.GUID)
         {
             PendingIconInfo.AddCallback(callback);
             return PendingIconInfo.Handle;
         }
 
-        ObjectIconInfo iconInfo = new(objectAsset, ObjectIconHandle, callback);
-        QueuedObjectIcons.Push(iconInfo);
+        AssetIconInfo iconInfo = new(asset, AssetIconHandle, callback);
+        QueuedAssetIcons.Push(iconInfo);
 
-        ObjectIconHandle++;
+        AssetIconHandle++;
         return iconInfo.Handle;
     }
 
-    public int RequestIcon(ResourceAsset resourceAsset, ItemIconReady callback)
+    private static bool CreateObjectAsset(ObjectAsset objectAsset, out Transform? model)
     {
-        if (CachedIcons.TryGetValue(resourceAsset.GUID, out Texture2D? icon))
+        model = null;
+        if (objectAsset.type == EObjectType.DECAL) return true;
+
+        GameObject original = objectAsset.GetOrLoadModel(SDG.Unturned.Level.isEditor);
+        if (original == null) return false;
+
+        model = GameObject.Instantiate(original).transform;
+        model.rotation = Quaternion.Euler(-90f, 0f, 0f);
+
+        if (objectAsset.rubble != EObjectRubble.NONE)
         {
-            callback(-1, icon);
-            return -1;
+            InteractableObjectRubble interactableRubble = model.gameObject.AddComponent<InteractableObjectRubble>();
+            interactableRubble.updateState(objectAsset, objectAsset.getState());
+            Transform? editor = model.Find("Editor");
+            if (editor != null)
+                editor.gameObject.SetActive(objectAsset.rubbleEditor == EObjectRubbleEditor.DEAD && SDG.Unturned.Level.isEditor);
         }
 
-        foreach (ModelIconInfo queuedIcon in QueuedModelIcons)
+        if (objectAsset.interactability == EObjectInteractability.NPC)
         {
-            if (queuedIcon.AssetGuid != resourceAsset.GUID) continue;
-            queuedIcon.AddCallback(callback);
-            return queuedIcon.Handle;
+            InteractableObjectNPC interactableNPC = model.gameObject.AddComponent<InteractableObjectNPC>();
+            interactableNPC.updateState(objectAsset, objectAsset.getState());
+            interactableNPC.enabled = false;
+            Animation animationNPC = model.Find("Root").GetComponent<Animation>();
+            animationNPC.Play("Idle_Stand");
+            animationNPC["Idle_Stand"].normalizedTime = 1f;
         }
 
-        if (PendingModelInfo != null && PendingModelInfo.AssetGuid == resourceAsset.GUID)
-        {
-            PendingModelInfo.AddCallback(callback);
-            return PendingModelInfo.Handle;
-        }
-
-        ModelIconInfo iconInfo = new(
-            resourceAsset.GUID,
-            resourceAsset.FriendlyName,
-            ObjectIconHandle,
-            callback,
-            () =>
-            {
-                GameObject? original = resourceAsset.modelGameObject;
-                if (original == null) return null;
-
-                Transform pendingResource = GameObject.Instantiate(original).transform;
-                pendingResource.position = new Vector3(256f, -256f, 0f);
-                pendingResource.rotation = Quaternion.identity;
-                return pendingResource;
-            },
-            repairAlphaFromColor: true,
-            isResource: true
-        );
-        QueuedModelIcons.Push(iconInfo);
-        ObjectIconHandle++;
-        return iconInfo.Handle;
+        return true;
     }
-    public int RequestIcon(FoliageInstancedMeshInfoAsset foliageAsset, ItemIconReady callback)
+
+    private static bool CreateResourceAsset(ResourceAsset resourceAsset, out Transform? model)
     {
-        if (CachedIcons.TryGetValue(foliageAsset.GUID, out Texture2D? icon))
-        {
-            callback(-1, icon);
-            return -1;
-        }
+        model = null;
 
-        foreach (ModelIconInfo queuedIcon in QueuedModelIcons)
-        {
-            if (queuedIcon.AssetGuid != foliageAsset.GUID) continue;
-            queuedIcon.AddCallback(callback);
-            return queuedIcon.Handle;
-        }
+        GameObject? original = resourceAsset.modelGameObject;
+        if (original == null) return false;
 
-        if (PendingModelInfo != null && PendingModelInfo.AssetGuid == foliageAsset.GUID)
-        {
-            PendingModelInfo.AddCallback(callback);
-            return PendingModelInfo.Handle;
-        }
+        model = GameObject.Instantiate(original).transform;
 
-        ModelIconInfo iconInfo = new(
-            foliageAsset.GUID,
-            foliageAsset.name,
-            ObjectIconHandle,
-            callback,
-            () =>
-            {
-                Mesh? mesh = SDG.Unturned.Assets.load(foliageAsset.mesh);
-                Material? material = SDG.Unturned.Assets.load(foliageAsset.material);
-                if (mesh == null || material == null) return null;
-
-                GameObject previewObject = new("IconStore:FoliageInstancedMesh")
-                {
-                    layer = LayerMasks.LARGE
-                };
-                MeshFilter meshFilter = previewObject.AddComponent<MeshFilter>();
-                meshFilter.sharedMesh = mesh;
-                MeshRenderer meshRenderer = previewObject.AddComponent<MeshRenderer>();
-                meshRenderer.sharedMaterial = material;
-
-                Transform previewTransform = previewObject.transform;
-                previewTransform.position = new Vector3(256f, -256f, 0f);
-                previewTransform.rotation = Quaternion.identity;
-                return previewTransform;
-            },
-            repairAlphaFromColor: true,
-            isResource: true
-        );
-        QueuedModelIcons.Push(iconInfo);
-        ObjectIconHandle++;
-        return iconInfo.Handle;
+        return true;
     }
-    private List<Renderer> _renderers = new(4);
 
-    private Bounds GetBounds(Transform transform)
+    private static bool CreateFoliageAsset(FoliageInstancedMeshInfoAsset foliageAsset, out Transform? model)
+    {
+        model = null;
+
+        Mesh? mesh = SDG.Unturned.Assets.load(foliageAsset.mesh);
+        Material? material = SDG.Unturned.Assets.load(foliageAsset.material);
+        if (mesh == null || material == null) return false;
+
+        GameObject previewObject = new("IconStore:FoliageInstancedMesh")
+        {
+            layer = LayerMasks.LARGE
+        };
+        MeshFilter meshFilter = previewObject.AddComponent<MeshFilter>();
+        meshFilter.sharedMesh = mesh;
+        MeshRenderer meshRenderer = previewObject.AddComponent<MeshRenderer>();
+        meshRenderer.sharedMaterial = material;
+
+        model = previewObject.transform;
+
+        return true;
+    }
+
+    private Texture2D CaptureObjectIcon(ObjectAsset objectAsset, Transform objectTransform)
+    {
+        if (objectAsset.type == EObjectType.DECAL)
+        {
+            GameObject original = objectAsset.GetOrLoadModel(SDG.Unturned.Level.isEditor);
+            Transform decalTransform = original.transform.Find("Decal");
+            Texture2D decalTexture = (Texture2D)decalTransform.GetComponent<Decal>().material.GetTexture("_MainTex");
+            if (decalTexture == null)
+            {
+                CommandWindow.LogWarning($"{objectAsset.AssetErrorPrefix}: Missing \"Decal\" Texture!");
+                return _transparentTexture;
+            }
+
+            int width = _width;
+            int height = _height;
+            if (decalTransform.localScale.x > decalTransform.localScale.y)
+                height = Mathf.CeilToInt(height * decalTransform.localScale.y / decalTransform.localScale.x);
+            else
+                width = Mathf.CeilToInt(width * decalTransform.localScale.x / decalTransform.localScale.y);
+
+            return ResizeTexture(decalTexture, width, height);
+        }
+
+        Vector3 direction;
+        if (objectAsset.FriendlyName.ToLower().Contains("billboard") || objectAsset.interactability == EObjectInteractability.NPC)
+            direction = (objectTransform.right - objectTransform.up).normalized;
+        else
+            direction = (objectTransform.right + objectTransform.up).normalized;
+
+        return CaptureModelIcon(objectTransform, direction, objectAsset.interactability == EObjectInteractability.NPC ? 1.4f : -1f);
+    }
+
+    private static readonly List<Renderer> _renderers = new(4);
+    private static Bounds GetBounds(Transform transform)
     {
         _renderers.Clear();
         transform.GetComponentsInChildren(_renderers);
@@ -294,25 +281,13 @@ public class IconStore
     }
 
     private Texture2D CaptureModelIcon(
-        string friendlyName,
-        Transform objectTransform,
-        bool isNpc,
-        bool disableLevelLighting = true,
-        bool repairAlphaFromColor = false,
-        bool isResource = false
+        Transform modelTransform,
+        Vector3 direction,
+        float overrideOrthographicSize = -1f,
+        bool repairAlphaFromColor = false
     )
     {
-        Bounds bounds = GetBounds(objectTransform);
-
-        Vector3 direction;
-        if (friendlyName.ToLower().Contains("billboard") || isNpc)
-        {
-            direction = (objectTransform.right - objectTransform.up).normalized;
-        }
-        else
-        {
-            direction = (objectTransform.right + objectTransform.up).normalized;
-        }
+        Bounds bounds = GetBounds(modelTransform);
 
         float distance = Mathf.Max(bounds.size.x, bounds.size.z);
         float height = (bounds.size.y * 0.85f);
@@ -328,7 +303,7 @@ public class IconStore
         }
         else
         {
-            _camera.transform.position =  (isResource ? objectTransform.position : bounds.center) + direction * distance + Vector3.up * height;
+            _camera.transform.position = bounds.center + direction * distance + Vector3.up * height;
         }
 
         _camera.transform.rotation = Quaternion.LookRotation((bounds.center - _camera.transform.position).normalized);
@@ -337,10 +312,10 @@ public class IconStore
         int antiAliasing = SDG.Unturned.GraphicsSettings.IsItemIconAntiAliasingEnabled ? 4 : 1;
         RenderTexture temporary =
             RenderTexture.GetTemporary(_width, _height, 16, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB, antiAliasing);
-        temporary.name = "Render_" + objectTransform.name;
+        temporary.name = "Render_" + modelTransform.name;
         RenderTexture.active = temporary;
         _camera.targetTexture = temporary;
-        _camera.orthographicSize = isNpc ? 1.4f : CalculateOrthographicSize(bounds);
+        _camera.orthographicSize = overrideOrthographicSize > 0f ? overrideOrthographicSize : CalculateOrthographicSize(bounds);
         _camera.farClipPlane = (bounds.center - _camera.transform.position).magnitude * 2f;
 
         bool fog = RenderSettings.fog;
@@ -356,13 +331,13 @@ public class IconStore
         RenderSettings.ambientEquatorColor = Color.white;
         RenderSettings.ambientGroundColor = Color.white;
         RenderSettings.customReflectionTexture = null;
-        if (disableLevelLighting && Provider.isConnected)
+        if (Provider.isConnected)
             LevelLighting.setEnabled(isEnabled: false);
 
         GL.Clear(clearDepth: true, clearColor: true, ColorEx.BlackZeroAlpha);
         _camera.Render();
 
-        if (disableLevelLighting && Provider.isConnected)
+        if (Provider.isConnected)
             LevelLighting.setEnabled(isEnabled: true);
         RenderSettings.fog = fog;
         RenderSettings.ambientMode = ambientMode;
@@ -371,18 +346,19 @@ public class IconStore
         RenderSettings.ambientGroundColor = ambientGroundColor;
         RenderSettings.customReflectionTexture = customReflection;
 
-        objectTransform.position = new Vector3(0f, -256f, 256f);
+        modelTransform.position = new Vector3(0f, -256f, 256f);
 
-        Texture2D objectIcon = new(_width, _height, TextureFormat.ARGB32, mipChain: false)
+        Texture2D modelIcon = new(_width, _height, TextureFormat.ARGB32, mipChain: false)
         {
-            name = "Icon_" + objectTransform.name,
+            name = "Icon_" + modelTransform.name,
             filterMode = FilterMode.Point
         };
-        objectIcon.ReadPixels(new Rect(0f, 0f, _width, _height), 0, 0);
+        modelIcon.ReadPixels(new Rect(0f, 0f, _width, _height), 0, 0);
 
+        // Seems to be required to Render some Grass Foliage, Should probably be replaced with a Shader but it's fine for Small Icons
         if (repairAlphaFromColor)
         {
-            Color32[] pixels = objectIcon.GetPixels32();
+            Color32[] pixels = modelIcon.GetPixels32();
             for (int i = 0; i < pixels.Length; i++)
             {
                 Color32 pixel = pixels[i];
@@ -399,21 +375,16 @@ public class IconStore
                 }
             }
 
-            objectIcon.SetPixels32(pixels);
+            modelIcon.SetPixels32(pixels);
         }
 
-        objectIcon.Apply(updateMipmaps: false, makeNoLongerReadable: true);
+        modelIcon.Apply(updateMipmaps: false, makeNoLongerReadable: true);
 
         RenderTexture.active = null;
         RenderTexture.ReleaseTemporary(temporary);
-        GameObject.Destroy(objectTransform.gameObject);
+        GameObject.Destroy(modelTransform.gameObject);
 
-        return objectIcon;
-    }
-
-    private Texture2D CaptureObjectIcon(ObjectAsset objectAsset, Transform objectTransform)
-    {
-        return CaptureModelIcon(objectAsset.FriendlyName, objectTransform, objectAsset.interactability == EObjectInteractability.NPC);
+        return modelIcon;
     }
 
     private Texture2D ResizeTexture(Texture2D texture, int newWidth, int newHeight)
@@ -441,109 +412,51 @@ public class IconStore
 
     public void CustomUpdate()
     {
-        if (PendingIconInfo == null)
+        if (PendingIconInfo != null)
         {
-            if (QueuedObjectIcons.Count > 0)
+            // Move into Position for rendering this frame instead of last frame to allow for multiple IconStores
+            if (PendingModel != null) PendingModel.position = new Vector3(256f, -256f, 0f);
+
+            Texture2D assetIcon = PendingIconInfo.Asset switch
             {
-                PendingIconInfo = QueuedObjectIcons.Pop();
-                if (PendingIconInfo.ObjectAsset.type == EObjectType.DECAL) return;
+                ObjectAsset objectAsset => CaptureObjectIcon(objectAsset, PendingModel!),
+                ResourceAsset => CaptureModelIcon(PendingModel!, (PendingModel!.right + PendingModel!.forward).normalized, repairAlphaFromColor: true),
+                FoliageInstancedMeshInfoAsset => CaptureModelIcon(PendingModel!, (PendingModel!.right + PendingModel!.forward).normalized, repairAlphaFromColor: true),
+                _ => _transparentTexture
+            };
 
-                GameObject original = PendingIconInfo.ObjectAsset.GetOrLoadModel(SDG.Unturned.Level.isEditor);
-                if (original == null)
-                {
-                    PendingIconInfo.Callback(PendingIconInfo.Handle, _transparentTexture);
-                    CachedIcons.TryAdd(PendingIconInfo.ObjectAsset.GUID, _transparentTexture);
-                    PendingIconInfo = null;
-                    return;
-                }
+            PendingIconInfo.Callback(PendingIconInfo.Handle, assetIcon);
+            CachedIcons.Add(PendingIconInfo.Asset.GUID, assetIcon);
 
-                PendingObject = GameObject.Instantiate(original).transform;
+            if (PendingModel != null) GameObject.Destroy(PendingModel.gameObject);
+            PendingModel = null;
+            PendingIconInfo = null;
+        }
 
-                if (PendingIconInfo.ObjectAsset.rubble != EObjectRubble.NONE)
-                {
-                    InteractableObjectRubble interactableRubble = PendingObject.gameObject.AddComponent<InteractableObjectRubble>();
-                    interactableRubble.updateState(PendingIconInfo.ObjectAsset, PendingIconInfo.ObjectAsset.getState());
-                    Transform? editor = PendingObject.Find("Editor");
-                    if (editor != null)
-                        editor.gameObject.SetActive(PendingIconInfo.ObjectAsset.rubbleEditor == EObjectRubbleEditor.DEAD && SDG.Unturned.Level.isEditor);
-                }
+        if (QueuedAssetIcons.Count > 0)
+        {
+            PendingIconInfo = QueuedAssetIcons.Pop();
 
-                if (PendingIconInfo.ObjectAsset.interactability == EObjectInteractability.NPC)
-                {
-                    InteractableObjectNPC interactableNPC = PendingObject.gameObject.AddComponent<InteractableObjectNPC>();
-                    interactableNPC.updateState(PendingIconInfo.ObjectAsset, PendingIconInfo.ObjectAsset.getState());
-                    interactableNPC.enabled = false;
-                    Animation animationNPC = PendingObject.Find("Root").GetComponent<Animation>();
-                    animationNPC.Play("Idle_Stand");
-                    animationNPC["Idle_Stand"].normalizedTime = 1f;
-                }
+            bool createdSuccessfully = PendingIconInfo.Asset switch
+            {
+                ObjectAsset objectAsset => CreateObjectAsset(objectAsset, out PendingModel),
+                ResourceAsset resourceAsset => CreateResourceAsset(resourceAsset, out PendingModel),
+                FoliageInstancedMeshInfoAsset foliageAsset => CreateFoliageAsset(foliageAsset, out PendingModel),
+                _ => false
+            };
 
-                PendingObject.position = new Vector3(256f, -256f, 0f);
-                PendingObject.rotation = Quaternion.Euler(-90f, 0f, 0f);
+            if (!createdSuccessfully)
+            {
+                PendingIconInfo.Callback(PendingIconInfo.Handle, _transparentTexture);
+                CachedIcons.Add(PendingIconInfo.Asset.GUID, _transparentTexture);
+
+                if (PendingModel != null) GameObject.Destroy(PendingModel.gameObject);
+                PendingModel = null;
+                PendingIconInfo = null;
                 return;
             }
+
+            if (PendingModel != null) PendingModel.position = new Vector3(512f, -256f, 0f);
         }
-        else
-        {
-            Texture2D objectIcon;
-            if (PendingIconInfo.ObjectAsset.type == EObjectType.DECAL)
-            {
-                GameObject original = PendingIconInfo.ObjectAsset.GetOrLoadModel(SDG.Unturned.Level.isEditor);
-                Transform decalTransform = original.transform.Find("Decal");
-                objectIcon = (Texture2D)decalTransform.GetComponent<Decal>().material.GetTexture("_MainTex");
-                if (objectIcon == null)
-                {
-                    objectIcon = _transparentTexture;
-                    CommandWindow.LogWarning($"{PendingIconInfo.ObjectAsset.AssetErrorPrefix}: Missing \"Decal\" Texture!");
-                }
-
-                int width = _width;
-                int height = _height;
-                if (decalTransform.localScale.x > decalTransform.localScale.y)
-                    height = Mathf.CeilToInt(height * decalTransform.localScale.y / decalTransform.localScale.x);
-                else
-                    width = Mathf.CeilToInt(width * decalTransform.localScale.x / decalTransform.localScale.y);
-
-                objectIcon = ResizeTexture(objectIcon, width, height);
-            }
-            else
-                objectIcon = CaptureObjectIcon(PendingIconInfo.ObjectAsset, PendingObject!);
-
-            PendingIconInfo.Callback(PendingIconInfo.Handle, objectIcon);
-            CachedIcons.TryAdd(PendingIconInfo.ObjectAsset.GUID, objectIcon);
-
-            if (PendingObject != null) GameObject.Destroy(PendingObject.gameObject);
-            PendingObject = null;
-            PendingIconInfo = null;
-            return;
-        }
-
-        if (PendingModelInfo == null)
-        {
-            if (QueuedModelIcons.Count == 0) return;
-
-            PendingModelInfo = QueuedModelIcons.Pop();
-            PendingModel = PendingModelInfo.CreateModel();
-            if (PendingModel != null) return;
-
-            PendingModelInfo.Callback(PendingModelInfo.Handle, _transparentTexture);
-            CachedIcons.TryAdd(PendingModelInfo.AssetGuid, _transparentTexture);
-            PendingModelInfo = null;
-            return;
-        }
-
-        Texture2D modelIcon = CaptureModelIcon(
-            PendingModelInfo.FriendlyName,
-            PendingModel!,
-            isNpc: false,
-            disableLevelLighting: false,
-            repairAlphaFromColor: PendingModelInfo.RepairAlphaFromColor,
-            isResource: PendingModelInfo.IsResource
-        );
-        PendingModelInfo.Callback(PendingModelInfo.Handle, modelIcon);
-        CachedIcons.TryAdd(PendingModelInfo.AssetGuid, modelIcon);
-
-        PendingModel = null;
-        PendingModelInfo = null;
     }
 }
