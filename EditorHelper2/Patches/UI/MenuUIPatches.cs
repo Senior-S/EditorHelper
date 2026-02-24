@@ -13,7 +13,7 @@ public class MenuUIPatches
     /// Event invoked after <see cref="MenuUI.escapeMenu"/> is called.
     /// Useful to properly react to escape key in UIs
     /// </summary>
-    public static event Action OnEscapePressed;
+    public static event Action? OnEscapePressed;
     
     [HarmonyPatch(nameof(MenuUI.escapeMenu))]
     [HarmonyPostfix]
@@ -28,6 +28,6 @@ public class MenuUIPatches
     [UsedImplicitly]
     static bool PrefixTickInput(MenuUI __instance)
     {
-        return !UpdaterCore.IsOutDated;
+        return UpdaterCore.GetVersionStatus() != EVersionStatus.Outdated;
     }
 }

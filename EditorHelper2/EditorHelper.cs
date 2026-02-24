@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using EditorHelper2.Assets;
 using EditorHelper2.Commands;
 using EditorHelper2.common.Helpers;
@@ -16,12 +17,14 @@ public class EditorHelper : IModuleNexus
 {
     private static Harmony _harmony { get; set; }
     private static DiscordRichPresence _richPresence;
+    private static TaskDispatcher? _taskDispatcher;
+    private CancellationTokenSource? _tokenSource;
 
     public static DiscordRichPresence GetRichPresence()
     {
         return _richPresence;
     }
-    
+
     public EditorHelper()
     {
         _harmony = new Harmony("com.seniors.editorhelper2");
@@ -30,9 +33,10 @@ public class EditorHelper : IModuleNexus
     public void initialize()
     {
         _harmony.PatchAll(this.GetType().Assembly);
+        _tokenSource = new CancellationTokenSource();
         
-        Task.Run(UpdaterCore.Init);
-        Level.onLevelExited += () => Task.Run(UpdaterCore.Init);
+        Task.Run(() => UpdaterCore.LoadConfigAsync(_tokenSource.Token));
+        Level.onLevelExited += () => Task.Run(() => UpdaterCore.LoadConfigAsync(_tokenSource.Token));
         CommandWindow.LogFormat("Editor Helper 2 v{0}", GetType().Assembly.GetName().Version);
         
         RegisterCustomAssets();
@@ -43,6 +47,7 @@ public class EditorHelper : IModuleNexus
         CommandWindow.LogFormat("[EditorHelper2] Loaded {0} extensions.", loadedExtensions);
         
         InitDiscordRichPresence();
+        InitTaskDispatcher();
     }
     
     private void InitDiscordRichPresence()
@@ -54,6 +59,13 @@ public class EditorHelper : IModuleNexus
         {
             _richPresence.UpdateAnonymous(true);
         }
+    }
+
+    private void InitTaskDispatcher()
+    {
+        GameObject taskDispatcherObject = new("EditorHelper:TaskDispatcher");
+        Object.DontDestroyOnLoad(taskDispatcherObject);
+        _taskDispatcher = taskDispatcherObject.AddComponent<TaskDispatcher>();
     }
 
     private void RegisterCustomAssets()
@@ -78,6 +90,8 @@ public class EditorHelper : IModuleNexus
     public void shutdown()
     {
         _harmony.UnpatchAll(_harmony.Id);
+        _tokenSource?.Cancel();
         Object.Destroy(_richPresence);
+        Object.Destroy(_taskDispatcher);
     }
 }
