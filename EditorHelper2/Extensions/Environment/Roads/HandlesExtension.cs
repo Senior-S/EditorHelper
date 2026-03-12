@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.common.API.Attributes;
@@ -10,12 +9,13 @@ using EditorHelper2.UI.Builders;
 using SDG.Framework.Rendering;
 using SDG.Framework.Utilities;
 using SDG.Unturned;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace EditorHelper2.Extensions.Environment.Roads;
 
 [UIExtension(typeof(EditorEnvironmentRoadsUI))]
-[EHExtension("Road Handles & Selection", "Senior S & JienSultan")]
+[EHExtension("Road Handles & Selection", "Senior S & JienSultan & Gamingtoday093")]
 public class HandlesExtension : UIExtension, IExtension
 {
     [ExistingMember("container")]
@@ -69,6 +69,7 @@ public class HandlesExtension : UIExtension, IExtension
     private readonly ISleekToggle _depthToggleButton;
     private readonly ISleekFloat32Field _snapTransformField;
     private readonly ISleekToggle _handlePrioritizeToggleButton;
+    private readonly ISleekButton _reverseButton;
 
     public bool GetHandlePrioritizeValue()
     {
@@ -95,14 +96,22 @@ public class HandlesExtension : UIExtension, IExtension
         _step = 0;
         _frame = 0;
         
-        UIBuilder builder = new(40f, 40f);
-        
-        builder.SetAnchorVertical(1f)
+        UIBuilder builder = new(200f, 30f);
+
+        builder.SetSpacing(40f)
+            .SetAnchorVertical(1f)
             .SetOffsetVertical(-320f)
+            .SetText("Reverse Tangents");
+
+        _reverseButton = builder.BuildButton("Reverse the order of road tangents");
+        _reverseButton.OnClicked += OnReverseRoad; 
+
+        builder.SetSizeHorizontal(40f)
+            .SetSizeVertical(40f)
             .SetText("Radius includes depth");
         _depthToggleButton = builder.BuildToggle("Should the display radius of the road include the depth?");
 
-        builder.SetSpacing(30f)
+        builder.SetSpacing(35f)
             .SetSizeHorizontal(200f)
             .SetSizeVertical(30f);
 
@@ -112,9 +121,14 @@ public class HandlesExtension : UIExtension, IExtension
         _coordinateButton = builder.BuildButtonState(
             new GUIContent(local.format("CoordinateButtonTextGlobal"), bundle.load<Texture>("Global")),
             new GUIContent(local.format("CoordinateButtonTextLocal"), bundle.load<Texture>("Local")));
+        _coordinateButton.onSwappedState = OnSwappedState;
+
+        builder.SetSpacing(40f);
 
         builder.SetText(local.format("SnapTransformLabelText"));
         _snapTransformField = builder.BuildFloatInput(ESleekSide.RIGHT);
+        _snapTransformField.Value = _snapTransform;
+        _snapTransformField.OnValueChanged += OnSnapTransformFieldValueChanged;
 
         builder.SetText("Prioritize handle")
             .SetSizeHorizontal(40f)
@@ -143,13 +157,8 @@ public class HandlesExtension : UIExtension, IExtension
         _container.AddChild(_depthToggleButton);
         _container.AddChild(_snapTransformField);
         _container.AddChild(_handlePrioritizeToggleButton);
-        _snapTransformField.Value = _snapTransform;
+        _container.AddChild(_reverseButton);
         
-        _handles.OnPreTransform += OnHandlePreTransform;
-        _handles.OnTranslatedAndRotated += OnHandleTranslatedAndRotated;
-        _handles.OnTransformed += OnHandleTransformed;
-        _coordinateButton.onSwappedState = OnSwappedState;
-        _snapTransformField.OnValueChanged += OnSnapTransformFieldValueChanged;
         Camera.onPostRender += OnPostRender;
         
         EditorRoadsPatches.OnRoadSelected += OnRoadSelected;
@@ -210,6 +219,17 @@ public class HandlesExtension : UIExtension, IExtension
         
         _roadSelection.FromPosition = _roadSelection.Transform.position;
         _roadSelection.RelativeToPivot = worldToPivot * _roadSelection.Transform.localToWorldMatrix;
+
+        if (EditorRoads.joint != null)
+        {
+            _roadSelection.FromTangents[0] = EditorRoads.joint.getTangent(0);
+            _roadSelection.FromTangents[1] = EditorRoads.joint.getTangent(1);
+        }
+        else
+        {
+            _roadSelection.FromTangents[0] = Vector3.zero;
+            _roadSelection.FromTangents[1] = Vector3.zero;
+        }
     }
     
     private void OnHandleTranslatedAndRotated(Vector3 worldPositionDelta, Quaternion worldRotationDelta, Vector3 pivotPosition, bool modifyRotation)
@@ -267,13 +287,13 @@ public class HandlesExtension : UIExtension, IExtension
             {
                 if (primaryJoint.getTangent(0) != Vector3.zero)
                 {
-                    Vector3 rotatedPosition = worldRotationDelta * _roadSelection.Tangents[0];
+                    Vector3 rotatedPosition = worldRotationDelta * _roadSelection.FromTangents[0];
                     EditorRoads.road.moveTangent(EditorRoads.vertexIndex, 0, rotatedPosition);
                 }
 
                 if (primaryJoint.getTangent(1) != Vector3.zero)
                 {
-                    Vector3 rotatedPosition = worldRotationDelta * _roadSelection.Tangents[1];
+                    Vector3 rotatedPosition = worldRotationDelta * _roadSelection.FromTangents[1];
                     EditorRoads.road.moveTangent(EditorRoads.vertexIndex, 1, rotatedPosition);
                 }
             }
@@ -336,8 +356,8 @@ public class HandlesExtension : UIExtension, IExtension
             }
             updatedPositions.Clear();
 
-            _roadSelection.Tangents[0] = EditorRoads.joint.getTangent(0);
-            _roadSelection.Tangents[1] = EditorRoads.joint.getTangent(1);
+            _roadSelection.FromTangents[0] = EditorRoads.joint.getTangent(0);
+            _roadSelection.FromTangents[1] = EditorRoads.joint.getTangent(1);
 
             if (!Mathf.Approximately(oldY, point.y))
             {
@@ -352,7 +372,32 @@ public class HandlesExtension : UIExtension, IExtension
 
         CalculateHandleOffsets();
     }
-    
+
+    private void OnReverseRoad(ISleekElement button)
+    {
+        if (EditorRoads.selection == null) return;
+        if (EditorRoads.road.joints.Count < 2) return;
+
+        EditorRoads.road.joints.Reverse();
+        for (int i = 0; i < EditorRoads.road.joints.Count; i++)
+        {
+            RoadJoint joint = EditorRoads.road.joints[i];
+            
+            for (int t = 0; t < joint.tangents.Length / 2; t++)
+            {
+                int otherTangent = joint.tangents.Length - 1 - t;
+
+                Vector3 tangent = joint.getTangent(t);
+                joint.tangents[t] = joint.getTangent(otherTangent);
+                joint.tangents[otherTangent] = tangent;
+            }
+        }
+
+        EditorRoads.road.updatePoints();
+        int newIndex = EditorRoads.road.joints.Count - 1 - EditorRoads.vertexIndex;
+        EditorRoads.select(EditorRoads.road.paths[newIndex].vertex);
+    }
+
     private void OnSwappedState(SleekButtonState button, int index)
     {
         _dragCoordinate = (EDragCoordinate)index;
@@ -375,7 +420,8 @@ public class HandlesExtension : UIExtension, IExtension
         _coordinateButton.IsVisible = buttonVisible;
         _snapTransformField.IsVisible = buttonVisible;
         _handlePrioritizeToggleButton.IsVisible = buttonVisible;
-        
+        _reverseButton.IsVisible = buttonVisible;
+
         // While dragging, update the selection rectangle and highlight nodes under it
         if (_isSelecting)
         {
@@ -652,14 +698,14 @@ public class HandlesExtension : UIExtension, IExtension
                         point += EditorInteract.worldHit.normal * _snapTransform;
                     }
 
-                    Quaternion pivotRotation = _handles.GetPivotRotation();
-                    _handles.ExternallyTransformPivot(point, pivotRotation, modifyRotation: false);
+                    _handles.ExternallyTransformPivot(point, _handles.GetPivotRotation(), modifyRotation: false);
+                    CalculateHandleOffsets();
 
                     Vector3 toPosition = GetCurrentSelectedPointPosition();
                     if ((toPosition - fromPosition).sqrMagnitude > 0.0001f)
                     {
                         _step++;
-                        Register(new ReunRoadTransform(_step, fromPosition, toPosition, EditorRoads.vertexIndex, EditorRoads.tangentIndex));
+                        RegisterRoadTransform();
                     }
 
                     return false;
@@ -722,20 +768,46 @@ public class HandlesExtension : UIExtension, IExtension
     {
         _isUsingHandle = false;
         _handles.MouseUp();
+        
         _step++;
+        RegisterRoadTransform();
+    }
 
-        Vector3 toPosition = Vector3.zero;
+    private void RegisterRoadTransform()
+    {
+        if (_roadSelection == null) return;
+
         if (EditorRoads.tangentIndex > -1)
         {
-            toPosition = EditorRoads.road.joints[EditorRoads.vertexIndex].tangents[EditorRoads.tangentIndex];
+            Vector3 fromPosition = _roadSelection.FromPosition - EditorRoads.joint.vertex;
+            Vector3 toPosition = EditorRoads.joint.getTangent(EditorRoads.tangentIndex);
+
+            Register(new ReunRoadTransformTangent(_step, _roadSelection.Transform, fromPosition, toPosition));
         }
         else if (EditorRoads.vertexIndex > -1)
         {
-            toPosition = EditorRoads.road.joints[EditorRoads.vertexIndex].vertex;
+            Vector3[]? fromTangents = null;
+            Vector3[]? toTangents = null;
+            if (HasTangentsChanged(_roadSelection.FromTangents, EditorRoads.joint.tangents))
+            {
+                fromTangents = [.. _roadSelection.FromTangents];
+                toTangents = [.. EditorRoads.joint.tangents];
+            }
+
+            Register(new ReunRoadTransformVertex(_step, _roadSelection.Transform, _roadSelection.FromPosition, EditorRoads.joint.vertex, fromTangents, toTangents));
+        }
+    }
+
+    private bool HasTangentsChanged(Vector3[] fromTangents, Vector3[] toTangents)
+    {
+        for (int i = 0; i < fromTangents.Length; i++)
+        {
+            if (i >= toTangents.Length) return false;
+            if ((fromTangents[i] - toTangents[i]).sqrMagnitude <= 0.0001f) continue;
+            return true;
         }
 
-        if (_roadSelection == null) return;
-        Register(new ReunRoadTransform(_step, _roadSelection.FromPosition, toPosition, EditorRoads.vertexIndex, EditorRoads.tangentIndex));
+        return false;
     }
     
     private void StopDragging()
@@ -960,7 +1032,7 @@ public class HandlesExtension : UIExtension, IExtension
             EditorRoads.deselect();
     }
     
-    private void CalculateHandleOffsets()
+    public void CalculateHandleOffsets()
     {
         if (EditorRoads.selection == null)
         {
@@ -969,38 +1041,21 @@ public class HandlesExtension : UIExtension, IExtension
 
         if (_dragCoordinate == EDragCoordinate.GLOBAL)
         {
-            Vector3 zero = EditorRoads.selection.transform.position;
-            _handles.SetPreferredPivot(zero, Quaternion.identity);
+            _handles.SetPreferredPivot(EditorRoads.selection.position, Quaternion.identity);
         }
         else
         {
-            Road road = EditorRoads.road;
-
-            _handles.SetPreferredPivot(EditorRoads.selection.position, CalculateLocalPoint(road, EditorRoads.path));
+            _handles.SetPreferredPivot(EditorRoads.selection.position, CalculateLocalRotationFromSelection());
         }
     }
-    
-    private Quaternion CalculateLocalPoint(Road road, RoadPath actualPath)
+
+    private Quaternion CalculateLocalRotationFromSelection()
     {
-        if (road.paths.Count < 2) return actualPath.vertex.rotation;
+        if (EditorRoads.selection == null) return Quaternion.identity;
+        if (EditorRoads.road == null || EditorRoads.joint == null) return Quaternion.identity;
+        if (EditorRoads.road.joints.Count < 2) return Quaternion.identity;
 
-        int actualIndex = road.paths.IndexOf(actualPath);
-        int nextPathIndex = actualIndex;
-        if (nextPathIndex >= 0 && nextPathIndex < road.paths.Count - 1)
-        {
-            nextPathIndex += 1;
-        }
-        else
-        {
-            nextPathIndex -= 1;
-        }
-
-        Vector3 position = GetBezierPoint(road.paths[nextPathIndex].vertex.position,
-            road.paths[nextPathIndex].tangents[nextPathIndex > actualIndex ? 0 : 1].position,
-            actualPath.vertex.position, actualPath.tangents[nextPathIndex > actualIndex ? 1 : 0].position, 0.75f);
-        return nextPathIndex > actualIndex
-            ? Quaternion.LookRotation(actualPath.vertex.position - position)
-            : Quaternion.LookRotation(position - actualPath.vertex.position);
+        return Quaternion.LookRotation((EditorRoads.joint.getTangent(0) - EditorRoads.joint.getTangent(1)).normalized);
     }
     
     private Vector3 GetBezierPoint(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
@@ -1028,12 +1083,8 @@ public class HandlesExtension : UIExtension, IExtension
         _container.RemoveChild(_depthToggleButton);
         _container.RemoveChild(_snapTransformField);
         _container.RemoveChild(_handlePrioritizeToggleButton);
+        _container.RemoveChild(_reverseButton);
         
-        _handles.OnPreTransform -= OnHandlePreTransform;
-        _handles.OnTranslatedAndRotated -= OnHandleTranslatedAndRotated;
-        _handles.OnTransformed -= OnHandleTransformed;
-        _coordinateButton.onSwappedState = null;
-        _snapTransformField.OnValueChanged -= OnSnapTransformFieldValueChanged;
         Camera.onPostRender -= OnPostRender;
         
         EditorRoadsPatches.OnRoadSelected -= OnRoadSelected;

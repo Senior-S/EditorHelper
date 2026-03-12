@@ -106,6 +106,8 @@ public static class EditorRoadsUpdate
             }
         }
 
+        #region HandlesExtension
         handlesExtension?.PostCustomUpdate();
+        #endregion
     }
 }
