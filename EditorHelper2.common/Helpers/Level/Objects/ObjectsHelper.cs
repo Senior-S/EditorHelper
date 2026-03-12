@@ -69,4 +69,11 @@ public static class ObjectsHelper
 
         return filters.Count > 0 ? filters[0].mesh.bounds : new Bounds(objectTransform.position, Vector3.one);
     }
+
+    public static LevelObject? GetObject(Transform transform)
+    {
+        if (!Regions.tryGetCoordinate(transform.position, out byte x, out byte y)) return null;
+
+        return LevelObjects.objects[x, y].FirstOrDefault(o => o.transform == transform);
+    }
 }
