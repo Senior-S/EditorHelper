@@ -16,6 +16,7 @@ public static class EditorObjectsUpdate
     /// 8/12/25: Added code for <see cref="HighlightExtension"/> *postfix*
     /// 8/22/25: Added code for <see cref="IconsExtension"/> *postfix*
     /// 8/25/25: Added code for <see cref="ExtrasExtension"/> *postfix*
+    /// 3/12/26: Added code for <see cref="ObjectCopyExtraExtension"/>
     public static void Update(EditorObjects editorObjectsInstance)
     {
         if (!EditorObjects.isBuilding)
@@ -170,28 +171,46 @@ public static class EditorObjectsUpdate
 			}
 			if (KeybindManager.IsDown(KeybindIds.ObjectsCopy) && EditorObjects.selection.Count > 0)
 			{
-				EditorObjects.copies.Clear();
+                #region ObjectCopyExtraExtension
+                if (ExtensionManager.TryGetInstance(out ObjectCopyExtraExtension? objectCopyExtra))
+                {
+                    objectCopyExtra.ClearCopy();
+                }
+                #endregion
+                EditorObjects.copies.Clear();
 				for (int j = 0; j < EditorObjects.selection.Count; j++)
 				{
-					LevelObjects.getAssetEditor(EditorObjects.selection[j].transform, out ObjectAsset? objectAsset, out ItemAsset? itemAsset);
-					if (objectAsset != null || itemAsset != null)
-					{
-						EditorObjects.copies.Add(new EditorCopy(EditorObjects.selection[j].transform.position, EditorObjects.selection[j].transform.rotation, EditorObjects.selection[j].transform.localScale, objectAsset, itemAsset));
-					}
-				}
+					Transform copyTransform = EditorObjects.selection[j].transform;
+
+                    LevelObjects.getAssetEditor(copyTransform, out ObjectAsset? objectAsset, out ItemAsset? itemAsset);
+					if (objectAsset == null && itemAsset == null) continue;
+
+					var copyData = new EditorCopy(copyTransform.position, copyTransform.transform.rotation, copyTransform.localScale, objectAsset, itemAsset);
+                    #region ObjectCopyExtraExtension
+                    objectCopyExtra?.RegisterCopy(copyTransform, copyData);
+                    #endregion
+                    EditorObjects.copies.Add(copyData);
+                }
 			}
 			if (KeybindManager.IsDown(KeybindIds.ObjectsPaste) && EditorObjects.copies.Count > 0)
 			{
-				EditorObjects.clearSelection();
+                EditorObjects.clearSelection();
 				LevelObjects.step++;
 				for (int k = 0; k < EditorObjects.copies.Count; k++)
 				{
-					Transform transform = LevelObjects.registerAddObject(EditorObjects.copies[k].position, EditorObjects.copies[k].rotation, EditorObjects.copies[k].scale, EditorObjects.copies[k].objectAsset, EditorObjects.copies[k].itemAsset);
-					if (transform != null)
+					EditorCopy copyData = EditorObjects.copies[k];
+
+					Transform? pasteTransform = LevelObjects.registerAddObject(copyData.position, copyData.rotation, copyData.scale, copyData.objectAsset, copyData.itemAsset);
+					if (pasteTransform == null) continue;
+
+                    #region ObjectCopyExtraExtension
+                    if (ExtensionManager.TryGetInstance(out ObjectCopyExtraExtension? objectCopyExtra))
 					{
-						EditorObjects.addSelection(transform);
+                        objectCopyExtra.ApplyCopy(pasteTransform, copyData);
 					}
-				}
+                    #endregion
+                    EditorObjects.addSelection(pasteTransform);
+                }
 			}
 			if (!editorObjectsInstance.isUsingHandle)
 			{
