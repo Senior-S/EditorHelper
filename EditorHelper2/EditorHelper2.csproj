@@ -46,7 +46,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="DanielWillett.UnturnedUITools" Version="1.4.6" />
+      <PackageReference Include="DanielWillett.UnturnedUITools" Version="1.4.5" />
       <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

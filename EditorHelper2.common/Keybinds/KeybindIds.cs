@@ -6,15 +6,6 @@ public static class KeybindIds
     public const string EditorUndo = "editor.undo";
     public const string EditorRedo = "editor.redo";
 
-    public const string TabTerrain = "tab.terrain";
-    public const string TabEnvironment = "tab.environment";
-    public const string TabSpawns = "tab.spawns";
-    public const string TabLevel = "tab.level";
-    public const string TabIndex0 = "tab.index_0";
-    public const string TabIndex1 = "tab.index_1";
-    public const string TabIndex2 = "tab.index_2";
-    public const string TabIndex3 = "tab.index_3";
-
     public const string VisibilityRoads = "visibility.roads";
     public const string VisibilityNavigation = "visibility.navigation";
     public const string VisibilityNodes = "visibility.nodes";

@@ -7,7 +7,6 @@ using DanielWillett.UITools.API.Extensions.Members;
 using DanielWillett.UITools.Util;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
-using EditorHelper2.common.Extensions;
 using EditorHelper2.common.Keybinds;
 using EditorHelper2.UI.Builders;
 using SDG.Unturned;
@@ -23,6 +22,48 @@ public class KeybindsMenuExtension : UIExtension, IExtension
 
     [ExistingMember("container")]
     private readonly SleekFullscreenBox? _container;
+
+    [ExistingMember("container", OwningType = typeof(EditorDashboardUI))]
+    private readonly SleekFullscreenBox? _dashboardContainer;
+
+    [ExistingMember("container", OwningType = typeof(EditorTerrainUI))]
+    private readonly SleekFullscreenBox? _terrainContainer;
+
+    [ExistingMember("container", OwningType = typeof(EditorEnvironmentUI))]
+    private readonly SleekFullscreenBox? _environmentContainer;
+
+    [ExistingMember("container", OwningType = typeof(EditorSpawnsUI))]
+    private readonly SleekFullscreenBox? _spawnsContainer;
+
+    [ExistingMember("container", OwningType = typeof(EditorLevelUI))]
+    private readonly SleekFullscreenBox? _levelContainer;
+
+    [ExistingMember("container", OwningType = typeof(EditorLevelVisibilityUI))]
+    private readonly SleekFullscreenBox? _levelVisibilityContainer;
+
+    [ExistingMember("container", OwningType = typeof(EditorLevelPlayersUI))]
+    private readonly SleekFullscreenBox? _levelPlayersContainer;
+
+    [ExistingMember("container", OwningType = typeof(EditorEnvironmentLightingUI))]
+    private readonly SleekFullscreenBox? _environmentLightingContainer;
+
+    [ExistingMember("container", OwningType = typeof(EditorEnvironmentRoadsUI))]
+    private readonly SleekFullscreenBox? _environmentRoadsContainer;
+
+    [ExistingMember("container", OwningType = typeof(EditorEnvironmentNavigationUI))]
+    private readonly SleekFullscreenBox? _environmentNavigationContainer;
+
+    [ExistingMember("container", OwningType = typeof(EditorSpawnsAnimalsUI))]
+    private readonly SleekFullscreenBox? _spawnsAnimalsContainer;
+
+    [ExistingMember("container", OwningType = typeof(EditorSpawnsItemsUI))]
+    private readonly SleekFullscreenBox? _spawnsItemsContainer;
+
+    [ExistingMember("container", OwningType = typeof(EditorSpawnsZombiesUI))]
+    private readonly SleekFullscreenBox? _spawnsZombiesContainer;
+
+    [ExistingMember("container", OwningType = typeof(EditorSpawnsVehiclesUI))]
+    private readonly SleekFullscreenBox? _spawnsVehiclesContainer;
 
     private readonly ISleekButton _openButton;
     private readonly SleekFullscreenBox _root;
@@ -59,12 +100,8 @@ public class KeybindsMenuExtension : UIExtension, IExtension
 
         builder.ResetProperties()
             .SetScaleHorizontal(1f)
-            .SetScaleVertical(1f)
-            .SetSizeHorizontal(40f)
-            .SetSizeVertical(40f)
-            .SetOffsetHorizontal(-20f)
-            .SetOffsetVertical(-20f);
-        _screenDimmer = builder.BuildColoredBox(new SleekColor(ESleekTint.BACKGROUND, 0.5f));
+            .SetScaleVertical(1f);
+        _screenDimmer = builder.BuildColoredBox(new SleekColor(ESleekTint.BACKGROUND, 1f));
 
         builder.ResetProperties()
             .SetOffsetHorizontal(10f)
@@ -78,7 +115,7 @@ public class KeybindsMenuExtension : UIExtension, IExtension
         builder.ResetProperties()
             .SetScaleHorizontal(1f)
             .SetScaleVertical(1f);
-        _backgroundDimmer = builder.BuildColoredBox(new SleekColor(ESleekTint.BACKGROUND, 0.8f));
+        _backgroundDimmer = builder.BuildColoredBox(new SleekColor(ESleekTint.BACKGROUND, 1f));
 
         builder.ResetProperties()
             .SetSizeVertical(40f)
@@ -168,6 +205,7 @@ public class KeybindsMenuExtension : UIExtension, IExtension
         KeybindRebindManager.SetMenuOpen(true);
         RebuildList();
         HideOtherEditorUI();
+        _container!.IsVisible = false;
         _root.AnimateIntoView();
     }
 
@@ -178,15 +216,35 @@ public class KeybindsMenuExtension : UIExtension, IExtension
         KeybindRebindManager.SetMenuOpen(false);
         KeybindRebindManager.CancelRebind();
         _root.AnimateOutOfView(1f, 0f);
+        _container!.IsVisible = true;
         RestoreOtherEditorUI();
     }
 
     private void HideOtherEditorUI()
     {
         _hiddenElements.Clear();
+        HideElement(_dashboardContainer);
+        HideElement(_terrainContainer);
+        HideElement(_environmentContainer);
+        HideElement(_spawnsContainer);
+        HideElement(_levelContainer);
+        HideElement(_levelVisibilityContainer);
+        HideElement(_levelPlayersContainer);
+        HideElement(_environmentLightingContainer);
+        HideElement(_environmentRoadsContainer);
+        HideElement(_environmentNavigationContainer);
+        HideElement(_spawnsAnimalsContainer);
+        HideElement(_spawnsItemsContainer);
+        HideElement(_spawnsZombiesContainer);
+        HideElement(_spawnsVehiclesContainer);
 
-        for (int i = 0; i < EditorUI.window.GetChildCount(); i++)
-            HideElement(EditorUI.window.GetChildAtIndexEx(i));
+        HideUIAccessorElement("EditorTerrainHeightUI");
+        HideUIAccessorElement("EditorTerrainMaterialsUI");
+        HideUIAccessorElement("EditorTerrainDetailsUI");
+        HideUIAccessorElement("EditorTerrainTilesUI");
+        HideUIAccessorElement("EditorEnvironmentNodesUI");
+        HideUIAccessorElement("EditorLevelObjectsUI");
+        HideUIAccessorElement("EditorVolumesUI");
     }
 
     private void HideElement(ISleekElement? element)
@@ -196,6 +254,16 @@ public class KeybindsMenuExtension : UIExtension, IExtension
         if (_hiddenElements.ContainsKey(element)) return;
         _hiddenElements[element] = element.IsVisible;
         element.IsVisible = false;
+    }
+
+    private void HideUIAccessorElement(string propertyName)
+    {
+        PropertyInfo? property = typeof(UIAccessor).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Static);
+        if (property == null) return;
+        if (property.GetValue(null) is ISleekElement element)
+        {
+            HideElement(element);
+        }
     }
 
     private void RestoreOtherEditorUI()
@@ -217,7 +285,8 @@ public class KeybindsMenuExtension : UIExtension, IExtension
         const float rowHeight = 30f;
 
         IEnumerable<IGrouping<string, KeybindAction>> grouped = KeybindManager.Actions
-            .OrderBy(action => action.OrderId)
+            .OrderBy(action => action.Category)
+            .ThenBy(action => action.DisplayName)
             .GroupBy(action => action.Category);
 
         foreach (IGrouping<string, KeybindAction> group in grouped)
@@ -241,17 +310,10 @@ public class KeybindsMenuExtension : UIExtension, IExtension
     {
         UIBuilder builder = new(0f, 26f);
         builder.SetOffsetVertical(offsetY)
-            .SetScaleHorizontal(1f);
-        
-        ISleekBox header = builder.BuildBox();
-
-        builder.SetOffsetVertical(0f)
-            .SetOffsetHorizontal(4f)
+            .SetScaleHorizontal(1f)
             .SetText(category);
 
-        ISleekLabel label = builder.BuildLabel(TextAnchor.MiddleLeft);
-        header.AddChild(label);
-
+        ISleekBox header = builder.BuildBox(TextAnchor.MiddleLeft);
         _scrollView.AddChild(header);
     }
 
