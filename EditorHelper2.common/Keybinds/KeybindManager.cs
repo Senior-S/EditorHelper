@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Newtonsoft.Json;
 using SDG.Unturned;
 using UnityEngine;
@@ -13,6 +14,8 @@ public static class KeybindManager
     private static readonly Dictionary<string, KeybindAction> ActionsInternal = new(StringComparer.OrdinalIgnoreCase);
     private static readonly string KeybindsFile = Path.Combine(Globals.ExtensionsFolder, "keybinds.json");
     private static bool _initialized;
+
+    private static int _nextInstanceId = 0;
 
     public static event Action<string>? BindingChanged;
 
@@ -209,6 +212,23 @@ public static class KeybindManager
         Register(new KeybindAction(KeybindIds.EditorRedo, "Redo", "Redo last transaction", "Editor",
             new Keybind(KeyCode.LeftControl, KeyCode.LeftShift, KeyCode.Z)));
 
+        Register(new KeybindAction(KeybindIds.TabTerrain, "Terrain Tab", "Go to the terrain tab", "Editor Tabs",
+            new Keybind(KeyCode.LeftControl, KeyCode.Alpha1)));
+        Register(new KeybindAction(KeybindIds.TabEnvironment, "Environment Tab", "Go to the environment tab", "Editor Tabs",
+            new Keybind(KeyCode.LeftControl, KeyCode.Alpha2)));
+        Register(new KeybindAction(KeybindIds.TabSpawns, "Spawns Tab", "Go to the spawns tab", "Editor Tabs",
+            new Keybind(KeyCode.LeftControl, KeyCode.Alpha3)));
+        Register(new KeybindAction(KeybindIds.TabLevel, "Level Tab", "Go to the level tab", "Editor Tabs",
+            new Keybind(KeyCode.LeftControl, KeyCode.Alpha4)));
+        Register(new KeybindAction(KeybindIds.TabIndex0, "Subtab 1", "Go to the first subtab", "Editor Tabs",
+            new Keybind(KeyCode.Alpha1)));
+        Register(new KeybindAction(KeybindIds.TabIndex1, "Subtab 2", "Go to the second subtab", "Editor Tabs",
+            new Keybind(KeyCode.Alpha2)));
+        Register(new KeybindAction(KeybindIds.TabIndex2, "Subtab 3", "Go to the third subtab", "Editor Tabs",
+            new Keybind(KeyCode.Alpha3)));
+        Register(new KeybindAction(KeybindIds.TabIndex3, "Subtab 4", "Go to the fourth subtab", "Editor Tabs",
+            new Keybind(KeyCode.Alpha4)));
+
         Register(new KeybindAction(KeybindIds.VisibilityRoads, "Toggle Roads Visibility", "Show/hide roads", "Visibility",
             new Keybind(KeyCode.F1)));
         Register(new KeybindAction(KeybindIds.VisibilityNavigation, "Toggle Navigation Visibility", "Show/hide navigation", "Visibility",
@@ -283,8 +303,12 @@ public static class KeybindManager
             new Keybind(KeyCode.LeftControl, KeyCode.X)));
     }
 
+    private static int GetNextInstanceId() => ++_nextInstanceId;
+
     private static void Register(KeybindAction action)
     {
+        // Set the OrderId when Registering instead of in the KeybindActions Constructor as the Order of calling Register is easier to control
+        if (action.OrderId == 0) action.OrderId = GetNextInstanceId();
         ActionsInternal[action.Id] = action;
     }
 
