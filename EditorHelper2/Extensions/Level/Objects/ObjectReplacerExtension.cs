@@ -525,11 +525,26 @@ public class ObjectReplacerExtension : UIExtension, IExtension
     private void ExecuteReplacement(List<LevelObject> objectsToReplace)
     {
         if (_targetAsset == null || _sourceAsset == null) return;
+        if (objectsToReplace.Count == 0)
+        {
+            _statusLabel.Text = "No matching objects found";
+            return;
+        }
+
+        // Clear the editor selection before removing any objects so the level objects
+        // UI does not keep references to transforms that are about to be destroyed.
+        EditorObjects.clearSelection();
+        LevelObjects.step++;
 
         int replacedCount = 0;
 
         foreach (LevelObject levelObject in objectsToReplace)
         {
+            if (levelObject.transform == null)
+            {
+                continue;
+            }
+
             Vector3 position = levelObject.transform.position;
             Quaternion rotation = levelObject.transform.rotation;
             Vector3 scale = levelObject.transform.localScale;

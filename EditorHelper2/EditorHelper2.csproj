@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>preview</LangVersion>
         <Nullable>enable</Nullable>
-        <Version>1.0.4.3</Version>
+        <Version>1.0.4.4</Version>
         <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     </PropertyGroup>
 
@@ -46,6 +46,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="AssetsTools.NET" Version="3.0.4" />
       <PackageReference Include="DanielWillett.UnturnedUITools" Version="1.4.6" />
       <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
         <PrivateAssets>all</PrivateAssets>
