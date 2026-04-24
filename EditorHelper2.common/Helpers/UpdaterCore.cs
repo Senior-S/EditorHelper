@@ -44,6 +44,10 @@ public static class UpdaterCore
         return false;
     }
     public static event Action? OnConfigLoaded;
+    /// <summary>
+    /// Used by <see cref="OnConfigLoaded"/> to bypass <see cref="_requestLock"/> Wait and Release
+    /// </summary>
+    private static bool _onConfigLoaded = false;
 
     private static readonly Version CurrentVersion = typeof(UpdaterCore).Assembly.GetName().Version;
 
@@ -63,10 +67,15 @@ public static class UpdaterCore
                 }
             }
 
-            // This should be Awaited instead of Fire & Forget because otherwise _globalConfig and _loadedConfig could be invalid (null and false, when the event is dispatched on the Main thread)
+            // This should be Awaited instead of Fire & Forget because otherwise _globalConfig could be invalid (null, when the event is dispatched on the Main thread)
             await TaskDispatcher.QueueOnMainThreadAsync(() =>
             {
-                OnConfigLoaded?.Invoke();
+                _onConfigLoaded = true;
+                try
+                {
+                    OnConfigLoaded?.Invoke();
+                }
+                finally { _onConfigLoaded = false; }
             }, cancellationToken);
         }
         finally { _requestLock.Release(); }
@@ -94,7 +103,7 @@ public static class UpdaterCore
         title = null;
         subtitle = null;
 
-        if (!_requestLock.Wait(0)) return false;
+        if (!_onConfigLoaded && !_requestLock.Wait(0)) return false;
 
         try
         {
@@ -111,14 +120,14 @@ public static class UpdaterCore
 
             return false;
         }
-        finally { _requestLock.Release(); }
+        finally { if (!_onConfigLoaded) _requestLock.Release(); }
     }
 
     public static EGetLatestVersionResult TryGetLatestVersion(out Version latestVersion)
     {
         latestVersion = CurrentVersion;
 
-        if (!_requestLock.Wait(0)) return EGetLatestVersionResult.Loading;
+        if (!_onConfigLoaded && !_requestLock.Wait(0)) return EGetLatestVersionResult.Loading;
 
         try
         {
@@ -130,7 +139,7 @@ public static class UpdaterCore
 
             return EGetLatestVersionResult.Failed;
         }
-        finally { _requestLock.Release(); }
+        finally { if (!_onConfigLoaded) _requestLock.Release(); }
     }
 
     public static Version LatestVersion
