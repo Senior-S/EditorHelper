@@ -141,7 +141,7 @@ public class NewsExtension : UIExtension, IExtension
         MenuUI.container.AddChild(_updateRequiredBox);
         MenuDashboardUI.mainScrollView.AddChild(_updateBox);
 
-        if (UpdaterCore.ConfigLoaded) VersionStatusReady();
+        if (UpdaterCore.ConfigLoaded()) VersionStatusReady();
         UpdaterCore.OnConfigLoaded += VersionStatusReady; // Allow for Realtime Updating
     }
 
