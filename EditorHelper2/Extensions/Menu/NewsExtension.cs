@@ -81,7 +81,7 @@ public class NewsExtension : UIExtension, IExtension
         EnsureStatusAlert();
         UpdateStatusAlert(EVersionStatus.Loading);
 
-        if (UpdaterCore.ConfigLoaded) VersionStatusReady();
+        if (UpdaterCore.ConfigLoaded()) VersionStatusReady();
         UpdaterCore.OnConfigLoaded += VersionStatusReady; // Allow for Realtime Updating
         LiveConfig.OnRefreshed += OnLiveConfigRefreshed;
     }
