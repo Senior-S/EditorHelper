@@ -19,41 +19,20 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="Assembly-CSharp">
-        <HintPath>..\..\..\..\SteamLibrary\steamapps\common\Unturned\Unturned_Data\Managed\Assembly-CSharp.dll</HintPath>
-      </Reference>
-      <Reference Include="com.rlabrecque.steamworks.net">
-        <HintPath>..\..\..\..\SteamLibrary\steamapps\common\Unturned\Unturned_Data\Managed\com.rlabrecque.steamworks.net.dll</HintPath>
-      </Reference>
       <Reference Include="HighlightingSystem">
         <HintPath>..\Libs\HighlightingSystem.dll</HintPath>
-      </Reference>
-      <Reference Include="SDG.Glazier.Runtime">
-        <HintPath>..\Libs\SDG.Glazier.Runtime.dll</HintPath>
-      </Reference>
-      <Reference Include="SDG.NetPak.Runtime">
-        <HintPath>..\Libs\SDG.NetPak.Runtime.dll</HintPath>
-      </Reference>
-      <Reference Include="SDG.NetTransport">
-        <HintPath>..\Libs\SDG.NetTransport.dll</HintPath>
-      </Reference>
-      <Reference Include="UnityEx">
-        <HintPath>..\..\..\..\SteamLibrary\steamapps\common\Unturned\Unturned_Data\Managed\UnityEx.dll</HintPath>
-      </Reference>
-      <Reference Include="UnturnedDat">
-        <HintPath>..\Libs\UnturnedDat.dll</HintPath>
       </Reference>
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="AssetsTools.NET" Version="3.0.4" />
-      <PackageReference Include="DanielWillett.UnturnedUITools" Version="1.4.6" />
+      <PackageReference Include="DanielWillett.UnturnedUITools" Version="1.4.7" />
+      <PackageReference Include="EditorHelper.Unturned.Client" Version="3.26.3.3" />
       <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Lib.Harmony" Version="2.3.6" />
-      <PackageReference Include="RocketModFix.UnityEngine.Redist" Version="2022.3.62.3" />
     </ItemGroup>
 
     <ItemGroup>
