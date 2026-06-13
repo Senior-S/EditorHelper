@@ -38,6 +38,9 @@ public class MapConfigExtension : UIExtension, IExtension
     private static readonly FieldInfo? MenuSelectedLevelField = typeof(MenuWorkshopEditorUI)
         .GetField("selectedLevel", BindingFlags.Static | BindingFlags.NonPublic);
 
+    private static readonly FieldInfo? LevelInfoCachedLocalizationField = typeof(LevelInfo)
+        .GetField("cachedLocalization", BindingFlags.Instance | BindingFlags.NonPublic);
+
     private static readonly HashSet<string> IgnoredFields = new(StringComparer.Ordinal)
     {
         nameof(LevelInfoConfigData.Hash),
@@ -172,6 +175,7 @@ public class MapConfigExtension : UIExtension, IExtension
     private readonly List<ISleekElement> _sectionButtons = [];
     private readonly List<ISleekElement> _fieldRows = [];
     private readonly Dictionary<ISleekElement, bool> _hiddenElements = new();
+    private readonly Dictionary<int, string> _tipTexts = new();
 
     private LevelInfoConfigData _configData = new();
     private string _selectedSection = "General";
@@ -379,6 +383,7 @@ public class MapConfigExtension : UIExtension, IExtension
             SetStatus("Failed to load Config.json. Defaults are shown.");
         }
 
+        LoadLocalizedTips();
         _pathLabel.Text = ConfigPath;
         UpdateSaveButtonText();
     }
@@ -389,11 +394,12 @@ public class MapConfigExtension : UIExtension, IExtension
         {
             string path = ConfigPath;
             Directory.CreateDirectory(Path.GetDirectoryName(path) ?? CurrentMapPath);
-            File.WriteAllText(path, JsonConvert.SerializeObject(_configData, Formatting.Indented));
+            File.WriteAllText(path, JsonConvert.SerializeObject(CreateNonDefaultConfigJson(_configData), Formatting.Indented));
+            SaveLocalizedTips();
             ApplyToCurrentLevelInfo();
             _isDirty = false;
             UpdateSaveButtonText();
-            SetStatus("Saved Config.json.");
+            SetStatus("Saved Config.json and English.dat.");
         }
         catch (Exception ex)
         {
@@ -426,10 +432,23 @@ public class MapConfigExtension : UIExtension, IExtension
             PropertyInfo? property = typeof(LevelInfo)
                 .GetProperty(nameof(LevelInfo.configData), BindingFlags.Instance | BindingFlags.Public);
             property?.GetSetMethod(nonPublic: true)?.Invoke(levelInfo, [_configData]);
+            InvalidateLevelInfoLocalization(levelInfo);
         }
         catch (Exception ex)
         {
             UnturnedLog.exception(ex, "[EditorHelper2] Failed to apply map config to current level info:");
+        }
+    }
+
+    private static void InvalidateLevelInfoLocalization(LevelInfo levelInfo)
+    {
+        try
+        {
+            LevelInfoCachedLocalizationField?.SetValue(levelInfo, null);
+        }
+        catch (Exception ex)
+        {
+            UnturnedLog.exception(ex, "[EditorHelper2] Failed to invalidate map localization cache:");
         }
     }
 
@@ -455,15 +474,14 @@ public class MapConfigExtension : UIExtension, IExtension
         float offsetY = 0f;
         foreach (FieldInfo field in GetSectionFields(_selectedSection))
         {
-            AddFieldRow(field, offsetY);
-            offsetY += RowHeight;
+            offsetY += AddFieldRow(field, offsetY);
         }
 
         _scrollView.ContentSizeOffset = new Vector2(0f, offsetY);
         _isRebuilding = false;
     }
 
-    private void AddFieldRow(FieldInfo field, float offsetY)
+    private float AddFieldRow(FieldInfo field, float offsetY)
     {
         UIBuilder builder = new(0f, RowHeight);
         builder.SetOffsetHorizontal(8f)
@@ -482,16 +500,19 @@ public class MapConfigExtension : UIExtension, IExtension
         if (field.FieldType == typeof(bool))
         {
             AddToggleField(field, value is true, defaultValue, offsetY);
-            return;
+            return RowHeight;
         }
 
         if (field.FieldType.IsEnum)
         {
             AddEnumField(field, value, defaultValue, offsetY);
-            return;
+            return RowHeight;
         }
 
         AddTextField(field, value, defaultValue, offsetY);
+        return RowHeight + (field.Name == nameof(LevelInfoConfigData.Tips)
+            ? AddTipRows(offsetY + RowHeight)
+            : 0f);
     }
 
     private void AddToggleField(FieldInfo field, bool value, object? defaultValue, float offsetY)
@@ -582,12 +603,75 @@ public class MapConfigExtension : UIExtension, IExtension
             }
 
             fieldElement.BackgroundColor = SleekColor.BackgroundIfLight(Color.black);
+            bool shouldRebuildTips = field.Name == nameof(LevelInfoConfigData.Tips)
+                                     && parsed is int parsedTipCount
+                                     && parsedTipCount != _configData.Tips;
             field.SetValue(_configData, parsed);
             MarkDirty();
+            if (shouldRebuildTips)
+            {
+                Rebuild();
+                SetStatus("Unsaved changes. Tip inputs refreshed.");
+            }
         };
+        if (field.Name == nameof(LevelInfoConfigData.Tips))
+        {
+            fieldElement.TooltipText = WrapTooltipText(fieldElement.TooltipText + "\nTip_# inputs refresh after changing this value.");
+        }
 
         _scrollView.AddChild(fieldElement);
         _fieldRows.Add(fieldElement);
+    }
+
+    private float AddTipRows(float offsetY)
+    {
+        int count = Mathf.Max(0, _configData.Tips);
+        for (int i = 0; i < count; i++)
+        {
+            AddTipRow(i, offsetY + i * RowHeight);
+        }
+
+        return count * RowHeight;
+    }
+
+    private void AddTipRow(int index, float offsetY)
+    {
+        UIBuilder builder = new(0f, RowHeight);
+        builder.SetOffsetHorizontal(28f)
+            .SetOffsetVertical(offsetY)
+            .SetSizeHorizontal(-380f)
+            .SetScaleHorizontal(1f)
+            .SetText($"Tip_{index}");
+
+        ISleekLabel label = builder.BuildLabel(TextAnchor.MiddleLeft, ESleekFontSize.Small);
+        _scrollView.AddChild(label);
+        _fieldRows.Add(label);
+
+        builder.ResetProperties()
+            .SetAnchorHorizontal(1f)
+            .SetOffsetHorizontal(-340f)
+            .SetOffsetVertical(offsetY + 2f)
+            .SetSizeHorizontal(330f)
+            .SetSizeVertical(28f)
+            .SetText($"Loading tip #{index + 1}");
+
+        ISleekField field = builder.BuildStringField();
+        field.Text = _tipTexts.TryGetValue(index, out string text) ? text : string.Empty;
+        field.PlaceholderText = "Tip shown while loading the map";
+        field.TooltipText = WrapTooltipText($"Configures Tip_{index} in English.dat. Unturned randomly chooses a key from Tip_0 through Tip_{Mathf.Max(0, _configData.Tips - 1)}.");
+        field.OnTextChanged += (_, value) =>
+        {
+            if (_isRebuilding)
+            {
+                return;
+            }
+
+            _tipTexts[index] = value;
+            MarkDirty();
+        };
+
+        _scrollView.AddChild(field);
+        _fieldRows.Add(field);
     }
 
     private static int GetEnumStateIndex(Array enumValues, object? value)
@@ -1097,7 +1181,7 @@ public class MapConfigExtension : UIExtension, IExtension
     {
         return FieldMetadataByName.TryGetValue(field.Name, out FieldMetadata metadata)
             ? metadata.Hint
-            : "Latest-source field with no custom legend yet. It is still saved with Config.json.";
+            : "Latest-source field with no custom legend yet. It is saved to Config.json only when different from Unturned's default.";
     }
 
     private static string BuildSectionTooltip(string section)
@@ -1168,6 +1252,138 @@ public class MapConfigExtension : UIExtension, IExtension
         return JToken.FromObject(value).ToObject(value.GetType());
     }
 
+    private static JObject CreateNonDefaultConfigJson(LevelInfoConfigData configData)
+    {
+        JObject result = new();
+        LevelInfoConfigData defaults = new();
+
+        foreach (FieldInfo field in GetSerializableConfigFields())
+        {
+            object? value = field.GetValue(configData);
+            object? defaultValue = field.GetValue(defaults);
+            if (AreJsonValuesEqual(value, defaultValue))
+            {
+                continue;
+            }
+
+            result[field.Name] = value == null ? JValue.CreateNull() : JToken.FromObject(value);
+        }
+
+        return result;
+    }
+
+    private static IEnumerable<FieldInfo> GetSerializableConfigFields()
+    {
+        return typeof(LevelInfoConfigData)
+            .GetFields(BindingFlags.Instance | BindingFlags.Public)
+            .Where(field => !IgnoredFields.Contains(field.Name))
+            .Where(field => field.GetCustomAttribute<JsonIgnoreAttribute>() == null);
+    }
+
+    private static bool AreJsonValuesEqual(object? value, object? defaultValue)
+    {
+        if (value == null || defaultValue == null)
+        {
+            return value == null && defaultValue == null;
+        }
+
+        return JToken.DeepEquals(JToken.FromObject(value), JToken.FromObject(defaultValue));
+    }
+
+    private void LoadLocalizedTips()
+    {
+        _tipTexts.Clear();
+
+        foreach (KeyValuePair<int, string> pair in ReadLocalizedTips())
+        {
+            _tipTexts[pair.Key] = pair.Value;
+        }
+    }
+
+    private Dictionary<int, string> ReadLocalizedTips()
+    {
+        Dictionary<int, string> result = new();
+        string path = LocalizationPath;
+        if (!File.Exists(path))
+        {
+            return result;
+        }
+
+        foreach (string line in File.ReadAllLines(path))
+        {
+            if (!TryParseLocalizationLine(line, out string key, out string value)
+                || !TryParseTipKey(key, out int index))
+            {
+                continue;
+            }
+
+            result[index] = value;
+        }
+
+        return result;
+    }
+
+    private void SaveLocalizedTips()
+    {
+        string path = LocalizationPath;
+        bool fileExists = File.Exists(path);
+        List<string> lines = fileExists
+            ? File.ReadAllLines(path).Where(line => !IsTipLocalizationLine(line)).ToList()
+            : [];
+
+        int count = Mathf.Max(0, _configData.Tips);
+        if (!fileExists && count <= 0)
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(path) ?? CurrentMapPath);
+        for (int i = 0; i < count; i++)
+        {
+            _tipTexts.TryGetValue(i, out string text);
+            lines.Add($"Tip_{i} {text ?? string.Empty}");
+        }
+
+        File.WriteAllLines(path, lines);
+    }
+
+    private static bool IsTipLocalizationLine(string line)
+    {
+        return TryParseLocalizationLine(line, out string key, out _)
+               && TryParseTipKey(key, out _);
+    }
+
+    private static bool TryParseLocalizationLine(string line, out string key, out string value)
+    {
+        key = string.Empty;
+        value = string.Empty;
+
+        if (string.IsNullOrEmpty(line) || line.StartsWith("//", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        int separatorIndex = line.IndexOf(' ');
+        if (separatorIndex < 0)
+        {
+            key = line;
+            return true;
+        }
+
+        key = line[..separatorIndex];
+        value = line[(separatorIndex + 1)..];
+        return key.Length > 0;
+    }
+
+    private static bool TryParseTipKey(string key, out int index)
+    {
+        const string prefix = "Tip_";
+        index = 0;
+        return key.StartsWith(prefix, StringComparison.Ordinal)
+               && int.TryParse(key[prefix.Length..], NumberStyles.None, CultureInfo.InvariantCulture, out index)
+               && index >= 0;
+    }
+
     private void MarkDirty()
     {
         _isDirty = true;
@@ -1188,6 +1404,8 @@ public class MapConfigExtension : UIExtension, IExtension
     private string CurrentMapPath => _targetLevel?.path ?? SDG.Unturned.Level.info.path;
 
     private string ConfigPath => Path.Combine(CurrentMapPath, "Config.json");
+
+    private string LocalizationPath => Path.Combine(CurrentMapPath, "English.dat");
 
     private static LevelInfo? GetSelectedMenuLevel()
     {

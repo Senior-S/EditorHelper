@@ -19,6 +19,16 @@ public class EditorUIPatches
     [UsedImplicitly]
     private static void PrefixUpdate()
     {
+        if (CinematicModeExtension.IsOpen)
+        {
+            if (InputEx.ConsumeKeyDown(KeyCode.Escape))
+            {
+                CinematicModeExtension.CloseIfOpen();
+            }
+
+            return;
+        }
+
         if (!KeybindsMenuExtension.IsOpen) return;
         if (InputEx.ConsumeKeyDown(KeyCode.Escape))
         {
@@ -77,5 +87,49 @@ public class EditorUIPatches
     private static void PostfixUpdate()
     {
         KeybindRebindManager.HandleUpdate();
+    }
+}
+
+[HarmonyPatch(typeof(EditorTerrainUI), "open")]
+public class EditorTerrainUIPatches
+{
+    [HarmonyPostfix]
+    [UsedImplicitly]
+    private static void PostfixOpen()
+    {
+        CinematicModeExtension.CloseForEditorTabSwitch();
+    }
+}
+
+[HarmonyPatch(typeof(EditorEnvironmentUI), "open")]
+public class EditorEnvironmentUIPatches
+{
+    [HarmonyPostfix]
+    [UsedImplicitly]
+    private static void PostfixOpen()
+    {
+        CinematicModeExtension.CloseForEditorTabSwitch();
+    }
+}
+
+[HarmonyPatch(typeof(EditorSpawnsUI), "open")]
+public class EditorSpawnsUIPatches
+{
+    [HarmonyPostfix]
+    [UsedImplicitly]
+    private static void PostfixOpen()
+    {
+        CinematicModeExtension.CloseForEditorTabSwitch();
+    }
+}
+
+[HarmonyPatch(typeof(EditorLevelUI), "open")]
+public class EditorLevelUIPatches
+{
+    [HarmonyPostfix]
+    [UsedImplicitly]
+    private static void PostfixOpen()
+    {
+        CinematicModeExtension.CloseForEditorTabSwitch();
     }
 }
