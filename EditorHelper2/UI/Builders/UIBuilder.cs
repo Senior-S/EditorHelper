@@ -347,13 +347,13 @@ public class UIBuilder
         return stringField;
     }
 
-    public ISleekInt32Field BuildInt32Field(string tooltipText = "")
+    public ISleekInt32Field BuildInt32Field(string tooltipText = "", ESleekSide labelSide = ESleekSide.LEFT)
     {
         ISleekInt32Field int32Field = Glazier.Get().CreateInt32Field();
         int32Field.TooltipText = tooltipText;
         if (_text.Length > 0)
         {
-            int32Field.AddLabel(_text, ESleekSide.LEFT);
+            int32Field.AddLabel(_text, labelSide);
             int32Field.TextColor = ESleekTint.FONT;
         }
         FormatElement(ref int32Field);

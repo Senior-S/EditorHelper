@@ -12,9 +12,7 @@ namespace EditorHelper2.common.Extensions
         {
             var child = element.GetChildAtIndex(index);
 
-            if (child is GlazierProxy_IMGUI proxyIMGUI) child = proxyIMGUI.owner;
-            else if (child is GlazierProxy_uGUI proxyuGUI) child = proxyuGUI.owner;
-            else if (child is GlazierProxy_UIToolkit proxyUIToolkit) child = proxyUIToolkit.owner;
+            if (child is ISleekProxyImplementation proxy) child = proxy.GetWrapper();
 
             return child;
         }

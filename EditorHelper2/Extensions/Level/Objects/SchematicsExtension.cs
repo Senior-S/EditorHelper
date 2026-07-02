@@ -187,7 +187,8 @@ public class SchematicsExtension : UIExtension, IExtension
                 return;
             }
         }
-        
+
+        _schematicNameValue = _schematicNameField.Text;
         _schematicsHelper.SaveSchematic(_schematicNameValue);
         UpdateSchematicsScrollbox();
     }

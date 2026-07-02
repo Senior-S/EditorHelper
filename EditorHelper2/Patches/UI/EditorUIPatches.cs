@@ -1,6 +1,7 @@
 using EditorHelper2.common.Keybinds;
 using EditorHelper2.Extensions.Editor.Dashboard;
 using EditorHelper2.Extensions.Editor.Pause;
+using EditorHelper2.Extensions.Level.Objects;
 using EditorHelper2.Loader;
 using HarmonyLib;
 using JetBrains.Annotations;
@@ -19,6 +20,16 @@ public class EditorUIPatches
     [UsedImplicitly]
     private static void PrefixUpdate()
     {
+        if (LSystemRoadsExtension.IsOpen)
+        {
+            if (InputEx.ConsumeKeyDown(KeyCode.Escape))
+            {
+                LSystemRoadsExtension.CloseIfOpen();
+            }
+
+            return;
+        }
+
         if (CinematicModeExtension.IsOpen)
         {
             if (InputEx.ConsumeKeyDown(KeyCode.Escape))

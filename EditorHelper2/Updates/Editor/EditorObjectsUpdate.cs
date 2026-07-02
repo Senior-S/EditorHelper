@@ -436,5 +436,6 @@ public static class EditorObjectsUpdate
 	        extrasExtension?.ChangeButtonsVisibility(EditorObjects.selection.Count == 1);
         }
         #endregion
+
     }
 }
