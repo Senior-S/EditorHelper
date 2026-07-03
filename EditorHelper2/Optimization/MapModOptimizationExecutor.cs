@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using SDG.Unturned;
 
 namespace EditorHelper2.Optimization;
@@ -20,6 +21,7 @@ internal static class MapModOptimizationExecutor
     {
         ReportProgress(reportProgress, "Preparing output folders...");
         Directory.CreateDirectory(plan.OutputRootPath);
+        List<BundleExportReport> bundleReports = [];
 
         for (int i = 0; i < plan.Assets.Count; i++)
         {
@@ -32,14 +34,7 @@ internal static class MapModOptimizationExecutor
             CopyDirectory(asset.SourceFolderPath, asset.OutputFolderPath);
         }
 
-        for (int i = 0; i < plan.MasterBundles.Count; i++)
-        {
-            MasterBundleExportPlan masterBundle = plan.MasterBundles[i];
-            ReportProgress(reportProgress, $"Trimming master bundle {i + 1}/{plan.MasterBundles.Count}: {masterBundle.SourceBundleName}");
-            Directory.CreateDirectory(masterBundle.OutputBundleDirectoryPath);
-            WriteMasterBundleConfig(masterBundle);
-            BundleSubsetExporter.Export(masterBundle, plan.Warnings);
-        }
+        ExportMasterBundles(plan, bundleReports, reportProgress);
 
         for (int i = 0; i < plan.Assets.Count; i++)
         {
@@ -62,7 +57,7 @@ internal static class MapModOptimizationExecutor
         int patchedResourceCount = PatchTreesFile(Path.Combine(plan.LevelPath, "Terrain", "Trees.dat"), plan.GuidMap);
 
         ReportProgress(reportProgress, "Writing optimization report...");
-        string reportPath = WriteReport(plan, patchedObjectCount, patchedResourceCount, mapBackupPath);
+        string reportPath = WriteReport(plan, bundleReports, patchedObjectCount, patchedResourceCount, mapBackupPath);
 
         ModOptimizationResult result = new()
         {
@@ -74,6 +69,7 @@ internal static class MapModOptimizationExecutor
             MapBackupPath = mapBackupPath
         };
 
+        result.BundleReports.AddRange(bundleReports);
         result.Warnings.AddRange(plan.Warnings);
         ReportProgress(reportProgress, "Optimization finished.");
         return result;
@@ -91,6 +87,51 @@ internal static class MapModOptimizationExecutor
         builder.AppendLine();
         builder.AppendLine("Has_Clip_Prefab false");
         File.WriteAllText(configPath, builder.ToString());
+    }
+
+    private static void ExportMasterBundles(
+        ModOptimizationPlan plan,
+        List<BundleExportReport> bundleReports,
+        Action<string>? reportProgress)
+    {
+        if (plan.MasterBundles.Count == 0)
+        {
+            return;
+        }
+
+        int maxParallelism = Math.Max(1, plan.MaxParallelMasterBundleExports);
+        bool enableStreamedPayloadCompaction = !plan.UseMetadataOnlyBundleTrim;
+        BundleExportReport?[] reports = new BundleExportReport?[plan.MasterBundles.Count];
+        List<string>[] warningsByBundle = new List<string>[plan.MasterBundles.Count];
+
+        Parallel.For(
+            0,
+            plan.MasterBundles.Count,
+            new ParallelOptions { MaxDegreeOfParallelism = maxParallelism },
+            i =>
+            {
+                MasterBundleExportPlan masterBundle = plan.MasterBundles[i];
+                ReportProgress(reportProgress, $"Trimming master bundle {i + 1}/{plan.MasterBundles.Count}: {masterBundle.SourceBundleName}");
+
+                List<string> warnings = [];
+                Directory.CreateDirectory(masterBundle.OutputBundleDirectoryPath);
+                WriteMasterBundleConfig(masterBundle);
+                reports[i] = BundleSubsetExporter.Export(masterBundle, warnings, enableStreamedPayloadCompaction);
+                warningsByBundle[i] = warnings;
+            });
+
+        for (int i = 0; i < reports.Length; i++)
+        {
+            if (reports[i] != null)
+            {
+                bundleReports.Add(reports[i]!);
+            }
+
+            if (warningsByBundle[i] != null)
+            {
+                plan.Warnings.AddRange(warningsByBundle[i]);
+            }
+        }
     }
 
     private static void RewriteTextFiles(string rootPath, IReadOnlyDictionary<Guid, Guid> guidMap, IReadOnlyDictionary<string, string> bundleNameMap)
@@ -273,7 +314,12 @@ internal static class MapModOptimizationExecutor
         return patchedCount;
     }
 
-    private static string WriteReport(ModOptimizationPlan plan, int patchedObjectCount, int patchedResourceCount, string mapBackupPath)
+    private static string WriteReport(
+        ModOptimizationPlan plan,
+        IReadOnlyCollection<BundleExportReport> bundleReports,
+        int patchedObjectCount,
+        int patchedResourceCount,
+        string mapBackupPath)
     {
         string reportPath = Path.Combine(plan.OutputRootPath, "EditorHelper2_Optimization_Report.txt");
         StringBuilder builder = new();
@@ -281,7 +327,11 @@ internal static class MapModOptimizationExecutor
         builder.AppendLine($"Exported assets: {plan.Assets.Count}");
         builder.AppendLine($"Root objects: {plan.RootObjectAssetCount}");
         builder.AppendLine($"Root resources: {plan.RootResourceAssetCount}");
+        builder.AppendLine($"Root item spawn assets: {plan.RootItemSpawnAssetCount}");
+        builder.AppendLine($"Root vehicle spawn assets: {plan.RootVehicleSpawnAssetCount}");
         builder.AppendLine($"Master bundles: {plan.MasterBundles.Count}");
+        builder.AppendLine($"Master bundle parallel jobs: {plan.MaxParallelMasterBundleExports}");
+        builder.AppendLine($"Metadata-only bundle trim: {plan.UseMetadataOnlyBundleTrim}");
         builder.AppendLine($"Patched object instances: {patchedObjectCount}");
         builder.AppendLine($"Patched resource instances: {patchedResourceCount}");
         builder.AppendLine($"Map backup: {mapBackupPath}");
@@ -290,6 +340,23 @@ internal static class MapModOptimizationExecutor
         foreach ((string sourceBundle, string targetBundle) in plan.BundleNameMap.OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase))
         {
             builder.AppendLine($"{sourceBundle} -> {targetBundle}");
+        }
+
+        if (bundleReports.Count > 0)
+        {
+            builder.AppendLine();
+            builder.AppendLine("Bundle optimization details:");
+            foreach (BundleExportReport bundleReport in bundleReports.OrderBy(report => report.SourceBundleName, StringComparer.OrdinalIgnoreCase))
+            {
+                builder.AppendLine($"{bundleReport.SourceBundleName}:");
+                builder.AppendLine($"  Roots kept: {bundleReport.RootContainerCount}");
+                builder.AppendLine($"  Root resolution fallback: {bundleReport.UsedFallbackRootResolution}");
+                builder.AppendLine($"  Metadata-only fallback: {bundleReport.UsedMetadataOnlyFallback}");
+                builder.AppendLine($"  Safety fallback: {bundleReport.UsedSafetyFallback}");
+                builder.AppendLine($"  Serialized assets: {bundleReport.KeptSerializedAssetCount}/{bundleReport.OriginalSerializedAssetCount}");
+                builder.AppendLine($"  Streamed payload bytes: {bundleReport.KeptStreamedBytes}/{bundleReport.OriginalStreamedBytes}");
+                builder.AppendLine($"  Bundle bytes: {bundleReport.FinalBundleBytes}/{bundleReport.OriginalBundleBytes}");
+            }
         }
 
         if (plan.Warnings.Count > 0)

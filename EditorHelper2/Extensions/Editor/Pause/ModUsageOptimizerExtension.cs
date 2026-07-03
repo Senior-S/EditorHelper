@@ -24,11 +24,20 @@ namespace EditorHelper2.Extensions.Editor.Pause;
 [EHExtension("Mod Usage Optimizer Extension", "Senior S")]
 public class ModUsageOptimizerExtension : UIExtension, IExtension
 {
+    private const float PanelWidth = 460f;
+    private const float CompactPanelHeight = 185f;
+    private const float ExpandedPanelHeight = 270f;
+    private const float PanelPadding = 10f;
+    private const float ContentWidth = PanelWidth - PanelPadding * 2f;
+    private const float SidePanelMinimumScreenWidth = 1120f;
+
     [ExistingMember("container")]
     private readonly SleekFullscreenBox? _container;
 
     private readonly ISleekBox _panel;
     private readonly ISleekField _outputPathField;
+    private readonly ISleekField _parallelBundleJobsField;
+    private readonly ISleekToggle _metadataOnlyTrimToggle;
     private readonly ISleekButton _optimizeButton;
     private readonly ISleekBox _statusBox;
 
@@ -37,19 +46,18 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
 
     public ModUsageOptimizerExtension()
     {
-        UIBuilder builder = new(520f, 185f);
-        builder.SetAnchorHorizontal(0.5f)
-            .SetAnchorVertical(0.5f)
-            .SetOffsetHorizontal(-260f)
-            .SetOffsetVertical(305f);
+        UIBuilder builder = new(PanelWidth, CompactPanelHeight);
+        builder.SetAnchorHorizontal(0f)
+            .SetAnchorVertical(1f);
 
         _panel = builder.BuildBox();
+        UpdatePanelPlacement();
 
         builder.ResetProperties()
             .SetAnchorHorizontal(0f)
-            .SetOffsetHorizontal(10f)
-            .SetOffsetVertical(10f)
-            .SetSizeHorizontal(500f)
+            .SetOffsetHorizontal(PanelPadding)
+            .SetOffsetVertical(PanelPadding)
+            .SetSizeHorizontal(ContentWidth)
             .SetSizeVertical(20f)
             .SetText("Optimized mod output folder");
         ISleekLabel titleLabel = builder.BuildLabel(TextAnchor.MiddleLeft);
@@ -57,20 +65,53 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
 
         builder.ResetProperties()
             .SetAnchorHorizontal(0f)
-            .SetOffsetHorizontal(10f)
+            .SetOffsetHorizontal(PanelPadding)
             .SetOffsetVertical(35f)
-            .SetSizeHorizontal(500f)
+            .SetSizeHorizontal(ContentWidth)
             .SetSizeVertical(30f)
-            .SetText(@"E:\Mods\MyOptimizedMap");
+            .SetText(@"C:\Mods\MyOptimizedMap");
         _outputPathField = builder.BuildStringField();
         _outputPathField.TooltipText = "Absolute folder path where the optimized mod should be written";
         _panel.AddChild(_outputPathField);
 
         builder.ResetProperties()
             .SetAnchorHorizontal(0f)
-            .SetOffsetHorizontal(10f)
+            .SetOffsetHorizontal(PanelPadding)
             .SetOffsetVertical(75f)
-            .SetSizeHorizontal(500f)
+            .SetSizeHorizontal(250f)
+            .SetSizeVertical(20f)
+            .SetText("Parallel bundle jobs");
+        ISleekLabel parallelLabel = builder.BuildLabel(TextAnchor.MiddleLeft);
+        _panel.AddChild(parallelLabel);
+
+        builder.ResetProperties()
+            .SetAnchorHorizontal(0f)
+            .SetOffsetHorizontal(PanelPadding + 260f)
+            .SetOffsetVertical(70f)
+            .SetSizeHorizontal(80f)
+            .SetSizeVertical(30f)
+            .SetText("1");
+        _parallelBundleJobsField = builder.BuildStringField();
+        _parallelBundleJobsField.Text = "1";
+        _parallelBundleJobsField.TooltipText = "Number of master bundles trimmed at the same time";
+        _panel.AddChild(_parallelBundleJobsField);
+
+        builder.ResetProperties()
+            .SetAnchorHorizontal(0f)
+            .SetOffsetHorizontal(PanelPadding)
+            .SetOffsetVertical(110f)
+            .SetSizeHorizontal(30f)
+            .SetSizeVertical(30f)
+            .SetText("Metadata-only trim");
+        _metadataOnlyTrimToggle = builder.BuildToggle("Skip streamed payload compaction for faster, larger bundle output", ESleekSide.RIGHT);
+        _metadataOnlyTrimToggle.Value = false;
+        _panel.AddChild(_metadataOnlyTrimToggle);
+
+        builder.ResetProperties()
+            .SetAnchorHorizontal(0f)
+            .SetOffsetHorizontal(PanelPadding)
+            .SetOffsetVertical(145f)
+            .SetSizeHorizontal(ContentWidth)
             .SetSizeVertical(30f)
             .SetText("Optimize Mod Usage");
         _optimizeButton = builder.BuildButton("Create a new optimized mod and patch the saved level GUIDs");
@@ -78,10 +119,10 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
 
         builder.ResetProperties()
             .SetAnchorHorizontal(0f)
-            .SetOffsetHorizontal(10f)
-            .SetOffsetVertical(110f)
-            .SetSizeHorizontal(500f)
-            .SetSizeVertical(60f)
+            .SetOffsetHorizontal(PanelPadding)
+            .SetOffsetVertical(185f)
+            .SetSizeHorizontal(ContentWidth)
+            .SetSizeVertical(70f)
             .SetText(string.Empty);
         _statusBox = builder.BuildBox(TextAnchor.UpperLeft);
         _statusBox.IsVisible = false;
@@ -99,6 +140,28 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
 
         _optimizeButton.OnClicked += OnOptimizeClicked;
         _container.AddChild(_panel);
+    }
+
+    protected override void Opened()
+    {
+        UpdatePanelPlacement();
+    }
+
+    private void UpdatePanelPlacement()
+    {
+        if (Screen.width < SidePanelMinimumScreenWidth)
+        {
+            _panel.PositionScale_X = 0.5f;
+            _panel.PositionScale_Y = 0f;
+            _panel.PositionOffset_X = -PanelWidth / 2f;
+            _panel.PositionOffset_Y = PanelPadding;
+            return;
+        }
+
+        _panel.PositionScale_X = 0f;
+        _panel.PositionScale_Y = 1f;
+        _panel.PositionOffset_X = PanelPadding;
+        _panel.PositionOffset_Y = -(_panel.SizeOffset_Y + PanelPadding);
     }
 
     private void OnOptimizeClicked(ISleekElement button)
@@ -127,6 +190,15 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
             return;
         }
 
+        string parallelBundleJobsInput = _parallelBundleJobsField.Text?.Trim() ?? string.Empty;
+        if (!int.TryParse(parallelBundleJobsInput, out int parallelBundleJobs) || parallelBundleJobs < 1)
+        {
+            SetStatus("Enter a valid parallel bundle job count of 1 or higher.");
+            return;
+        }
+
+        bool useMetadataOnlyBundleTrim = _metadataOnlyTrimToggle.Value;
+
         DiscordRichPresence? richPresence = EditorHelper.GetRichPresence();
         if (richPresence == null)
         {
@@ -134,10 +206,30 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
             return;
         }
 
-        richPresence.StartCoroutine(RunOptimizationRoutine(normalizedOutputPath));
+        void StartOptimization()
+        {
+            richPresence.StartCoroutine(RunOptimizationRoutine(normalizedOutputPath, parallelBundleJobs, useMetadataOnlyBundleTrim));
+        }
+
+        if (parallelBundleJobs > 2)
+        {
+            if (!ExtensionManager.TryGetInstance(out PromptsExtension? promptsExtension))
+            {
+                SetStatus("Unable to confirm high parallelism because the prompt system is missing.");
+                return;
+            }
+
+            promptsExtension.DisplayQuestion(
+                $"Use {parallelBundleJobs} parallel bundle jobs? This can use high memory and disk bandwidth.",
+                StartOptimization,
+                noAction: () => SetStatus("Optimization aborted."));
+            return;
+        }
+
+        StartOptimization();
     }
 
-    private IEnumerator RunOptimizationRoutine(string outputPath)
+    private IEnumerator RunOptimizationRoutine(string outputPath, int parallelBundleJobs, bool useMetadataOnlyBundleTrim)
     {
         _isRunning = true;
         _optimizeButton.IsClickable = false;
@@ -164,8 +256,11 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
             yield break;
         }
 
+        plan.MaxParallelMasterBundleExports = parallelBundleJobs;
+        plan.UseMetadataOnlyBundleTrim = useMetadataOnlyBundleTrim;
+
         string scanSummary =
-            $"Step 2/4 - Saving level. Found {plan.RootObjectAssetCount} root objects and {plan.RootResourceAssetCount} root resources from installed mods.";
+            $"Step 2/4 - Saving level. Found {plan.RootObjectAssetCount} root objects, {plan.RootResourceAssetCount} root resources, {plan.RootItemSpawnAssetCount} item spawn assets, and {plan.RootVehicleSpawnAssetCount} vehicle spawn assets from installed mods.";
         if (plan.Warnings.Count > 0)
         {
             scanSummary += $" {plan.Warnings.Count} warning(s) were recorded during scanning.";
@@ -253,6 +348,8 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
     {
         _statusBox.Text = text;
         _statusBox.IsVisible = true;
+        _panel.SizeOffset_Y = ExpandedPanelHeight;
+        UpdatePanelPlacement();
     }
 
     public void Dispose()

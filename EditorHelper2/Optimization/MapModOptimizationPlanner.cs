@@ -14,6 +14,12 @@ internal static class MapModOptimizationPlanner
     private static readonly Regex GuidRegex = new(
         @"(?i)\b[0-9a-f]{32}\b|\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b",
         RegexOptions.Compiled);
+    private static readonly Regex QuotedPathRegex = new(
+        @"""Path""\s+""(?<path>[^""]+)""",
+        RegexOptions.Compiled);
+    private static readonly Regex InlineBundlePathRegex = new(
+        @"(?m)^[^\r\n""]+\s+(?<path>[^ \t\r\n""]+\.(?:mat|mp3|ogg|wav|png|jpg|jpeg|asset|prefab|anim|controller|shader))\s*$",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private static readonly HashSet<string> TextFileExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -42,15 +48,16 @@ internal static class MapModOptimizationPlanner
             {
                 foreach (LevelObject levelObject in LevelObjects.objects[x, y])
                 {
-                    if (levelObject.asset == null && (levelObject.GUID != Guid.Empty || levelObject.id != 0))
+                    Asset? objectAsset = levelObject.asset ?? ResolveObjectAsset(levelObject.GUID, levelObject.id);
+                    if (objectAsset == null && (levelObject.GUID != Guid.Empty || levelObject.id != 0))
                     {
                         missingMapAssets.Add(BuildMissingObjectDescription(levelObject, x, y));
                         continue;
                     }
 
-                    if (ShouldOptimizeAsset(levelObject.asset))
+                    if (ShouldOptimizeAsset(objectAsset))
                     {
-                        rootObjectAssets.Add(levelObject.asset);
+                        rootObjectAssets.Add(objectAsset!);
                     }
                 }
             }
@@ -59,19 +66,23 @@ internal static class MapModOptimizationPlanner
         LevelGround.GatherAllTrees(resources);
         foreach (ResourceSpawnpoint resource in resources)
         {
-            if (resource.asset == null && (resource.guid != Guid.Empty || resource.id != 0))
+            Asset? resourceAsset = resource.asset ?? ResolveResourceAsset(resource);
+            if (resourceAsset == null && resource.guid != Guid.Empty)
             {
                 missingMapAssets.Add(BuildMissingResourceDescription(resource));
             }
         }
 
         List<Asset> rootResourceAssets = resources
-            .Select(resource => resource.asset)
+            .Select(resource => resource.asset ?? ResolveResourceAsset(resource))
             .Where(ShouldOptimizeAsset)
             .Cast<Asset>()
             .ToList();
 
-        foreach (Asset asset in rootObjectAssets.Cast<Asset>().Concat(rootResourceAssets))
+        List<Asset> rootItemSpawnAssets = GatherItemSpawnAssets(missingMapAssets);
+        List<Asset> rootVehicleSpawnAssets = GatherVehicleSpawnAssets(missingMapAssets);
+
+        foreach (Asset asset in rootObjectAssets.Cast<Asset>().Concat(rootResourceAssets).Concat(rootItemSpawnAssets).Concat(rootVehicleSpawnAssets))
         {
             pendingAssets.Enqueue(asset);
         }
@@ -83,7 +94,9 @@ internal static class MapModOptimizationPlanner
             LevelPath = Level.info.path,
             LevelName = Level.info.name,
             RootObjectAssetCount = rootObjectAssets.Select(asset => asset.GUID).Distinct().Count(),
-            RootResourceAssetCount = rootResourceAssets.Select(asset => asset.GUID).Distinct().Count()
+            RootResourceAssetCount = rootResourceAssets.Select(asset => asset.GUID).Distinct().Count(),
+            RootItemSpawnAssetCount = rootItemSpawnAssets.Select(asset => asset.GUID).Distinct().Count(),
+            RootVehicleSpawnAssetCount = rootVehicleSpawnAssets.Select(asset => asset.GUID).Distinct().Count()
         };
         AddMissingAssetWarnings(missingMapAssets, plan.Warnings);
 
@@ -178,6 +191,16 @@ internal static class MapModOptimizationPlanner
                     bundlePlan.IncludedRelativeFolders.Add(relativeFolderPath);
                 }
 
+                foreach (string rootContainerKey in BuildExactRootContainerKeys(bundle, sourceDatFilePath))
+                {
+                    if (!bundlePlan.ExactRootContainerKeys.Contains(rootContainerKey, StringComparer.OrdinalIgnoreCase))
+                    {
+                        bundlePlan.ExactRootContainerKeys.Add(rootContainerKey);
+                    }
+                }
+
+                AddBundlePathReferenceRoots(sourceFolderPath, bundle, bundlePlan, plan.Warnings);
+
                 outputFolderPath = Path.Combine(outputBundleDirectoryPath, relativeFolderPath);
             }
             else
@@ -218,6 +241,117 @@ internal static class MapModOptimizationPlanner
         return plan;
     }
 
+    private static List<Asset> GatherItemSpawnAssets(List<string> missingMapAssets)
+    {
+        List<Asset> assets = [];
+        HashSet<Guid> visitedSpawnAssets = [];
+
+        foreach (ItemTable itemTable in LevelItems.tables)
+        {
+            if (itemTable.tableID != 0)
+            {
+                Asset? asset = SDG.Unturned.Assets.find(EAssetType.SPAWN, itemTable.tableID);
+                if (asset == null)
+                {
+                    missingMapAssets.Add(BuildMissingItemSpawnTableDescription(itemTable));
+                }
+                else
+                {
+                    AddSpawnAsset(asset, EAssetType.ITEM, "Item", assets, visitedSpawnAssets, missingMapAssets);
+                }
+            }
+
+            foreach (ItemTier tier in itemTable.tiers)
+            {
+                foreach (ItemSpawn itemSpawn in tier.table)
+                {
+                    Asset? asset = SDG.Unturned.Assets.find(EAssetType.ITEM, itemSpawn.item);
+                    if (asset == null)
+                    {
+                        missingMapAssets.Add(BuildMissingItemDescription(itemTable, tier, itemSpawn.item));
+                    }
+                    else if (ShouldOptimizeAsset(asset))
+                    {
+                        assets.Add(asset);
+                    }
+                }
+            }
+        }
+
+        return assets;
+    }
+
+    private static List<Asset> GatherVehicleSpawnAssets(List<string> missingMapAssets)
+    {
+        List<Asset> assets = [];
+        HashSet<Guid> visitedSpawnAssets = [];
+
+        foreach (VehicleTable vehicleTable in LevelVehicles.tables)
+        {
+            if (vehicleTable.tableID != 0)
+            {
+                Asset? asset = SDG.Unturned.Assets.find(EAssetType.SPAWN, vehicleTable.tableID);
+                if (asset == null)
+                {
+                    missingMapAssets.Add(BuildMissingVehicleSpawnTableDescription(vehicleTable));
+                }
+                else
+                {
+                    AddSpawnAsset(asset, EAssetType.VEHICLE, "Vehicle", assets, visitedSpawnAssets, missingMapAssets);
+                }
+            }
+
+            foreach (VehicleTier tier in vehicleTable.tiers)
+            {
+                foreach (VehicleSpawn vehicleSpawn in tier.table)
+                {
+                    Asset? asset = SDG.Unturned.Assets.find(EAssetType.VEHICLE, vehicleSpawn.vehicle);
+                    if (asset == null)
+                    {
+                        missingMapAssets.Add(BuildMissingVehicleDescription(vehicleTable, tier, vehicleSpawn.vehicle));
+                    }
+                    else if (ShouldOptimizeAsset(asset))
+                    {
+                        assets.Add(asset);
+                    }
+                }
+            }
+        }
+
+        return assets;
+    }
+
+    private static void AddSpawnAsset(
+        Asset asset,
+        EAssetType legacyAssetType,
+        string label,
+        List<Asset> assets,
+        HashSet<Guid> visitedSpawnAssets,
+        List<string> missingMapAssets)
+    {
+        if (ShouldOptimizeAsset(asset))
+        {
+            assets.Add(asset);
+        }
+
+        if (asset is not SpawnAsset spawnAsset || !visitedSpawnAssets.Add(spawnAsset.GUID))
+        {
+            return;
+        }
+
+        foreach (SpawnTable spawnTable in spawnAsset.tables)
+        {
+            Asset? childAsset = spawnTable.FindAsset(legacyAssetType);
+            if (childAsset == null)
+            {
+                missingMapAssets.Add($"{label} spawn table {spawnAsset.FriendlyName} has unresolved entry {spawnTable}");
+                continue;
+            }
+
+            AddSpawnAsset(childAsset, legacyAssetType, label, assets, visitedSpawnAssets, missingMapAssets);
+        }
+    }
+
     private static void EnqueueReferencedAssets(string sourceFolderPath, Queue<Asset> pendingAssets, List<string> warnings)
     {
         foreach (string filePath in Directory.EnumerateFiles(sourceFolderPath, "*", SearchOption.AllDirectories))
@@ -254,6 +388,137 @@ internal static class MapModOptimizationPlanner
         }
     }
 
+    private static void AddBundlePathReferenceRoots(
+        string sourceFolderPath,
+        MasterBundleConfig bundle,
+        MasterBundleExportPlan bundlePlan,
+        List<string> warnings)
+    {
+        foreach (string filePath in Directory.EnumerateFiles(sourceFolderPath, "*", SearchOption.AllDirectories))
+        {
+            if (!TextFileExtensions.Contains(Path.GetExtension(filePath)))
+            {
+                continue;
+            }
+
+            string contents;
+            try
+            {
+                contents = File.ReadAllText(filePath);
+            }
+            catch (Exception ex)
+            {
+                warnings.Add($"Unable to read dependency file {filePath}: {ex.Message}");
+                continue;
+            }
+
+            foreach (string bundlePath in EnumerateBundlePaths(contents))
+            {
+                foreach (string rootKey in BuildBundleRootKeysFromReferencedPath(bundle.assetPrefix, bundlePath))
+                {
+                    if (!bundlePlan.ExactRootContainerKeys.Contains(rootKey, StringComparer.OrdinalIgnoreCase))
+                    {
+                        bundlePlan.ExactRootContainerKeys.Add(rootKey);
+                    }
+                }
+
+                string? relativeFolder = TryBuildRelativeFolderFromReferencedPath(bundlePath);
+                if (!string.IsNullOrWhiteSpace(relativeFolder) &&
+                    !bundlePlan.IncludedRelativeFolders.Contains(relativeFolder, StringComparer.OrdinalIgnoreCase))
+                {
+                    bundlePlan.IncludedRelativeFolders.Add(relativeFolder);
+                }
+            }
+        }
+    }
+
+    private static IEnumerable<string> EnumerateBundlePaths(string contents)
+    {
+        foreach (Match match in QuotedPathRegex.Matches(contents))
+        {
+            string path = match.Groups["path"].Value.Trim();
+            if (LooksLikeBundlePath(path))
+            {
+                yield return path;
+            }
+        }
+
+        foreach (Match match in InlineBundlePathRegex.Matches(contents))
+        {
+            string path = match.Groups["path"].Value.Trim();
+            if (LooksLikeBundlePath(path))
+            {
+                yield return path;
+            }
+        }
+    }
+
+    private static bool LooksLikeBundlePath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        string normalizedPath = path.Replace('\\', '/').Trim();
+        if (normalizedPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            normalizedPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return normalizedPath.Contains('/');
+    }
+
+    private static IEnumerable<string> BuildBundleRootKeysFromReferencedPath(string assetPrefix, string bundlePath)
+    {
+        string normalizedPrefix = NormalizeBundlePathSegment(assetPrefix);
+        string normalizedPath = NormalizeBundlePathSegment(bundlePath);
+        if (string.IsNullOrWhiteSpace(normalizedPath))
+        {
+            yield break;
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedPrefix) &&
+            normalizedPath.StartsWith(normalizedPrefix + "/", StringComparison.OrdinalIgnoreCase))
+        {
+            yield return normalizedPath;
+            yield break;
+        }
+
+        if (LooksLikeAbsoluteUnityPath(normalizedPath))
+        {
+            yield return normalizedPath;
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedPrefix))
+        {
+            yield return normalizedPath;
+            yield break;
+        }
+
+        yield return $"{normalizedPrefix}/{normalizedPath}";
+
+        if (!EndsWithBundleSegment(normalizedPrefix))
+        {
+            yield return $"{normalizedPrefix}/Bundles/{normalizedPath}";
+        }
+    }
+
+    private static string? TryBuildRelativeFolderFromReferencedPath(string bundlePath)
+    {
+        string normalizedPath = NormalizeBundlePathSegment(bundlePath);
+        if (string.IsNullOrWhiteSpace(normalizedPath))
+        {
+            return null;
+        }
+
+        string? directoryPath = Path.GetDirectoryName(normalizedPath.Replace('/', Path.DirectorySeparatorChar));
+        return string.IsNullOrWhiteSpace(directoryPath)
+            ? null
+            : NormalizeRelativeFolderPath(directoryPath.Replace(Path.DirectorySeparatorChar, '/'));
+    }
+
     private static bool ShouldOptimizeAsset(Asset? asset)
     {
         if (asset == null)
@@ -269,6 +534,29 @@ internal static class MapModOptimizationPlanner
         return !string.IsNullOrWhiteSpace(asset.absoluteOriginFilePath);
     }
 
+    private static Asset? ResolveObjectAsset(Guid guid, ushort id)
+    {
+        if (guid != Guid.Empty && SDG.Unturned.Assets.find(guid) is ObjectAsset objectAssetByGuid)
+        {
+            return objectAssetByGuid;
+        }
+
+        return id == 0 ? null : SDG.Unturned.Assets.find(EAssetType.OBJECT, id);
+    }
+
+    private static Asset? ResolveResourceAsset(ResourceSpawnpoint resource)
+    {
+        if (resource.guid != Guid.Empty && SDG.Unturned.Assets.find(resource.guid) is ResourceAsset resourceAssetByGuid)
+        {
+            return resourceAssetByGuid;
+        }
+
+#pragma warning disable CS0618
+        ushort id = resource.id;
+#pragma warning restore CS0618
+        return id == 0 ? null : SDG.Unturned.Assets.find(EAssetType.RESOURCE, id);
+    }
+
     private static bool IsModAsset(Asset asset)
     {
         if (asset.originMasterBundle != null &&
@@ -277,7 +565,8 @@ internal static class MapModOptimizationPlanner
             return false;
         }
 
-        return asset.assetOrigin != EAssetOrigin.OFFICIAL;
+        AssetOrigin? origin = asset.origin;
+        return origin == null || !ReferenceEquals(origin, SDG.Unturned.Assets.legacyOfficialOrigin);
     }
 
     private static string BuildMissingObjectDescription(LevelObject levelObject, int x, int y)
@@ -289,7 +578,27 @@ internal static class MapModOptimizationPlanner
     private static string BuildMissingResourceDescription(ResourceSpawnpoint resource)
     {
         string guidText = resource.guid == Guid.Empty ? "none" : resource.guid.ToString("N");
-        return $"Resource at {resource.point} with GUID {guidText} and ID {resource.id}";
+        return $"Resource at {resource.point} with GUID {guidText}";
+    }
+
+    private static string BuildMissingItemSpawnTableDescription(ItemTable itemTable)
+    {
+        return $"Item spawn table \"{itemTable.name}\" with spawn table ID {itemTable.tableID}";
+    }
+
+    private static string BuildMissingItemDescription(ItemTable itemTable, ItemTier tier, ushort itemId)
+    {
+        return $"Item spawn table \"{itemTable.name}\" tier \"{tier.name}\" with item ID {itemId}";
+    }
+
+    private static string BuildMissingVehicleSpawnTableDescription(VehicleTable vehicleTable)
+    {
+        return $"Vehicle spawn table \"{vehicleTable.name}\" with spawn table ID {vehicleTable.tableID}";
+    }
+
+    private static string BuildMissingVehicleDescription(VehicleTable vehicleTable, VehicleTier tier, ushort vehicleId)
+    {
+        return $"Vehicle spawn table \"{vehicleTable.name}\" tier \"{tier.name}\" with vehicle ID {vehicleId}";
     }
 
     private static void AddMissingAssetWarnings(List<string> missingMapAssets, List<string> warnings)
@@ -302,7 +611,7 @@ internal static class MapModOptimizationPlanner
         const int previewCount = 6;
         IEnumerable<string> previewLines = missingMapAssets.Take(previewCount);
         warnings.Add(
-            $"Skipped {missingMapAssets.Count} object/resource reference(s) because their mod assets are not installed locally. " +
+            $"Skipped {missingMapAssets.Count} object/resource/item spawn/vehicle spawn reference(s) because their mod assets are not installed locally. " +
             $"Optimization continued with the assets available on this machine.");
 
         foreach (string line in previewLines)
@@ -321,6 +630,124 @@ internal static class MapModOptimizationPlanner
         string safeName = SanitizePathSegment(baseName);
         string hash = ComputeShortHash(uniqueSeed);
         return $"{safeName}_{hash}";
+    }
+
+    private static IEnumerable<string> BuildExactRootContainerKeys(MasterBundleConfig bundle, string sourceDatFilePath)
+    {
+        string normalizedDatPath = Path.GetFullPath(sourceDatFilePath);
+        string normalizedBundleDirectoryPath = Path.GetFullPath(bundle.directoryPath);
+        string sourceDirectoryPath = Path.GetDirectoryName(normalizedDatPath) ?? normalizedBundleDirectoryPath;
+        string assetName = normalizedDatPath.EndsWith("Asset.dat", StringComparison.OrdinalIgnoreCase)
+            ? Path.GetFileName(sourceDirectoryPath)
+            : Path.GetFileNameWithoutExtension(normalizedDatPath);
+
+        if (string.IsNullOrWhiteSpace(assetName))
+        {
+            yield break;
+        }
+
+        foreach (string relativePath in BuildRootRelativePaths(normalizedBundleDirectoryPath, normalizedDatPath, sourceDirectoryPath))
+        {
+            foreach (string rootKey in BuildBundleContainerPathCandidates(bundle.assetPrefix, relativePath, assetName))
+            {
+                if (!string.IsNullOrWhiteSpace(rootKey))
+                {
+                    yield return rootKey;
+                }
+            }
+        }
+    }
+
+    private static IEnumerable<string> BuildRootRelativePaths(string bundleDirectoryPath, string sourceDatFilePath, string sourceDirectoryPath)
+    {
+        if (sourceDirectoryPath.StartsWith(bundleDirectoryPath, StringComparison.OrdinalIgnoreCase))
+        {
+            foreach (string relativePath in ExpandRootRelativePath(Path.GetRelativePath(bundleDirectoryPath, sourceDirectoryPath)))
+            {
+                yield return relativePath;
+            }
+        }
+
+        string datWithoutExtension = Path.ChangeExtension(sourceDatFilePath, null) ?? sourceDatFilePath;
+        if (datWithoutExtension.StartsWith(bundleDirectoryPath, StringComparison.OrdinalIgnoreCase))
+        {
+            foreach (string relativePath in ExpandRootRelativePath(Path.GetRelativePath(bundleDirectoryPath, datWithoutExtension)))
+            {
+                yield return relativePath;
+            }
+        }
+    }
+
+    private static IEnumerable<string> ExpandRootRelativePath(string relativePath)
+    {
+        string normalizedRelativePath = NormalizeBundlePathSegment(relativePath);
+        if (string.IsNullOrWhiteSpace(normalizedRelativePath))
+        {
+            yield break;
+        }
+
+        yield return normalizedRelativePath;
+
+        if (normalizedRelativePath.StartsWith("Bundles/", StringComparison.OrdinalIgnoreCase))
+        {
+            yield return normalizedRelativePath.Substring("Bundles/".Length);
+        }
+    }
+
+    private static IEnumerable<string> BuildBundleContainerPathCandidates(string assetPrefix, string relativePath, string assetName)
+    {
+        string normalizedPrefix = NormalizeBundlePathSegment(assetPrefix);
+        string normalizedRelativePath = NormalizeBundlePathSegment(relativePath);
+        string normalizedAssetName = NormalizeBundlePathSegment(assetName);
+        string relativeRoot = CombineBundleContainerPath(string.Empty, normalizedRelativePath, normalizedAssetName);
+
+        if (string.IsNullOrWhiteSpace(relativeRoot))
+        {
+            yield break;
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedPrefix) &&
+            relativeRoot.StartsWith(normalizedPrefix + "/", StringComparison.OrdinalIgnoreCase))
+        {
+            yield return relativeRoot;
+            yield break;
+        }
+
+        if (LooksLikeAbsoluteUnityPath(relativeRoot))
+        {
+            yield return relativeRoot;
+        }
+
+        if (string.IsNullOrWhiteSpace(normalizedPrefix))
+        {
+            yield return relativeRoot;
+            yield break;
+        }
+
+        yield return CombineBundleContainerPath(normalizedPrefix, normalizedRelativePath, normalizedAssetName);
+
+        if (!EndsWithBundleSegment(normalizedPrefix))
+        {
+            yield return CombineBundleContainerPath($"{normalizedPrefix}/Bundles", normalizedRelativePath, normalizedAssetName);
+        }
+    }
+
+    private static string CombineBundleContainerPath(string assetPrefix, string relativePath, string assetName)
+    {
+        List<string> segments = new(3);
+        AddBundlePathSegment(segments, assetPrefix);
+        AddBundlePathSegment(segments, relativePath);
+        AddBundlePathSegment(segments, assetName);
+        return string.Join("/", segments);
+    }
+
+    private static void AddBundlePathSegment(List<string> segments, string value)
+    {
+        string normalizedValue = NormalizeBundlePathSegment(value);
+        if (!string.IsNullOrWhiteSpace(normalizedValue))
+        {
+            segments.Add(normalizedValue);
+        }
     }
 
     private static string ComputeShortHash(string value)
@@ -358,6 +785,28 @@ internal static class MapModOptimizationPlanner
             : relativeFolderPath;
     }
 
+    private static string NormalizeBundlePathSegment(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+
+        return path.Replace('\\', '/').Trim('/');
+    }
+
+    private static bool LooksLikeAbsoluteUnityPath(string path)
+    {
+        return NormalizeBundlePathSegment(path).StartsWith("Assets/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool EndsWithBundleSegment(string path)
+    {
+        string normalizedPath = NormalizeBundlePathSegment(path);
+        return string.Equals(normalizedPath, "Bundles", StringComparison.OrdinalIgnoreCase) ||
+               normalizedPath.EndsWith("/Bundles", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static byte[] ComputeSha1(string value)
     {
         using SHA1 sha1 = SHA1.Create();
@@ -391,19 +840,29 @@ internal static class MapModOptimizationPlanner
 
     private sealed class GuidTemplateGenerator
     {
+        private const string GuidPrefixMarker = "fade2100";
         private readonly string _prefix;
-        private long _counter;
+        private ulong _counter;
 
         public GuidTemplateGenerator(string levelName, string outputRootPath)
         {
             byte[] hashBytes = ComputeSha1($"{levelName}|{outputRootPath}");
-            _prefix = $"fade21001{hashBytes[0]:x2}{hashBytes[1]:x2}{hashBytes[2]:x2}{hashBytes[3]:x2}";
+            _prefix = $"{GuidPrefixMarker}{hashBytes[0]:x2}{hashBytes[1]:x2}{hashBytes[2]:x2}{hashBytes[3]:x2}";
+            if (_prefix.Length != 16)
+            {
+                throw new InvalidOperationException("Generated GUID prefix must be 16 hexadecimal characters.");
+            }
+
             _counter = 0;
         }
 
         public Guid Next()
         {
-            _counter++;
+            checked
+            {
+                _counter++;
+            }
+
             string guidValue = $"{_prefix}{_counter:x16}";
             return Guid.ParseExact(guidValue, "N");
         }

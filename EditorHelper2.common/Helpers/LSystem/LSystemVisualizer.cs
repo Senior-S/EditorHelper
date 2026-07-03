@@ -82,7 +82,7 @@ public sealed class LSystemVisualizer
             }
 
             int newRoadPieces = CountNewCells(startGrid, endGrid, occupied);
-            // ponytail: keep one native undo batch small enough for Ctrl+Z to stay reliable.
+
             if (newRoadPieces == 0 || occupied.Count + newRoadPieces > maxRoadPieces)
             {
                 continue;

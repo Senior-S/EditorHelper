@@ -190,7 +190,7 @@ public sealed class RoadHelper
         if (_roads.ContainsKey(position)) return true;
         if (_pendingRoads.Contains(position)) return true;
 
-        // ponytail: O(n) fuzzy lookup is fine for editor-sized generated roads; spatial hash if this gets huge.
+
         foreach (Vector3Int roadPosition in _roads.Keys)
         {
             int x = roadPosition.x - position.x;

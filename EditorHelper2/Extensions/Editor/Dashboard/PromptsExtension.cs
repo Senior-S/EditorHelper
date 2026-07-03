@@ -30,6 +30,7 @@ public class PromptsExtension : UIExtension, IExtension
     /// Action executed after the user answer.
     /// </summary>
     private Action? _questionPostAction;
+    private Action? _questionNoAction;
     
     public PromptsExtension()
     {
@@ -93,13 +94,15 @@ public class PromptsExtension : UIExtension, IExtension
     
     private void OnYesButtonClicked(ISleekElement button)
     {
+        HideQuestion();
         _questionAction?.Invoke();
-        
         _questionPostAction?.Invoke();
     }
     
     private void OnNoButtonClicked(ISleekElement button)
     {
+        HideQuestion();
+        _questionNoAction?.Invoke();
         _questionPostAction?.Invoke();
     }
     #endregion Event handlers
@@ -110,6 +113,8 @@ public class PromptsExtension : UIExtension, IExtension
         _alertBox.Text = text;
         _alertBox.IsVisible = true;
         _acceptButton.IsVisible = true;
+        _yesButton.IsVisible = false;
+        _noButton.IsVisible = false;
     }
 
     /// <summary>
@@ -120,12 +125,26 @@ public class PromptsExtension : UIExtension, IExtension
     /// <param name="postAction">Action executed after the user have answered</param>
     public void DisplayQuestion(string text, Action yesAction, Action postAction)
     {
+        DisplayQuestion(text, yesAction, null, postAction);
+    }
+
+    public void DisplayQuestion(string text, Action yesAction, Action? noAction = null, Action? postAction = null)
+    {
         _questionAction = yesAction;
+        _questionNoAction = noAction;
         _questionPostAction = postAction;
         _alertBox.Text = text;
         _alertBox.IsVisible = true;
+        _acceptButton.IsVisible = false;
         _yesButton.IsVisible = true;
         _noButton.IsVisible = true;
+    }
+
+    private void HideQuestion()
+    {
+        _alertBox.IsVisible = false;
+        _yesButton.IsVisible = false;
+        _noButton.IsVisible = false;
     }
     #endregion Extension Functions
 

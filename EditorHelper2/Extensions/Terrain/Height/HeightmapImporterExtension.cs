@@ -218,8 +218,7 @@ public class HeightmapImporterExtension : UIExtension, IExtension
         {
             throw new InvalidDataException("Unsupported heightmap format.");
         }
-
-        // ponytail: raw files are assumed big-endian 16-bit like Unturned; add byte-order UI only if someone needs it.
+        
         return LoadRaw16(bytes, size, size);
     }
 

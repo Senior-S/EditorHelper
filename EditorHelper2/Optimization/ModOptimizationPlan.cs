@@ -10,6 +10,10 @@ internal sealed class ModOptimizationPlan
     public string LevelName { get; set; } = string.Empty;
     public int RootObjectAssetCount { get; set; }
     public int RootResourceAssetCount { get; set; }
+    public int RootItemSpawnAssetCount { get; set; }
+    public int RootVehicleSpawnAssetCount { get; set; }
+    public int MaxParallelMasterBundleExports { get; set; } = 1;
+    public bool UseMetadataOnlyBundleTrim { get; set; }
     public List<OptimizedAssetRecord> Assets { get; } = [];
     public List<MasterBundleExportPlan> MasterBundles { get; } = [];
     public Dictionary<Guid, Guid> GuidMap { get; } = [];
@@ -45,6 +49,7 @@ internal sealed class MasterBundleExportPlan
     public string OutputBundleFilePath { get; set; } = string.Empty;
     public string OutputBundleName { get; set; } = string.Empty;
     public int BundleVersion { get; set; }
+    public List<string> ExactRootContainerKeys { get; } = [];
     public List<string> IncludedRelativeFolders { get; } = [];
 }
 
@@ -56,5 +61,21 @@ internal sealed class ModOptimizationResult
     public int PatchedResourceCount { get; set; }
     public string ReportPath { get; set; } = string.Empty;
     public string MapBackupPath { get; set; } = string.Empty;
+    public List<BundleExportReport> BundleReports { get; } = [];
     public List<string> Warnings { get; } = [];
+}
+
+internal sealed class BundleExportReport
+{
+    public string SourceBundleName { get; set; } = string.Empty;
+    public int RootContainerCount { get; set; }
+    public bool UsedFallbackRootResolution { get; set; }
+    public bool UsedMetadataOnlyFallback { get; set; }
+    public bool UsedSafetyFallback { get; set; }
+    public int OriginalSerializedAssetCount { get; set; }
+    public int KeptSerializedAssetCount { get; set; }
+    public long OriginalStreamedBytes { get; set; }
+    public long KeptStreamedBytes { get; set; }
+    public long OriginalBundleBytes { get; set; }
+    public long FinalBundleBytes { get; set; }
 }
