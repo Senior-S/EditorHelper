@@ -22,6 +22,7 @@ This page gives a simple overview of what EditorHelper2 adds.
 - **Keybind menu**: rebind EditorHelper2 shortcuts.
 - **Excel export**: export map asset data into a spreadsheet.
 - **Map resolution tools**: generate higher-resolution map/satellite outputs.
+- **Map optimizer**: export an optimized mod folder from the installed mod assets used by the current map.
 
 ## Environment tools
 
@@ -41,6 +42,7 @@ This page gives a simple overview of what EditorHelper2 adds.
 
 ## Terrain tools
 
+- **Heightmap importer**: import PNG/JPG, square 16-bit raw, or `.heightmap` terrain data into the whole map or current tile.
 - **Foliage density and collection tools**: edit foliage values and collection contents live.
 - **Foliage icons**: preview and grid browsing for foliage assets.
 - **Resource replacer**: replace resource assets in selected area or whole map.

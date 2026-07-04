@@ -7,7 +7,9 @@ slug: /Download
 
 ## Latest version
 
-You can download the latest version by **[clicking here](https://ps.sshost.club/share/D6gOu1E6)**.
+The recommended way to install EditorHelper2 is with **[Modularn](/Modularn)**, the Unturned launcher. It can automatically download the latest versions of EditorHelper2 and keep your modules and mods up to date at all times.
+
+If you prefer to install the module manually, you can download the latest version by **[clicking here](https://ps.sshost.club/share/D6gOu1E6)**.
 
 ## How to install
 
