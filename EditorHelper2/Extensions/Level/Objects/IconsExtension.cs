@@ -156,16 +156,28 @@ public class IconsExtension : UIExtension, IExtension
     #region Icon Grid
     private void OnObjectIconGridButton(ISleekElement button)
     {
-        _objectIconGridContainer.IsVisible = !_objectIconGridContainer.IsVisible;
         if (_objectIconGridContainer.IsVisible)
         {
-            if (_assets != null) _objectIconGridScrollBox.SetData(_assets);
-            _objectIconGridContainer.SizeOffset_Y = Mathf.Min(PreferredObjectIconGridHeight, _objectIconGridScrollBox.ContentHeight);
+            HideIconGridContainer();
+        }
+        else
+        {
+            ShowIconGridContainer();
+        }
+    }
 
-            if (ExtensionManager.TryGetInstance(out SchematicsExtension schematicsExtension))
-            {
-                schematicsExtension?.HideSchematicsContainer();
-            }
+    /// <summary>
+    /// Opens the object icon grid and closes the schematics modal.
+    /// </summary>
+    public void ShowIconGridContainer()
+    {
+        _objectIconGridContainer.IsVisible = true;
+        if (_assets != null) _objectIconGridScrollBox.SetData(_assets);
+        _objectIconGridContainer.SizeOffset_Y = Mathf.Min(PreferredObjectIconGridHeight, _objectIconGridScrollBox.ContentHeight);
+
+        if (ExtensionManager.TryGetInstance(out SchematicsExtension? schematicsExtension))
+        {
+            schematicsExtension.HideSchematicsContainer();
         }
     }
 

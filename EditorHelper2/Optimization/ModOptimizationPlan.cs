@@ -13,6 +13,7 @@ internal sealed class ModOptimizationPlan
     public int RootItemSpawnAssetCount { get; set; }
     public int RootVehicleSpawnAssetCount { get; set; }
     public int MaxParallelMasterBundleExports { get; set; } = 1;
+    public bool SaveItemsAndVehicles { get; set; } = true;
     public bool UseMetadataOnlyBundleTrim { get; set; }
     public List<OptimizedAssetRecord> Assets { get; } = [];
     public List<MasterBundleExportPlan> MasterBundles { get; } = [];

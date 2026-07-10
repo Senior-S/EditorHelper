@@ -208,9 +208,25 @@ public class FoliageIconsExtension : UIExtension, IExtension
         _iconGridContainer.IsVisible = !_iconGridContainer.IsVisible;
         if (_iconGridContainer.IsVisible)
         {
-            SyncGridData(force: true);
-            _iconGridContainer.SizeOffset_Y = Mathf.Min(_preferredGridHeight, _iconGridScrollBox.ContentHeight);
+            ShowIconGrid();
         }
+    }
+
+    /// <summary>
+    /// Switches the foliage editor to Exact asset mode and opens the icon grid.
+    /// </summary>
+    public void ShowExactIconGrid()
+    {
+        _currentUIInstance.tool.mode = FoliageEditor.EFoliageMode.EXACT;
+        _currentUIInstance.searchTypeButton.state = 0;
+        ShowIconGrid();
+    }
+
+    private void ShowIconGrid()
+    {
+        _iconGridContainer.IsVisible = true;
+        SyncGridData(force: true);
+        _iconGridContainer.SizeOffset_Y = Mathf.Min(_preferredGridHeight, _iconGridScrollBox.ContentHeight);
     }
 
     private void SyncGridData(bool force = false)

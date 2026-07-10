@@ -150,12 +150,13 @@ public class SchematicsExtension : UIExtension, IExtension
     #region Event Handlers
     private void OnSchematicsButtonClicked(ISleekElement button)
     {
-        _schematicsContainer.IsVisible = !_schematicsContainer.IsVisible;
-        if (!_schematicsContainer.IsVisible) return;
-        
-        if (ExtensionManager.TryGetInstance(out IconsExtension iconsExtension))
+        if (_schematicsContainer.IsVisible)
         {
-            iconsExtension?.HideIconGridContainer();
+            HideSchematicsContainer();
+        }
+        else
+        {
+            ShowSchematicsContainer();
         }
     }
 
@@ -232,6 +233,19 @@ public class SchematicsExtension : UIExtension, IExtension
     #endregion
 
     #region Extension functions
+    /// <summary>
+    /// Opens the schematics modal and closes the object icon grid.
+    /// </summary>
+    public void ShowSchematicsContainer()
+    {
+        _schematicsContainer.IsVisible = true;
+
+        if (ExtensionManager.TryGetInstance(out IconsExtension? iconsExtension))
+        {
+            iconsExtension.HideIconGridContainer();
+        }
+    }
+
     public void HideSchematicsContainer() => _schematicsContainer.IsVisible = false;
 
     private ISleekElement OnCreateSchematicModel(Schematic item)

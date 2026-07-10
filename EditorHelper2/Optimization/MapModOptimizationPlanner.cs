@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -28,7 +29,7 @@ internal static class MapModOptimizationPlanner
         ".json"
     };
 
-    public static ModOptimizationPlan CreatePlan(string outputRootPath)
+    public static ModOptimizationPlan CreatePlan(string outputRootPath, bool saveItemsAndVehicles = true)
     {
         string normalizedOutputRoot = Path.GetFullPath(outputRootPath);
         if (string.IsNullOrWhiteSpace(normalizedOutputRoot))
@@ -79,8 +80,8 @@ internal static class MapModOptimizationPlanner
             .Cast<Asset>()
             .ToList();
 
-        List<Asset> rootItemSpawnAssets = GatherItemSpawnAssets(missingMapAssets);
-        List<Asset> rootVehicleSpawnAssets = GatherVehicleSpawnAssets(missingMapAssets);
+        List<Asset> rootItemSpawnAssets = saveItemsAndVehicles ? GatherItemSpawnAssets(missingMapAssets) : [];
+        List<Asset> rootVehicleSpawnAssets = saveItemsAndVehicles ? GatherVehicleSpawnAssets(missingMapAssets) : [];
 
         foreach (Asset asset in rootObjectAssets.Cast<Asset>().Concat(rootResourceAssets).Concat(rootItemSpawnAssets).Concat(rootVehicleSpawnAssets))
         {
@@ -96,9 +97,9 @@ internal static class MapModOptimizationPlanner
             RootObjectAssetCount = rootObjectAssets.Select(asset => asset.GUID).Distinct().Count(),
             RootResourceAssetCount = rootResourceAssets.Select(asset => asset.GUID).Distinct().Count(),
             RootItemSpawnAssetCount = rootItemSpawnAssets.Select(asset => asset.GUID).Distinct().Count(),
-            RootVehicleSpawnAssetCount = rootVehicleSpawnAssets.Select(asset => asset.GUID).Distinct().Count()
+            RootVehicleSpawnAssetCount = rootVehicleSpawnAssets.Select(asset => asset.GUID).Distinct().Count(),
+            SaveItemsAndVehicles = saveItemsAndVehicles
         };
-        AddMissingAssetWarnings(missingMapAssets, plan.Warnings);
 
         Dictionary<string, MasterBundleExportPlan> masterBundlePlans = new(StringComparer.OrdinalIgnoreCase);
         Dictionary<string, int> standaloneFolderIndices = new(StringComparer.OrdinalIgnoreCase);
@@ -235,11 +236,310 @@ internal static class MapModOptimizationPlanner
                 OutputBundleFileName = outputBundleFileName
             });
 
-            EnqueueReferencedAssets(sourceFolderPath, pendingAssets, plan.Warnings);
+            EnqueueReferencedAssets(sourceFolderPath, pendingAssets, plan.Warnings, saveItemsAndVehicles);
+
+            if (saveItemsAndVehicles)
+            {
+                EnqueueNpcItemVehicleAssets(asset, pendingAssets, missingMapAssets);
+            }
         }
 
+        AddMissingAssetWarnings(missingMapAssets, plan.Warnings);
         return plan;
     }
+
+#pragma warning disable CS0612 // NPC assets still expose legacy IDs for older content; use them only as fallback references.
+    private static void EnqueueNpcItemVehicleAssets(Asset asset, Queue<Asset> pendingAssets, List<string> missingMapAssets)
+    {
+        switch (asset)
+        {
+            case ObjectNPCAsset npcAsset:
+                EnqueueNpcOutfitItems(npcAsset.defaultOutfit, pendingAssets, missingMapAssets, $"{npcAsset.FriendlyName} default outfit");
+                EnqueueNpcOutfitItems(npcAsset.halloweenOutfit, pendingAssets, missingMapAssets, $"{npcAsset.FriendlyName} Halloween outfit");
+                EnqueueNpcOutfitItems(npcAsset.christmasOutfit, pendingAssets, missingMapAssets, $"{npcAsset.FriendlyName} Christmas outfit");
+                EnqueueItemAsset(npcAsset.primaryWeaponGuid, npcAsset.primary, pendingAssets, missingMapAssets, $"{npcAsset.FriendlyName} primary weapon");
+                EnqueueItemAsset(npcAsset.secondaryWeaponGuid, npcAsset.secondary, pendingAssets, missingMapAssets, $"{npcAsset.FriendlyName} secondary weapon");
+                EnqueueItemAsset(npcAsset.tertiaryWeaponGuid, npcAsset.tertiary, pendingAssets, missingMapAssets, $"{npcAsset.FriendlyName} tertiary weapon");
+                EnqueueIfOptimizable(npcAsset.FindDialogueAsset(), pendingAssets);
+                break;
+
+            case DialogueAsset dialogueAsset:
+                foreach (DialogueMessage message in dialogueAsset.messages ?? [])
+                {
+                    EnqueueDialogueElementAssets(message, pendingAssets, missingMapAssets);
+                    EnqueueIfOptimizable(message.FindPrevDialogueAsset(), pendingAssets);
+                }
+
+                foreach (DialogueResponse response in dialogueAsset.responses ?? [])
+                {
+                    EnqueueDialogueElementAssets(response, pendingAssets, missingMapAssets);
+                }
+
+                break;
+
+            case QuestAsset questAsset:
+                EnqueueNpcConditionAssets(questAsset.conditions, pendingAssets, missingMapAssets);
+                EnqueueNpcRewardAssets(questAsset.rewards, pendingAssets, missingMapAssets);
+                EnqueueNpcRewardAssets(GetRewardsListField(questAsset, "abandonmentRewardsList"), pendingAssets, missingMapAssets);
+                break;
+
+            case VendorAsset vendorAsset:
+                foreach (VendorBuying buying in vendorAsset.buying ?? [])
+                {
+                    EnqueueVendorElementAssets(buying, pendingAssets, missingMapAssets);
+                    EnqueueItemAsset(buying.TargetAssetGuid, buying.id, buying.FindItemAsset(), pendingAssets, missingMapAssets, $"{vendorAsset.FriendlyName} vendor buying entry");
+                }
+
+                foreach (VendorSellingBase selling in vendorAsset.selling ?? [])
+                {
+                    EnqueueVendorElementAssets(selling, pendingAssets, missingMapAssets);
+
+                    if (selling is VendorSellingItem sellingItem)
+                    {
+                        EnqueueItemAsset(sellingItem.TargetAssetGuid, sellingItem.id, sellingItem.FindItemAsset(), pendingAssets, missingMapAssets, $"{vendorAsset.FriendlyName} vendor selling item");
+                    }
+                    else if (selling is VendorSellingVehicle sellingVehicle)
+                    {
+                        EnqueueVehicleAsset(
+                            sellingVehicle.TargetAssetGuid,
+                            sellingVehicle.id,
+                            sellingVehicle.FindVehicleAssetAndHandleRedirects(),
+                            pendingAssets,
+                            missingMapAssets,
+                            $"{vendorAsset.FriendlyName} vendor selling vehicle");
+                    }
+                }
+
+                break;
+
+            case NPCRewardsAsset rewardsAsset:
+                EnqueueNpcConditionAssets(rewardsAsset.conditions, pendingAssets, missingMapAssets);
+                EnqueueNpcRewardAssets(GetRewardsListField(rewardsAsset, "rewardsList"), pendingAssets, missingMapAssets);
+                break;
+        }
+    }
+
+    private static void EnqueueDialogueElementAssets(DialogueElement element, Queue<Asset> pendingAssets, List<string> missingMapAssets)
+    {
+        EnqueueNpcConditionAssets(element.conditions, pendingAssets, missingMapAssets);
+        EnqueueNpcRewardAssets(element.rewards, pendingAssets, missingMapAssets);
+
+        if (element is DialogueResponse response)
+        {
+            EnqueueIfOptimizable(response.FindDialogueAsset(), pendingAssets);
+            EnqueueIfOptimizable(response.FindQuestAsset(), pendingAssets);
+            EnqueueIfOptimizable(response.FindVendorAsset(), pendingAssets);
+        }
+    }
+
+    private static void EnqueueVendorElementAssets(VendorElement element, Queue<Asset> pendingAssets, List<string> missingMapAssets)
+    {
+        EnqueueNpcConditionAssets(element.conditions, pendingAssets, missingMapAssets);
+        EnqueueNpcRewardAssets(element.rewards, pendingAssets, missingMapAssets);
+    }
+
+    private static void EnqueueNpcConditionAssets(INPCCondition[]? conditions, Queue<Asset> pendingAssets, List<string> missingMapAssets)
+    {
+        if (conditions == null)
+        {
+            return;
+        }
+
+        foreach (INPCCondition condition in conditions)
+        {
+            if (condition is NPCItemCondition itemCondition)
+            {
+                EnqueueItemAsset(Guid.Empty, itemCondition.id, itemCondition.GetItemAsset(), pendingAssets, missingMapAssets, "NPC item condition");
+            }
+            else if (condition is NPCQuestCondition questCondition)
+            {
+                EnqueueIfOptimizable(questCondition.GetQuestAsset(), pendingAssets);
+            }
+        }
+    }
+
+    private static void EnqueueNpcRewardAssets(INPCReward[]? rewards, Queue<Asset> pendingAssets, List<string> missingMapAssets)
+    {
+        if (rewards == null)
+        {
+            return;
+        }
+
+        foreach (INPCReward reward in rewards)
+        {
+            switch (reward)
+            {
+                case NPCItemReward itemReward:
+                    EnqueueItemAsset(itemReward.itemGuid, itemReward.id, itemReward.GetItemAsset(), pendingAssets, missingMapAssets, "NPC item reward");
+                    break;
+
+                case NPCRandomItemReward randomItemReward:
+                    EnqueueItemSpawnAsset(randomItemReward.SpawnTableGuid, randomItemReward.id, randomItemReward.FindSpawnAsset(), pendingAssets, missingMapAssets, "NPC random item reward");
+                    break;
+
+                case NPCVehicleReward vehicleReward:
+                    EnqueueVehicleAsset(
+                        vehicleReward.VehicleGuid,
+                        vehicleReward.id,
+                        vehicleReward.FindVehicleAssetAndHandleRedirects(),
+                        pendingAssets,
+                        missingMapAssets,
+                        "NPC vehicle reward");
+                    break;
+
+                case NPCQuestReward questReward:
+                    EnqueueIfOptimizable(questReward.GetQuestAsset(), pendingAssets);
+                    break;
+
+                case NPCRewardsListAssetReward rewardsListAssetReward:
+                    EnqueueIfOptimizable(ResolveAssetReference(rewardsListAssetReward.assetRef), pendingAssets);
+                    break;
+            }
+        }
+    }
+
+    private static void EnqueueNpcOutfitItems(NPCAssetOutfit? outfit, Queue<Asset> pendingAssets, List<string> missingMapAssets, string description)
+    {
+        if (outfit == null)
+        {
+            return;
+        }
+
+        EnqueueItemAsset(outfit.shirtGuid, outfit.shirt, pendingAssets, missingMapAssets, $"{description} shirt");
+        EnqueueItemAsset(outfit.pantsGuid, outfit.pants, pendingAssets, missingMapAssets, $"{description} pants");
+        EnqueueItemAsset(outfit.hatGuid, outfit.hat, pendingAssets, missingMapAssets, $"{description} hat");
+        EnqueueItemAsset(outfit.backpackGuid, outfit.backpack, pendingAssets, missingMapAssets, $"{description} backpack");
+        EnqueueItemAsset(outfit.vestGuid, outfit.vest, pendingAssets, missingMapAssets, $"{description} vest");
+        EnqueueItemAsset(outfit.maskGuid, outfit.mask, pendingAssets, missingMapAssets, $"{description} mask");
+        EnqueueItemAsset(outfit.glassesGuid, outfit.glasses, pendingAssets, missingMapAssets, $"{description} glasses");
+    }
+
+    private static void EnqueueItemAsset(Guid guid, ushort id, Queue<Asset> pendingAssets, List<string> missingMapAssets, string description)
+    {
+        EnqueueItemAsset(guid, id, ResolveItemAsset(guid, id), pendingAssets, missingMapAssets, description);
+    }
+
+    private static void EnqueueItemAsset(Guid guid, ItemAsset? itemAsset, Queue<Asset> pendingAssets, List<string> missingMapAssets, string description)
+    {
+        EnqueueItemAsset(guid, 0, itemAsset, pendingAssets, missingMapAssets, description);
+    }
+
+    private static void EnqueueItemAsset(Guid guid, ushort id, ItemAsset? itemAsset, Queue<Asset> pendingAssets, List<string> missingMapAssets, string description)
+    {
+        if (itemAsset != null)
+        {
+            EnqueueIfOptimizable(itemAsset, pendingAssets);
+            return;
+        }
+
+        AddMissingNpcReferenceWarning(guid, id, "item", description, missingMapAssets);
+    }
+
+    private static void EnqueueVehicleAsset(Guid guid, ushort id, VehicleAsset? vehicleAsset, Queue<Asset> pendingAssets, List<string> missingMapAssets, string description)
+    {
+        if (vehicleAsset != null)
+        {
+            EnqueueIfOptimizable(vehicleAsset, pendingAssets);
+            return;
+        }
+
+        AddMissingNpcReferenceWarning(guid, id, "vehicle", description, missingMapAssets);
+    }
+
+    private static void EnqueueItemSpawnAsset(Guid guid, ushort id, Asset? spawnAsset, Queue<Asset> pendingAssets, List<string> missingMapAssets, string description)
+    {
+        Asset? asset = spawnAsset ?? ResolveAsset(guid, EAssetType.SPAWN, id);
+        if (asset != null)
+        {
+            List<Asset> assets = [];
+            HashSet<Guid> visitedSpawnAssets = [];
+            AddSpawnAsset(asset, EAssetType.ITEM, "NPC item", assets, visitedSpawnAssets, missingMapAssets);
+
+            foreach (Asset childAsset in assets)
+            {
+                EnqueueIfOptimizable(childAsset, pendingAssets);
+            }
+
+            return;
+        }
+
+        AddMissingNpcReferenceWarning(guid, id, "item spawn table", description, missingMapAssets);
+    }
+
+    private static ItemAsset? ResolveItemAsset(Guid guid, ushort id)
+    {
+        return ResolveAsset(guid, EAssetType.ITEM, id) as ItemAsset;
+    }
+
+    private static Asset? ResolveAsset(Guid guid, EAssetType assetType, ushort id)
+    {
+        if (guid != Guid.Empty)
+        {
+            Asset? asset = SDG.Unturned.Assets.find(guid);
+            if (asset != null)
+            {
+                return asset;
+            }
+        }
+
+        return id == 0 ? null : SDG.Unturned.Assets.find(assetType, id);
+    }
+
+    private static void EnqueueIfOptimizable(Asset? asset, Queue<Asset> pendingAssets)
+    {
+        if (ShouldOptimizeAsset(asset))
+        {
+            pendingAssets.Enqueue(asset!);
+        }
+    }
+
+    private static Asset? ResolveAssetReference(object? assetReference)
+    {
+        if (assetReference == null)
+        {
+            return null;
+        }
+
+        Type referenceType = assetReference.GetType();
+        MethodInfo? findMethod = referenceType.GetMethod("Find", BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
+        if (findMethod?.Invoke(assetReference, null) is Asset asset)
+        {
+            return asset;
+        }
+
+        MethodInfo? getMethod = referenceType.GetMethod("Get", BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
+        if (getMethod?.Invoke(assetReference, null) is Asset getAsset)
+        {
+            return getAsset;
+        }
+
+        return null;
+    }
+
+    private static INPCReward[]? GetRewardsListField(object owner, string fieldName)
+    {
+        FieldInfo? listField = owner.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        object? list = listField?.GetValue(owner);
+        if (list == null)
+        {
+            return null;
+        }
+
+        FieldInfo? rewardsField = list.GetType().GetField("rewards", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        return rewardsField?.GetValue(list) as INPCReward[];
+    }
+
+    private static void AddMissingNpcReferenceWarning(Guid guid, ushort id, string assetKind, string description, List<string> missingMapAssets)
+    {
+        if (guid == Guid.Empty && id == 0)
+        {
+            return;
+        }
+
+        string guidText = guid == Guid.Empty ? "none" : guid.ToString("N");
+        missingMapAssets.Add($"NPC {description} with {assetKind} GUID {guidText} and ID {id}");
+    }
+#pragma warning restore CS0612
 
     private static List<Asset> GatherItemSpawnAssets(List<string> missingMapAssets)
     {
@@ -352,7 +652,7 @@ internal static class MapModOptimizationPlanner
         }
     }
 
-    private static void EnqueueReferencedAssets(string sourceFolderPath, Queue<Asset> pendingAssets, List<string> warnings)
+    private static void EnqueueReferencedAssets(string sourceFolderPath, Queue<Asset> pendingAssets, List<string> warnings, bool saveItemsAndVehicles)
     {
         foreach (string filePath in Directory.EnumerateFiles(sourceFolderPath, "*", SearchOption.AllDirectories))
         {
@@ -380,12 +680,17 @@ internal static class MapModOptimizationPlanner
                 }
 
                 Asset? referencedAsset = SDG.Unturned.Assets.find(guid);
-                if (ShouldOptimizeAsset(referencedAsset))
+                if (ShouldOptimizeAsset(referencedAsset) && ShouldSaveReferencedAsset(referencedAsset!, saveItemsAndVehicles))
                 {
                     pendingAssets.Enqueue(referencedAsset!);
                 }
             }
         }
+    }
+
+    private static bool ShouldSaveReferencedAsset(Asset asset, bool saveItemsAndVehicles)
+    {
+        return saveItemsAndVehicles || asset is not ItemAsset and not VehicleAsset;
     }
 
     private static void AddBundlePathReferenceRoots(
