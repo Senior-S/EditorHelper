@@ -18,16 +18,12 @@ public class EditorUIPatches
     [HarmonyPatch("Update")]
     [HarmonyPrefix]
     [UsedImplicitly]
-    private static void PrefixUpdate()
+    private static bool PrefixUpdate()
     {
         if (CommandPaletteExtension.IsOpen)
         {
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                CommandPaletteExtension.CloseIfOpen();
-            }
-
-            return;
+            CommandPaletteExtension.HandleModalInput();
+            return false;
         }
 
         if (LSystemRoadsExtension.IsOpen)
@@ -37,7 +33,7 @@ public class EditorUIPatches
                 LSystemRoadsExtension.CloseIfOpen();
             }
 
-            return;
+            return true;
         }
 
         if (CinematicModeExtension.IsOpen)
@@ -47,14 +43,16 @@ public class EditorUIPatches
                 CinematicModeExtension.CloseIfOpen();
             }
 
-            return;
+            return true;
         }
 
-        if (!KeybindsMenuExtension.IsOpen) return;
+        if (!KeybindsMenuExtension.IsOpen) return true;
         if (InputEx.ConsumeKeyDown(KeyCode.Escape))
         {
             KeybindsMenuExtension.CloseIfOpen();
         }
+
+        return true;
     }
 
     private static readonly FieldInfo EditorTerrainUIActiveField = typeof(EditorTerrainUI).GetField(nameof(EditorTerrainUI.active), BindingFlags.Public | BindingFlags.Static);
@@ -107,7 +105,9 @@ public class EditorUIPatches
     [UsedImplicitly]
     private static void PostfixUpdate()
     {
-        if (ExtensionManager.TryGetInstance(out CommandPaletteExtension? commandPaletteExtension))
+        if (!CommandPaletteExtension.ConsumeModalInputHandledThisFrame()
+            && !CommandPaletteExtension.IsOpen
+            && ExtensionManager.TryGetInstance(out CommandPaletteExtension? commandPaletteExtension))
         {
             commandPaletteExtension.CustomUpdate();
         }

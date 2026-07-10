@@ -37,10 +37,16 @@
 
     <ItemGroup>
       <Folder Include="Extensions\Spawns\" />
+      <Folder Include="Features\ReferenceOverlay\" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\EditorHelper2.common\EditorHelper2.common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Features\ReferenceOverlay\ReferenceOverlayMeshBuilder.cs" />
+      <Compile Remove="Features\ReferenceOverlay\ReferenceOverlaySettings.cs" />
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">

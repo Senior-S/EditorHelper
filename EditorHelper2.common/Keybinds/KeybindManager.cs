@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Newtonsoft.Json;
 using SDG.Unturned;
 using UnityEngine;
@@ -104,6 +103,22 @@ public static class KeybindManager
         return IsKeyDown(primary) && AreModifiersExact(binding) && AreOtherKeysHeld(binding, primary);
     }
 
+    /// <summary>
+    /// Tests a binding with raw Unity input for a UI which already owns input.
+    /// This deliberately ignores text-field focus; callers must not use it to open a modal UI.
+    /// </summary>
+    public static bool IsDownIgnoringTextFieldFocus(string id)
+    {
+        if (KeybindRebindManager.ShouldIgnoreInput) return false;
+        if (!ActionsInternal.TryGetValue(id, out KeybindAction? action)) return false;
+        Keybind binding = action.Current;
+        if (binding.IsNone || binding.PrimaryKey == KeyCode.None) return false;
+
+        return IsRawKeyDown(binding.PrimaryKey)
+               && AreModifiersExactRaw(binding)
+               && AreOtherNonModifierKeysHeldRaw(binding, binding.PrimaryKey);
+    }
+
     public static bool IsHeld(Keybind binding)
     {
         if (binding.IsNone) return false;
@@ -134,6 +149,17 @@ public static class KeybindManager
         return true;
     }
 
+    private static bool AreModifiersExactRaw(Keybind binding)
+    {
+        bool ctrl = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+        bool shift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        bool alt = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
+
+        return binding.Keys.Any(Keybind.IsCtrlKey) == ctrl
+               && binding.Keys.Any(Keybind.IsShiftKey) == shift
+               && binding.Keys.Any(Keybind.IsAltKey) == alt;
+    }
+
     private static bool AreAllNonModifierKeysHeld(Keybind binding)
     {
         foreach (KeyCode key in binding.Keys)
@@ -153,6 +179,25 @@ public static class KeybindManager
             if (!InputEx.GetKey(key)) return false;
         }
         return true;
+    }
+
+    private static bool AreOtherNonModifierKeysHeldRaw(Keybind binding, KeyCode primary)
+    {
+        foreach (KeyCode key in binding.Keys)
+        {
+            if (key == primary || Keybind.IsModifierKey(key)) continue;
+            if (!Input.GetKey(key)) return false;
+        }
+
+        return true;
+    }
+
+    private static bool IsRawKeyDown(KeyCode key)
+    {
+        if (Keybind.IsCtrlKey(key)) return Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl);
+        if (Keybind.IsShiftKey(key)) return Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift);
+        if (Keybind.IsAltKey(key)) return Input.GetKeyDown(KeyCode.LeftAlt) || Input.GetKeyDown(KeyCode.RightAlt);
+        return Input.GetKeyDown(key);
     }
 
     private static bool IsKeyDown(KeyCode key)
