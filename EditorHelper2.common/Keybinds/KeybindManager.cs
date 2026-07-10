@@ -211,6 +211,8 @@ public static class KeybindManager
             new Keybind(KeyCode.LeftControl, KeyCode.Z)));
         Register(new KeybindAction(KeybindIds.EditorRedo, "Redo", "Redo last transaction", "Editor",
             new Keybind(KeyCode.LeftControl, KeyCode.LeftShift, KeyCode.Z)));
+        Register(new KeybindAction(KeybindIds.CommandPalette, "Command Palette", "Search and run editor actions", "Editor",
+            new Keybind(KeyCode.LeftControl, KeyCode.P)));
 
         Register(new KeybindAction(KeybindIds.TabTerrain, "Terrain Tab", "Go to the terrain tab", "Editor Tabs",
             new Keybind(KeyCode.LeftControl, KeyCode.Alpha1)));

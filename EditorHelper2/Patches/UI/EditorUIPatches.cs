@@ -20,6 +20,16 @@ public class EditorUIPatches
     [UsedImplicitly]
     private static void PrefixUpdate()
     {
+        if (CommandPaletteExtension.IsOpen)
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                CommandPaletteExtension.CloseIfOpen();
+            }
+
+            return;
+        }
+
         if (LSystemRoadsExtension.IsOpen)
         {
             if (InputEx.ConsumeKeyDown(KeyCode.Escape))
@@ -97,6 +107,11 @@ public class EditorUIPatches
     [UsedImplicitly]
     private static void PostfixUpdate()
     {
+        if (ExtensionManager.TryGetInstance(out CommandPaletteExtension? commandPaletteExtension))
+        {
+            commandPaletteExtension.CustomUpdate();
+        }
+
         KeybindRebindManager.HandleUpdate();
     }
 }

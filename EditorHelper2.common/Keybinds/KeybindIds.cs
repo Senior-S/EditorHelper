@@ -5,6 +5,7 @@ public static class KeybindIds
     public const string EditorSave = "editor.save";
     public const string EditorUndo = "editor.undo";
     public const string EditorRedo = "editor.redo";
+    public const string CommandPalette = "editor.command_palette";
 
     public const string TabTerrain = "tab.terrain";
     public const string TabEnvironment = "tab.environment";

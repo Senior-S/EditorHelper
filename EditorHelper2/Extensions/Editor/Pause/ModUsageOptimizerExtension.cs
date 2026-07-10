@@ -38,6 +38,7 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
     private readonly ISleekField _outputPathField;
     private readonly ISleekField _parallelBundleJobsField;
     private readonly ISleekToggle _metadataOnlyTrimToggle;
+    private readonly ISleekToggle _saveItemsAndVehiclesToggle;
     private readonly ISleekButton _optimizeButton;
     private readonly ISleekBox _statusBox;
 
@@ -106,6 +107,17 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
         _metadataOnlyTrimToggle = builder.BuildToggle("Skip streamed payload compaction for faster, larger bundle output", ESleekSide.RIGHT);
         _metadataOnlyTrimToggle.Value = false;
         _panel.AddChild(_metadataOnlyTrimToggle);
+
+        builder.ResetProperties()
+            .SetAnchorHorizontal(0f)
+            .SetOffsetHorizontal(PanelPadding + 220f)
+            .SetOffsetVertical(110f)
+            .SetSizeHorizontal(30f)
+            .SetSizeVertical(30f)
+            .SetText("Save items and vehicles");
+        _saveItemsAndVehiclesToggle = builder.BuildToggle("Export item and vehicle assets used by spawn tables and NPCs", ESleekSide.RIGHT);
+        _saveItemsAndVehiclesToggle.Value = true;
+        _panel.AddChild(_saveItemsAndVehiclesToggle);
 
         builder.ResetProperties()
             .SetAnchorHorizontal(0f)
@@ -198,6 +210,7 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
         }
 
         bool useMetadataOnlyBundleTrim = _metadataOnlyTrimToggle.Value;
+        bool saveItemsAndVehicles = _saveItemsAndVehiclesToggle.Value;
 
         DiscordRichPresence? richPresence = EditorHelper.GetRichPresence();
         if (richPresence == null)
@@ -208,7 +221,7 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
 
         void StartOptimization()
         {
-            richPresence.StartCoroutine(RunOptimizationRoutine(normalizedOutputPath, parallelBundleJobs, useMetadataOnlyBundleTrim));
+            richPresence.StartCoroutine(RunOptimizationRoutine(normalizedOutputPath, parallelBundleJobs, useMetadataOnlyBundleTrim, saveItemsAndVehicles));
         }
 
         if (parallelBundleJobs > 2)
@@ -229,7 +242,7 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
         StartOptimization();
     }
 
-    private IEnumerator RunOptimizationRoutine(string outputPath, int parallelBundleJobs, bool useMetadataOnlyBundleTrim)
+    private IEnumerator RunOptimizationRoutine(string outputPath, int parallelBundleJobs, bool useMetadataOnlyBundleTrim, bool saveItemsAndVehicles)
     {
         _isRunning = true;
         _optimizeButton.IsClickable = false;
@@ -243,7 +256,7 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
 
         try
         {
-            plan = MapModOptimizationPlanner.CreatePlan(outputPath);
+            plan = MapModOptimizationPlanner.CreatePlan(outputPath, saveItemsAndVehicles);
         }
         catch (Exception ex)
         {
