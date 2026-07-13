@@ -194,7 +194,20 @@ internal static class TerrainDiffusionWorker
             throw new ArgumentException("Paths must not contain quote characters.", nameof(value));
         }
 
-        return $"\"{value}\"";
+        // Escape trailing backslashes so a Windows command-line parser does not
+        // consume the closing quote (important for a model directory such as C:\\).
+        int trailingBackslashes = 0;
+        for (int i = value.Length - 1; i >= 0 && value[i] == '\\'; i--)
+        {
+            trailingBackslashes++;
+        }
+
+        if (trailingBackslashes == 0)
+        {
+            return $"\"{value}\"";
+        }
+
+        return $"\"{value}{new string('\\', trailingBackslashes)}\"";
     }
 
     private static void ValidateRequest(TerrainDiffusionWorkerRequest request)
