@@ -80,6 +80,7 @@ public sealed class TerrainDiffusionExtension : UIExtension, IExtension
         builder.SetOffsetVertical(148f)
             .SetText("1337");
         _seedField = builder.BuildStringField();
+        _seedField.Text = "1337";
         _seedField.TooltipText = "Deterministic 64-bit Terrain Diffusion seed";
 
         builder.SetOffsetVertical(184f)
@@ -229,9 +230,9 @@ public sealed class TerrainDiffusionExtension : UIExtension, IExtension
                     _generationCancellation = null;
                     _generationTask = null;
                 }
-
-                cancellation.Dispose();
             });
+
+            cancellation.Dispose();
         }
     }
 
