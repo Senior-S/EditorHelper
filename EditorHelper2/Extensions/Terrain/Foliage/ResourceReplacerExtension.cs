@@ -49,11 +49,11 @@ public class ResourceReplacerExtension : UIExtension, IExtension
 
     private readonly ISleekLabel _statusLabel;
 
-    private ResourceAsset? _sourceAsset;
-    private ResourceAsset? _targetAsset;
+    private SelectableResource? _sourceAsset;
+    private SelectableResource? _targetAsset;
     private bool _selectingSource = true;
-    private List<ResourceAsset> _allResourceAssets = [];
-    private List<ResourceAsset> _filteredAssets = [];
+    private List<SelectableResource> _allResourceAssets = [];
+    private List<SelectableResource> _filteredAssets = [];
     private float _currentRadius = DefaultRadius;
 
     public ResourceReplacerExtension(EditorTerrainDetailsUI instance)
@@ -288,9 +288,35 @@ public class ResourceReplacerExtension : UIExtension, IExtension
     private void LoadResourceAssets()
     {
         _allResourceAssets.Clear();
-        SDG.Unturned.Assets.find(_allResourceAssets);
-        _allResourceAssets = _allResourceAssets.OrderBy(a => a.FriendlyName).ToList();
-        _filteredAssets = new List<ResourceAsset>(_allResourceAssets);
+
+        List<ResourceAsset> resourceAssets = [];
+        SDG.Unturned.Assets.find(resourceAssets);
+
+        List<FoliageResourceInfoAsset> resourceFoliageAssets = [];
+        SDG.Unturned.Assets.find(resourceFoliageAssets);
+
+        List<FoliageInstancedMeshInfoAsset> instancedMeshAssets = [];
+        SDG.Unturned.Assets.find(instancedMeshAssets);
+
+        Dictionary<Guid, FoliageResourceInfoAsset> foliageByResourceGuid = resourceFoliageAssets
+            .Select(foliage => (foliage, resource: foliage.resource.Find()))
+            .Where(pair => pair.resource != null)
+            .GroupBy(pair => pair.resource!.GUID)
+            .ToDictionary(group => group.Key, group => group.First().foliage);
+
+        foreach (ResourceAsset resourceAsset in resourceAssets)
+        {
+            foliageByResourceGuid.TryGetValue(resourceAsset.GUID, out FoliageResourceInfoAsset? foliageAsset);
+            _allResourceAssets.Add(new SelectableResource(resourceAsset, foliageAsset));
+        }
+
+        foreach (FoliageInstancedMeshInfoAsset foliageAsset in instancedMeshAssets)
+        {
+            _allResourceAssets.Add(new SelectableResource(null, foliageAsset));
+        }
+
+        _allResourceAssets = _allResourceAssets.OrderBy(a => a.DisplayName).ToList();
+        _filteredAssets = new List<SelectableResource>(_allResourceAssets);
     }
 
     private void RefreshAssetList()
@@ -300,14 +326,14 @@ public class ResourceReplacerExtension : UIExtension, IExtension
 
         UIBuilder itemBuilder = new(0f, 25f);
 
-        foreach (ResourceAsset asset in _filteredAssets)
+        foreach (SelectableResource asset in _filteredAssets)
         {
             itemBuilder.ResetProperties()
                 .SetAnchorHorizontal(0f)
                 .SetOffsetVertical(offsetY)
                 .SetScaleHorizontal(1f)
                 .SetSizeVertical(25f)
-                .SetText(asset.FriendlyName);
+                .SetText(asset.DisplayName);
 
             ISleekButton assetButton = itemBuilder.BuildButton();
             assetButton.OnClicked += _ => OnAssetSelected(asset);
@@ -323,7 +349,7 @@ public class ResourceReplacerExtension : UIExtension, IExtension
         bool canReplace = _sourceAsset != null && _targetAsset != null;
         _replaceButton.IsClickable = canReplace;
         _replaceButton.TooltipText = canReplace
-            ? $"Replace {_sourceAsset!.FriendlyName} with {_targetAsset!.FriendlyName}"
+            ? $"Replace {_sourceAsset!.DisplayName} with {_targetAsset!.DisplayName}"
             : "Select both source and target assets";
     }
 
@@ -381,29 +407,29 @@ public class ResourceReplacerExtension : UIExtension, IExtension
 
         if (string.IsNullOrEmpty(searchText))
         {
-            _filteredAssets = new List<ResourceAsset>(_allResourceAssets);
+            _filteredAssets = new List<SelectableResource>(_allResourceAssets);
         }
         else
         {
             _filteredAssets = _allResourceAssets
-                .Where(a => a.FriendlyName.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
+                .Where(a => a.DisplayName.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
                 .ToList();
         }
 
         RefreshAssetList();
     }
 
-    private void OnAssetSelected(ResourceAsset asset)
+    private void OnAssetSelected(SelectableResource asset)
     {
         if (_selectingSource)
         {
             _sourceAsset = asset;
-            _sourceButton.Text = asset.FriendlyName;
+            _sourceButton.Text = asset.DisplayName;
         }
         else
         {
             _targetAsset = asset;
-            _targetButton.Text = asset.FriendlyName;
+            _targetButton.Text = asset.DisplayName;
         }
 
         UpdateReplaceButtonState();
@@ -413,7 +439,7 @@ public class ResourceReplacerExtension : UIExtension, IExtension
     {
         Vector3 cameraPosition = MainCamera.instance?.transform.position ?? Vector3.zero;
         float closestDistanceSquared = float.MaxValue;
-        ResourceAsset? closestAsset = null;
+        SelectableResource? closestAsset = null;
 
         // Check Trees
         List<ResourceSpawnpoint> allTrees = [];
@@ -425,23 +451,24 @@ public class ResourceReplacerExtension : UIExtension, IExtension
             float distSq = (tree.point - cameraPosition).sqrMagnitude;
             if (distSq < closestDistanceSquared)
             {
-                closestDistanceSquared = distSq;
-                closestAsset = tree.asset;
+                SelectableResource? treeAsset = _allResourceAssets
+                    .FirstOrDefault(asset => asset.ResourceAsset?.GUID == tree.asset.GUID);
+                if (treeAsset != null)
+                {
+                    closestDistanceSquared = distSq;
+                    closestAsset = treeAsset;
+                }
             }
         }
 
         // Check Foliage
-        List<FoliageResourceInfoAsset> resourceInfoAssets = [];
-        SDG.Unturned.Assets.find(resourceInfoAssets);
-
         foreach (KeyValuePair<FoliageCoord, FoliageTile> tilePair in FoliageSystem.tiles)
         {
             FoliageTile tile = tilePair.Value;
             foreach (KeyValuePair<AssetReference<FoliageInstancedMeshInfoAsset>, FoliageInstanceList> pair in tile.instances)
             {
-                FoliageResourceInfoAsset? info = resourceInfoAssets.FirstOrDefault(x => x.GUID == pair.Key.GUID);
-                ResourceAsset? resourceAsset = info?.resource.Find();
-                if (resourceAsset == null) continue;
+                SelectableResource? foliageAsset = _allResourceAssets.FirstOrDefault(x => x.FoliageGuid == pair.Key.GUID);
+                if (foliageAsset == null) continue;
 
                 foreach (List<Matrix4x4> matrixList in pair.Value.matrices)
                 {
@@ -451,7 +478,7 @@ public class ResourceReplacerExtension : UIExtension, IExtension
                         if (distSq < closestDistanceSquared)
                         {
                             closestDistanceSquared = distSq;
-                            closestAsset = resourceAsset;
+                            closestAsset = foliageAsset;
                         }
                     }
                 }
@@ -464,7 +491,7 @@ public class ResourceReplacerExtension : UIExtension, IExtension
             OnAssetSelected(closestAsset);
             _selectionModeLabel.Text = "Select Source";
             UpdateSelectionHighlight();
-            _statusLabel.Text = $"Selected nearest: {closestAsset.FriendlyName}";
+            _statusLabel.Text = $"Selected nearest: {closestAsset.DisplayName}";
             OnTargetButtonClicked(null);
         }
         else
@@ -499,6 +526,9 @@ public class ResourceReplacerExtension : UIExtension, IExtension
 
     private List<ResourceSpawnpoint> GetMatchingResources()
     {
+        if (_sourceAsset?.ResourceAsset == null)
+            return [];
+
         List<ResourceSpawnpoint> allTrees = [];
         LevelGround.GatherAllTrees(allTrees);
 
@@ -510,7 +540,7 @@ public class ResourceReplacerExtension : UIExtension, IExtension
 
         return allTrees.Where(tree =>
         {
-            if (tree.asset == null || tree.asset.GUID != _sourceAsset!.GUID)
+            if (tree.asset == null || tree.asset.GUID != _sourceAsset.ResourceAsset.GUID)
                 return false;
 
             if (tree.isDead)
@@ -548,36 +578,42 @@ public class ResourceReplacerExtension : UIExtension, IExtension
         int replacedCount = 0;
         bool useNewTransform = _useNewTransformToggle.Value;
 
-        foreach (ResourceSpawnpoint resource in resourcesToReplace)
+        ResourceAsset? sourceResourceAsset = _sourceAsset.ResourceAsset;
+        ResourceAsset? targetResourceAsset = _targetAsset.ResourceAsset;
+
+        if (sourceResourceAsset != null && targetResourceAsset != null)
         {
-            Vector3 position = resource.point;
-            Quaternion originalRotation = resource.angle;
-            Vector3 originalScale = resource.scale;
-            bool isGenerated = resource.isGenerated;
-
-            Quaternion newRotation = originalRotation;
-            Vector3 newScale = originalScale;
-
-            if (useNewTransform)
+            foreach (ResourceSpawnpoint resource in resourcesToReplace)
             {
-                _targetAsset.GetLegacyRotationAndScale(position, out newRotation, out newScale);
+                Vector3 position = resource.point;
+                Quaternion originalRotation = resource.angle;
+                Vector3 originalScale = resource.scale;
+                bool isGenerated = resource.isGenerated;
+
+                Quaternion newRotation = originalRotation;
+                Vector3 newScale = originalScale;
+
+                if (useNewTransform)
+                {
+                    targetResourceAsset.GetLegacyRotationAndScale(position, out newRotation, out newScale);
+                }
+
+                resourceTransactionData.Add(new ReplacedResourceData
+                {
+                    Position = position,
+                    Rotation = originalRotation,
+                    Scale = originalScale,
+                    OriginalAssetGuid = sourceResourceAsset.GUID,
+                    NewAssetGuid = targetResourceAsset.GUID,
+                    IsGenerated = isGenerated
+                });
+
+                resource.destroy();
+                RemoveResourceFromStorage(resource);
+                LevelGround.addSpawn(position, newRotation, newScale, targetResourceAsset.GUID, isGenerated);
+
+                replacedCount++;
             }
-
-            resourceTransactionData.Add(new ReplacedResourceData
-            {
-                Position = position,
-                Rotation = originalRotation,
-                Scale = originalScale,
-                OriginalAssetGuid = _sourceAsset.GUID,
-                NewAssetGuid = _targetAsset.GUID,
-                IsGenerated = isGenerated
-            });
-
-            resource.destroy();
-            RemoveResourceFromStorage(resource);
-            LevelGround.addSpawn(position, newRotation, newScale, _targetAsset.GUID, isGenerated);
-
-            replacedCount++;
         }
 
         int foliageReplaced = ReplaceFoliageInstances(foliageTransactionData);
@@ -612,20 +648,13 @@ public class ResourceReplacerExtension : UIExtension, IExtension
         bool wholeMap = _wholeMapToggle.Value;
         float radiusSquared = _currentRadius * _currentRadius;
 
-        List<FoliageResourceInfoAsset> resourceInfoAssets = [];
-        SDG.Unturned.Assets.find(resourceInfoAssets);
-
-        FoliageResourceInfoAsset? sourceFoliageAsset = resourceInfoAssets
-            .FirstOrDefault(f => f.resource.Find()?.GUID == _sourceAsset.GUID);
-
-        FoliageResourceInfoAsset? targetFoliageAsset = resourceInfoAssets
-            .FirstOrDefault(f => f.resource.Find()?.GUID == _targetAsset.GUID);
-
-        if (sourceFoliageAsset == null || targetFoliageAsset == null)
+        if (!_sourceAsset.FoliageGuid.HasValue || !_targetAsset.FoliageGuid.HasValue)
             return 0;
 
-        AssetReference<FoliageInstancedMeshInfoAsset> sourceRef = new(sourceFoliageAsset.GUID);
-        AssetReference<FoliageInstancedMeshInfoAsset> targetRef = new(targetFoliageAsset.GUID);
+        Guid sourceFoliageGuid = _sourceAsset.FoliageGuid.Value;
+        Guid targetFoliageGuid = _targetAsset.FoliageGuid.Value;
+        AssetReference<FoliageInstancedMeshInfoAsset> sourceRef = new(sourceFoliageGuid);
+        AssetReference<FoliageInstancedMeshInfoAsset> targetRef = new(targetFoliageGuid);
 
         List<(FoliageTile tile, FoliageCoord coord, int matricesIndex, int matrixIndex, Matrix4x4 matrix, bool clearWhenBaked)> instancesToReplace = [];
 
@@ -669,10 +698,10 @@ public class ResourceReplacerExtension : UIExtension, IExtension
             tile.removeInstance(oldList, matricesIndex, matrixIndex);
 
             Matrix4x4 newMatrix = matrix;
-            if (useNewTransform)
+            if (useNewTransform && _targetAsset.ResourceAsset != null)
             {
                 Vector3 position = matrix.GetPosition();
-                _targetAsset.GetLegacyRotationAndScale(position, out Quaternion newRotation, out Vector3 newScale);
+                _targetAsset.ResourceAsset.GetLegacyRotationAndScale(position, out Quaternion newRotation, out Vector3 newScale);
                 newMatrix = Matrix4x4.TRS(position, newRotation, newScale);
             }
 
@@ -681,8 +710,8 @@ public class ResourceReplacerExtension : UIExtension, IExtension
                 TileCoord = coord,
                 OriginalMatrix = matrix,
                 NewMatrix = newMatrix,
-                OriginalAssetGuid = sourceFoliageAsset.GUID,
-                NewAssetGuid = targetFoliageAsset.GUID,
+                OriginalAssetGuid = sourceFoliageGuid,
+                NewAssetGuid = targetFoliageGuid,
                 ClearWhenBaked = clearWhenBaked
             });
 
@@ -729,6 +758,35 @@ public class ResourceReplacerExtension : UIExtension, IExtension
     }
 
     #endregion Core Logic
+
+    private sealed class SelectableResource
+    {
+        public ResourceAsset? ResourceAsset { get; }
+        public Guid? FoliageGuid { get; }
+        public string DisplayName { get; }
+
+        public SelectableResource(ResourceAsset? resourceAsset, FoliageInfoAsset? foliageAsset)
+        {
+            ResourceAsset = resourceAsset;
+            FoliageGuid = foliageAsset?.GUID;
+            DisplayName = GetDisplayName(resourceAsset, foliageAsset);
+        }
+
+        private static string GetDisplayName(ResourceAsset? resourceAsset, FoliageInfoAsset? foliageAsset)
+        {
+            if (!string.IsNullOrWhiteSpace(resourceAsset?.FriendlyName))
+                return resourceAsset.FriendlyName;
+
+            if (!string.IsNullOrWhiteSpace(foliageAsset?.FriendlyName))
+                return foliageAsset.FriendlyName;
+
+            if (!string.IsNullOrWhiteSpace(foliageAsset?.name))
+                return foliageAsset.name;
+
+            Guid guid = foliageAsset?.GUID ?? resourceAsset?.GUID ?? Guid.Empty;
+            return $"Unnamed ({guid})";
+        }
+    }
 
     #region Extension Functions
 
