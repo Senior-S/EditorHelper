@@ -49,7 +49,10 @@ internal readonly struct TerrainDiffusionWorkerRequest
 internal static class TerrainDiffusionWorker
 {
     private const int MaxDimension = 16385;
-    private const long MaxSampleCount = 268_000_000;
+    // Keep the client-side guard in sync with the sidecar's hard limit. This
+    // avoids starting a multi-minute worker that will deterministically reject
+    // the request after model initialization.
+    private const long MaxSampleCount = 100_000_000;
 
     public static async Task<TerrainDiffusionHeightmap> RunAsync(
         TerrainDiffusionWorkerRequest request,
@@ -265,6 +268,7 @@ internal static class TerrainDiffusionWorker
 internal sealed class TerrainDiffusionHeightmap
 {
     private const int HeaderSize = 16;
+    private const long MaxSampleCount = 100_000_000;
     private readonly float[] _values;
 
     public int Width { get; }
@@ -308,7 +312,7 @@ internal sealed class TerrainDiffusionHeightmap
 
         long sampleCount = (long)width * height;
         long expectedLength = HeaderSize + sampleCount * sizeof(float);
-        if (sampleCount > 268_000_000 || stream.Length != expectedLength)
+        if (sampleCount > MaxSampleCount || stream.Length != expectedLength)
         {
             throw new InvalidDataException($"Terrain Diffusion output length does not match {width}x{height} samples.");
         }

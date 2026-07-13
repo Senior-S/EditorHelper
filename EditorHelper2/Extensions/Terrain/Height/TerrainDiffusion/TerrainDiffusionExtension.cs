@@ -381,7 +381,7 @@ public sealed class TerrainDiffusionExtension : UIExtension, IExtension
         }
 
         long sampleCount = (long)(i2 - i1) * (j2 - j1);
-        if (sampleCount > 268_000_000)
+        if (sampleCount > 100_000_000)
         {
             error = "The selected scope is too large. Increase World Scale or use Current Tile.";
             return false;
