@@ -413,7 +413,7 @@ public sealed class TerrainDiffusionExtension : UIExtension, IExtension
 
     private static string NormalizePath(string? input)
     {
-        string path = Environment.ExpandEnvironmentVariables((input ?? string.Empty).Trim().Trim('"'));
+        string path = System.Environment.ExpandEnvironmentVariables((input ?? string.Empty).Trim().Trim('"'));
         if (path.Length == 0)
         {
             return string.Empty;
@@ -434,7 +434,7 @@ public sealed class TerrainDiffusionExtension : UIExtension, IExtension
         QueueCompletion(() => SetStatus(text, color));
     }
 
-    private void QueueCompletion(Action action)
+    private void QueueCompletion(System.Action action)
     {
         if (_disposed)
         {

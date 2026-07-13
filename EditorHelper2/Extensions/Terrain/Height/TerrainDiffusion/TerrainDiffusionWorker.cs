@@ -62,7 +62,7 @@ internal static class TerrainDiffusionWorker
         {
             FileName = "java",
             Arguments = BuildArguments(request),
-            WorkingDirectory = Path.GetDirectoryName(request.WorkerJarPath) ?? Environment.CurrentDirectory,
+            WorkingDirectory = Path.GetDirectoryName(request.WorkerJarPath) ?? System.Environment.CurrentDirectory,
             UseShellExecute = false,
             CreateNoWindow = true,
             RedirectStandardOutput = true,
