@@ -29,7 +29,10 @@ internal static class MapModOptimizationPlanner
         ".json"
     };
 
-    public static ModOptimizationPlan CreatePlan(string outputRootPath, bool saveItemsAndVehicles = true)
+    public static ModOptimizationPlan CreatePlan(
+        string outputRootPath,
+        bool saveItemsAndVehicles = true,
+        bool keepAllModItems = false)
     {
         string normalizedOutputRoot = Path.GetFullPath(outputRootPath);
         if (string.IsNullOrWhiteSpace(normalizedOutputRoot))
@@ -98,11 +101,13 @@ internal static class MapModOptimizationPlanner
             RootResourceAssetCount = rootResourceAssets.Select(asset => asset.GUID).Distinct().Count(),
             RootItemSpawnAssetCount = rootItemSpawnAssets.Select(asset => asset.GUID).Distinct().Count(),
             RootVehicleSpawnAssetCount = rootVehicleSpawnAssets.Select(asset => asset.GUID).Distinct().Count(),
-            SaveItemsAndVehicles = saveItemsAndVehicles
+            SaveItemsAndVehicles = saveItemsAndVehicles,
+            KeepAllModItems = keepAllModItems
         };
 
         Dictionary<string, MasterBundleExportPlan> masterBundlePlans = new(StringComparer.OrdinalIgnoreCase);
         Dictionary<string, int> standaloneFolderIndices = new(StringComparer.OrdinalIgnoreCase);
+        HashSet<AssetOrigin> itemOriginsEnqueued = [];
 
         while (pendingAssets.Count > 0)
         {
@@ -110,6 +115,11 @@ internal static class MapModOptimizationPlanner
             if (!visited.Add(asset.GUID))
             {
                 continue;
+            }
+
+            if (keepAllModItems && asset.origin != null && itemOriginsEnqueued.Add(asset.origin))
+            {
+                EnqueueAllItemsFromOrigin(asset.origin, pendingAssets);
             }
 
             if (string.IsNullOrWhiteSpace(asset.absoluteOriginFilePath))
@@ -236,7 +246,7 @@ internal static class MapModOptimizationPlanner
                 OutputBundleFileName = outputBundleFileName
             });
 
-            EnqueueReferencedAssets(sourceFolderPath, pendingAssets, plan.Warnings, saveItemsAndVehicles);
+            EnqueueReferencedAssets(sourceFolderPath, pendingAssets, plan.Warnings, saveItemsAndVehicles, keepAllModItems);
 
             if (saveItemsAndVehicles)
             {
@@ -246,6 +256,17 @@ internal static class MapModOptimizationPlanner
 
         AddMissingAssetWarnings(missingMapAssets, plan.Warnings);
         return plan;
+    }
+
+    private static void EnqueueAllItemsFromOrigin(AssetOrigin origin, Queue<Asset> pendingAssets)
+    {
+        foreach (Asset originAsset in origin.GetAssets())
+        {
+            if (originAsset is ItemAsset && ShouldOptimizeAsset(originAsset))
+            {
+                pendingAssets.Enqueue(originAsset);
+            }
+        }
     }
 
 #pragma warning disable CS0612 // NPC assets still expose legacy IDs for older content; use them only as fallback references.
@@ -652,7 +673,12 @@ internal static class MapModOptimizationPlanner
         }
     }
 
-    private static void EnqueueReferencedAssets(string sourceFolderPath, Queue<Asset> pendingAssets, List<string> warnings, bool saveItemsAndVehicles)
+    private static void EnqueueReferencedAssets(
+        string sourceFolderPath,
+        Queue<Asset> pendingAssets,
+        List<string> warnings,
+        bool saveItemsAndVehicles,
+        bool keepAllModItems)
     {
         foreach (string filePath in Directory.EnumerateFiles(sourceFolderPath, "*", SearchOption.AllDirectories))
         {
@@ -680,7 +706,8 @@ internal static class MapModOptimizationPlanner
                 }
 
                 Asset? referencedAsset = SDG.Unturned.Assets.find(guid);
-                if (ShouldOptimizeAsset(referencedAsset) && ShouldSaveReferencedAsset(referencedAsset!, saveItemsAndVehicles))
+                if (ShouldOptimizeAsset(referencedAsset) &&
+                    ShouldSaveReferencedAsset(referencedAsset!, saveItemsAndVehicles, keepAllModItems))
                 {
                     pendingAssets.Enqueue(referencedAsset!);
                 }
@@ -688,9 +715,11 @@ internal static class MapModOptimizationPlanner
         }
     }
 
-    private static bool ShouldSaveReferencedAsset(Asset asset, bool saveItemsAndVehicles)
+    private static bool ShouldSaveReferencedAsset(Asset asset, bool saveItemsAndVehicles, bool keepAllModItems)
     {
-        return saveItemsAndVehicles || asset is not ItemAsset and not VehicleAsset;
+        return saveItemsAndVehicles ||
+               (keepAllModItems && asset is ItemAsset) ||
+               asset is not ItemAsset and not VehicleAsset;
     }
 
     private static void AddBundlePathReferenceRoots(

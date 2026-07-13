@@ -332,6 +332,7 @@ internal static class MapModOptimizationExecutor
         builder.AppendLine($"Master bundles: {plan.MasterBundles.Count}");
         builder.AppendLine($"Master bundle parallel jobs: {plan.MaxParallelMasterBundleExports}");
         builder.AppendLine($"Save items and vehicles: {plan.SaveItemsAndVehicles}");
+        builder.AppendLine($"Keep all mod items: {plan.KeepAllModItems}");
         builder.AppendLine($"Metadata-only bundle trim: {plan.UseMetadataOnlyBundleTrim}");
         builder.AppendLine($"Patched object instances: {patchedObjectCount}");
         builder.AppendLine($"Patched resource instances: {patchedResourceCount}");

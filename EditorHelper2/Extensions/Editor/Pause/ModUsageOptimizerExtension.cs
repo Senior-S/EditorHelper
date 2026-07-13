@@ -25,8 +25,8 @@ namespace EditorHelper2.Extensions.Editor.Pause;
 public class ModUsageOptimizerExtension : UIExtension, IExtension
 {
     private const float PanelWidth = 460f;
-    private const float CompactPanelHeight = 185f;
-    private const float ExpandedPanelHeight = 270f;
+    private const float CompactPanelHeight = 220f;
+    private const float ExpandedPanelHeight = 305f;
     private const float PanelPadding = 10f;
     private const float ContentWidth = PanelWidth - PanelPadding * 2f;
     private const float SidePanelMinimumScreenWidth = 1120f;
@@ -39,6 +39,7 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
     private readonly ISleekField _parallelBundleJobsField;
     private readonly ISleekToggle _metadataOnlyTrimToggle;
     private readonly ISleekToggle _saveItemsAndVehiclesToggle;
+    private readonly ISleekToggle _keepAllModItemsToggle;
     private readonly ISleekButton _optimizeButton;
     private readonly ISleekBox _statusBox;
 
@@ -114,7 +115,7 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
             .SetOffsetVertical(110f)
             .SetSizeHorizontal(30f)
             .SetSizeVertical(30f)
-            .SetText("Save items and vehicles");
+            .SetText("Keep required items");
         _saveItemsAndVehiclesToggle = builder.BuildToggle("Export item and vehicle assets used by spawn tables and NPCs", ESleekSide.RIGHT);
         _saveItemsAndVehiclesToggle.Value = true;
         _panel.AddChild(_saveItemsAndVehiclesToggle);
@@ -123,6 +124,17 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
             .SetAnchorHorizontal(0f)
             .SetOffsetHorizontal(PanelPadding)
             .SetOffsetVertical(145f)
+            .SetSizeHorizontal(30f)
+            .SetSizeVertical(30f)
+            .SetText("Keep all mod items");
+        _keepAllModItemsToggle = builder.BuildToggle("Export every item asset from each mod used by the map", ESleekSide.RIGHT);
+        _keepAllModItemsToggle.Value = false;
+        _panel.AddChild(_keepAllModItemsToggle);
+
+        builder.ResetProperties()
+            .SetAnchorHorizontal(0f)
+            .SetOffsetHorizontal(PanelPadding)
+            .SetOffsetVertical(180f)
             .SetSizeHorizontal(ContentWidth)
             .SetSizeVertical(30f)
             .SetText("Optimize Mod Usage");
@@ -132,7 +144,7 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
         builder.ResetProperties()
             .SetAnchorHorizontal(0f)
             .SetOffsetHorizontal(PanelPadding)
-            .SetOffsetVertical(185f)
+            .SetOffsetVertical(220f)
             .SetSizeHorizontal(ContentWidth)
             .SetSizeVertical(70f)
             .SetText(string.Empty);
@@ -151,6 +163,8 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
         }
 
         _optimizeButton.OnClicked += OnOptimizeClicked;
+        _saveItemsAndVehiclesToggle.OnValueChanged += OnSaveItemsAndVehiclesChanged;
+        _keepAllModItemsToggle.OnValueChanged += OnKeepAllModItemsChanged;
         _container.AddChild(_panel);
     }
 
@@ -211,6 +225,7 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
 
         bool useMetadataOnlyBundleTrim = _metadataOnlyTrimToggle.Value;
         bool saveItemsAndVehicles = _saveItemsAndVehiclesToggle.Value;
+        bool keepAllModItems = _keepAllModItemsToggle.Value;
 
         DiscordRichPresence? richPresence = EditorHelper.GetRichPresence();
         if (richPresence == null)
@@ -221,7 +236,12 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
 
         void StartOptimization()
         {
-            richPresence.StartCoroutine(RunOptimizationRoutine(normalizedOutputPath, parallelBundleJobs, useMetadataOnlyBundleTrim, saveItemsAndVehicles));
+            richPresence.StartCoroutine(RunOptimizationRoutine(
+                normalizedOutputPath,
+                parallelBundleJobs,
+                useMetadataOnlyBundleTrim,
+                saveItemsAndVehicles,
+                keepAllModItems));
         }
 
         if (parallelBundleJobs > 2)
@@ -242,7 +262,12 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
         StartOptimization();
     }
 
-    private IEnumerator RunOptimizationRoutine(string outputPath, int parallelBundleJobs, bool useMetadataOnlyBundleTrim, bool saveItemsAndVehicles)
+    private IEnumerator RunOptimizationRoutine(
+        string outputPath,
+        int parallelBundleJobs,
+        bool useMetadataOnlyBundleTrim,
+        bool saveItemsAndVehicles,
+        bool keepAllModItems)
     {
         _isRunning = true;
         _optimizeButton.IsClickable = false;
@@ -256,7 +281,7 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
 
         try
         {
-            plan = MapModOptimizationPlanner.CreatePlan(outputPath, saveItemsAndVehicles);
+            plan = MapModOptimizationPlanner.CreatePlan(outputPath, saveItemsAndVehicles, keepAllModItems);
         }
         catch (Exception ex)
         {
@@ -365,6 +390,22 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
         UpdatePanelPlacement();
     }
 
+    private void OnSaveItemsAndVehiclesChanged(ISleekToggle toggle, bool state)
+    {
+        if (state)
+        {
+            _keepAllModItemsToggle.Value = false;
+        }
+    }
+
+    private void OnKeepAllModItemsChanged(ISleekToggle toggle, bool state)
+    {
+        if (state)
+        {
+            _saveItemsAndVehiclesToggle.Value = false;
+        }
+    }
+
     public void Dispose()
     {
         if (_container == null)
@@ -373,6 +414,8 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
         }
 
         _optimizeButton.OnClicked -= OnOptimizeClicked;
+        _saveItemsAndVehiclesToggle.OnValueChanged -= OnSaveItemsAndVehiclesChanged;
+        _keepAllModItemsToggle.OnValueChanged -= OnKeepAllModItemsChanged;
         _container.RemoveChild(_panel);
     }
 }

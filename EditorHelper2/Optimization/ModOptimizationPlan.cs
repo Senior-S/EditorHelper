@@ -14,6 +14,7 @@ internal sealed class ModOptimizationPlan
     public int RootVehicleSpawnAssetCount { get; set; }
     public int MaxParallelMasterBundleExports { get; set; } = 1;
     public bool SaveItemsAndVehicles { get; set; } = true;
+    public bool KeepAllModItems { get; set; }
     public bool UseMetadataOnlyBundleTrim { get; set; }
     public List<OptimizedAssetRecord> Assets { get; } = [];
     public List<MasterBundleExportPlan> MasterBundles { get; } = [];
