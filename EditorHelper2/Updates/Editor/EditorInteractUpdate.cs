@@ -1,5 +1,6 @@
 using EditorHelper2.common.Keybinds;
 using EditorHelper2.Extensions.Level.Objects;
+using EditorHelper2.Extensions.Level.Visibility;
 using EditorHelper2.Loader;
 using SDG.Framework.Devkit.Transactions;
 using SDG.Unturned;
@@ -88,6 +89,13 @@ public static class EditorInteractUpdate
             LevelVisibility.animalsVisible = !LevelVisibility.animalsVisible;
             EditorLevelVisibilityUI.animalsToggle.Value = LevelVisibility.animalsVisible;
         }
+
+        #region ObjectNavmeshVisualizationExtension
+        if (ExtensionManager.TryGetInstance(out ObjectNavmeshVisualizationExtension? objectNavmeshVisualizationExtension))
+        {
+            objectNavmeshVisualizationExtension.CustomUpdate();
+        }
+        #endregion
 
         if (__instance.activeTool == null)
         {
