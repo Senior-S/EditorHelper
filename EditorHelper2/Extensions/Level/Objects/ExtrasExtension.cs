@@ -6,6 +6,7 @@ using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.common.Helpers.Level.Objects;
 using EditorHelper2.common.Types;
+using EditorHelper2.Helpers;
 using EditorHelper2.Patches.Editor;
 using EditorHelper2.UI.Builders;
 using EditorHelper2.UI.Elements;
@@ -18,6 +19,7 @@ namespace EditorHelper2.Extensions.Level.Objects;
 [EHExtension("Extra Object Tools (Adjacent placement, Layer selection toggle, Object tag)", "Senior S")]
 public class ExtrasExtension : UIExtension, IExtension
 {
+    private const string ConfigSection = "ExtraObjectTools";
     [ExistingMember("container")]
     private readonly SleekFullscreenBox? _container;
     
@@ -98,6 +100,7 @@ public class ExtrasExtension : UIExtension, IExtension
         
         foreach (ISleekToggle toggle in toggles)
         {
+            toggle.Value = true;
             _layersContainer.AddChild(toggle);
             toggle.OnValueChanged += OnLayerToggleChanged;
         }
@@ -122,6 +125,7 @@ public class ExtrasExtension : UIExtension, IExtension
         _dicLevelObjects = [];
         
         Initialize();
+        MapEditorConfigHelper.RegisterExtensionSettings(ConfigSection, CaptureSettings, ApplySettings);
     }
     
     public void Initialize()
@@ -303,6 +307,7 @@ public class ExtrasExtension : UIExtension, IExtension
 
     public void Dispose()
     {
+        MapEditorConfigHelper.UnregisterExtensionSettings(ConfigSection);
         if (_container == null) return;
         
         EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y += _tagField.IsVisible ? 80f : 40f;
@@ -321,5 +326,56 @@ public class ExtrasExtension : UIExtension, IExtension
         _adjacentPlaceButton.OnClicked -= OnAdjacentPlaceClicked;
         _tagField.OnTextChanged -= OnTagFieldTextChanged;
         EditorObjectsPatches.OnObjectTransformSelected -= OnObjectTransformSelected;
+    }
+
+    private Settings CaptureSettings()
+    {
+        Dictionary<uint, string> objectTags = _dicLevelObjects
+            .Where(pair => pair.Key != null
+                           && pair.Key.instanceID > 0
+                           && pair.Key.transform != null
+                           && !string.IsNullOrWhiteSpace(pair.Value.Tag))
+            .ToDictionary(pair => pair.Key.instanceID, pair => pair.Value.Tag);
+
+        return new Settings
+        {
+            AdjacentAxis = _adjacentAxisButton.state,
+            SelectableLayers = _toggleToLayer
+                .Where(pair => pair.Key.Value)
+                .Select(pair => pair.Value)
+                .ToList(),
+            ObjectTags = objectTags
+        };
+    }
+
+    private void ApplySettings(Settings settings)
+    {
+        _adjacentAxisButton.state = Mathf.Clamp(settings.AdjacentAxis, 0, _adjacentAxisStates.Length - 1);
+
+        foreach (KeyValuePair<ISleekToggle, string> pair in _toggleToLayer)
+        {
+            pair.Key.Value = settings.SelectableLayers.Contains(pair.Value);
+        }
+
+        ObjectsLayerMask = _toggleToLayer
+            .Where(pair => pair.Key.Value)
+            .Aggregate(0, (current, pair) => current | 1 << LayerMask.NameToLayer(pair.Value));
+
+        _dicLevelObjects.Clear();
+        foreach (KeyValuePair<uint, string> pair in settings.ObjectTags)
+        {
+            LevelObject? levelObject = LevelObjects.FindLevelObjectByInstanceId(pair.Key);
+            if (levelObject != null && !string.IsNullOrWhiteSpace(pair.Value))
+            {
+                _dicLevelObjects[levelObject] = new LevelObjectExtension(pair.Value);
+            }
+        }
+    }
+
+    private sealed class Settings
+    {
+        public int AdjacentAxis { get; set; }
+        public List<string> SelectableLayers { get; set; } = [];
+        public Dictionary<uint, string> ObjectTags { get; set; } = [];
     }
 }

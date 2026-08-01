@@ -2,12 +2,12 @@
 using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
+using EditorHelper2.Helpers;
 using EditorHelper2.Patches.Editor;
 using EditorHelper2.UI.Builders;
 using SDG.Unturned;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.Rendering.VirtualTexturing.Debugging;
 
 namespace EditorHelper2.Extensions.Environment.Navigation;
 
@@ -15,6 +15,7 @@ namespace EditorHelper2.Extensions.Environment.Navigation;
 [UIExtension(typeof(EditorEnvironmentNavigationUI))]
 public class NavHandlesExtension : UIExtension, IExtension
 {
+    private const string ConfigSection = "NavigationHandles";
     [ExistingMember("container")]
     private readonly SleekFullscreenBox? _container;
 
@@ -90,6 +91,7 @@ public class NavHandlesExtension : UIExtension, IExtension
         bundle.unload();
 
         Initialize();
+        MapEditorConfigHelper.RegisterExtensionSettings(ConfigSection, CaptureSettings, ApplySettings);
     }
 
     public void Initialize()
@@ -270,6 +272,7 @@ public class NavHandlesExtension : UIExtension, IExtension
 
     public void Dispose()
     {
+        MapEditorConfigHelper.UnregisterExtensionSettings(ConfigSection);
         if (_container == null) return;
 
         _container.RemoveChild(_snapTransformField);
@@ -281,5 +284,18 @@ public class NavHandlesExtension : UIExtension, IExtension
         _handles.OnTransformed -= OnTransformed;
 
         EditorNavigationPatches.OnSelectionChanged -= OnSelectionChanged;
+    }
+
+    private Settings CaptureSettings() => new() { SnapTransform = _snapTransform };
+
+    private void ApplySettings(Settings settings)
+    {
+        _snapTransform = settings.SnapTransform;
+        _snapTransformField.Value = settings.SnapTransform;
+    }
+
+    private sealed class Settings
+    {
+        public float SnapTransform { get; set; } = 1f;
     }
 }

@@ -6,6 +6,7 @@ using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.common.Helpers.LSystem;
+using EditorHelper2.Helpers;
 using EditorHelper2.Extensions.Editor.Dashboard;
 using EditorHelper2.Loader;
 using EditorHelper2.Patches.Editor.UI;
@@ -19,6 +20,7 @@ namespace EditorHelper2.Extensions.Level.Objects;
 [EHExtension("L-System Roads Extension", "Senior S")]
 public class LSystemRoadsExtension : UIExtension, IExtension
 {
+    private const string ConfigSection = "LSystemRoads";
     private const int HardSegmentLimit = 200;
     private static LSystemRoadsExtension? _instance;
 
@@ -206,6 +208,7 @@ public class LSystemRoadsExtension : UIExtension, IExtension
         _seedField.Value = 4148;
         ApplyPreset(1);
         Initialize();
+        MapEditorConfigHelper.RegisterExtensionSettings(ConfigSection, CaptureSettings, ApplySettings);
     }
 
     public void Initialize()
@@ -461,6 +464,7 @@ public class LSystemRoadsExtension : UIExtension, IExtension
 
     public void Dispose()
     {
+        MapEditorConfigHelper.UnregisterExtensionSettings(ConfigSection);
         if (_container == null) return;
 
         EditorLevelObjectsUI.assetsScrollBox.SizeOffset_Y += 40f;
@@ -477,5 +481,65 @@ public class LSystemRoadsExtension : UIExtension, IExtension
         _container.RemoveChild(_roadsPanelButton);
         _container.RemoveChild(_settingsContainer);
         if (_instance == this) _instance = null;
+    }
+
+    private Settings CaptureSettings() => new()
+    {
+        SizePreset = _sizeButton.state,
+        Seed = _seedField.Value,
+        SegmentLimit = _segmentLimitField.Value,
+        InitialLength = _initialLengthField.Value,
+        BranchChance = _branchChanceField.Value,
+        TurnChance = _turnChanceField.Value,
+        Radius = _radiusField.Value,
+        StraightRoadGuid = _straightRoadGuid,
+        TeeRoadGuid = _teeRoadGuid,
+        QuadRoadGuid = _quadRoadGuid,
+        CornerRoadGuid = _cornerRoadGuid,
+        EndRoadGuid = _endRoadGuid
+    };
+
+    private void ApplySettings(Settings settings)
+    {
+        _sizeButton.state = Mathf.Clamp(settings.SizePreset, 0, 2);
+        _seedField.Value = settings.Seed;
+        _segmentLimitField.Value = settings.SegmentLimit;
+        _initialLengthField.Value = settings.InitialLength;
+        _branchChanceField.Value = settings.BranchChance;
+        _turnChanceField.Value = settings.TurnChance;
+        _radiusField.Value = settings.Radius;
+        _straightRoadGuid = settings.StraightRoadGuid;
+        _teeRoadGuid = settings.TeeRoadGuid;
+        _quadRoadGuid = settings.QuadRoadGuid;
+        _cornerRoadGuid = settings.CornerRoadGuid;
+        _endRoadGuid = settings.EndRoadGuid;
+        SetRoadAssetLabel(_straightRoadGuid, LSystemRoadSettings.DefaultStraightRoadGuid, _straightRoadLabel);
+        SetRoadAssetLabel(_teeRoadGuid, LSystemRoadSettings.DefaultTeeRoadGuid, _teeRoadLabel);
+        SetRoadAssetLabel(_quadRoadGuid, LSystemRoadSettings.DefaultQuadRoadGuid, _quadRoadLabel);
+        SetRoadAssetLabel(_cornerRoadGuid, LSystemRoadSettings.DefaultCornerRoadGuid, _cornerRoadLabel);
+        SetRoadAssetLabel(_endRoadGuid, LSystemRoadSettings.DefaultEndRoadGuid, _endRoadLabel);
+    }
+
+    private static void SetRoadAssetLabel(Guid guid, Guid defaultGuid, ISleekLabel label)
+    {
+        label.Text = guid == defaultGuid
+            ? "Default"
+            : (SDG.Unturned.Assets.find(guid) as ObjectAsset)?.FriendlyName ?? guid.ToString("N");
+    }
+
+    private sealed class Settings
+    {
+        public int SizePreset { get; set; } = 1;
+        public int Seed { get; set; } = 4148;
+        public int SegmentLimit { get; set; } = 64;
+        public int InitialLength { get; set; } = 8;
+        public float BranchChance { get; set; } = 35f;
+        public float TurnChance { get; set; } = 25f;
+        public float Radius { get; set; } = 650f;
+        public Guid StraightRoadGuid { get; set; } = LSystemRoadSettings.DefaultStraightRoadGuid;
+        public Guid TeeRoadGuid { get; set; } = LSystemRoadSettings.DefaultTeeRoadGuid;
+        public Guid QuadRoadGuid { get; set; } = LSystemRoadSettings.DefaultQuadRoadGuid;
+        public Guid CornerRoadGuid { get; set; } = LSystemRoadSettings.DefaultCornerRoadGuid;
+        public Guid EndRoadGuid { get; set; } = LSystemRoadSettings.DefaultEndRoadGuid;
     }
 }

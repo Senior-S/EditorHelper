@@ -7,6 +7,7 @@ using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
+using EditorHelper2.Helpers;
 using EditorHelper2.UI.Builders;
 using SDG.Unturned;
 using UnityEngine;
@@ -17,6 +18,7 @@ namespace EditorHelper2.Extensions.Level.Objects;
 [EHExtension("Object Replacer Extension", "Senior S")]
 public class ObjectReplacerExtension : UIExtension, IExtension
 {
+    private const string ConfigSection = "ObjectReplacer";
     [ExistingMember("container")]
     private readonly SleekFullscreenBox? _container;
 
@@ -50,6 +52,8 @@ public class ObjectReplacerExtension : UIExtension, IExtension
 
     private ObjectAsset? _sourceAsset;
     private ObjectAsset? _targetAsset;
+    private Guid? _configuredSourceGuid;
+    private Guid? _configuredTargetGuid;
     private bool _selectingSource = true;
     private List<ObjectAsset> _allObjectAssets = [];
     private List<ObjectAsset> _filteredAssets = [];
@@ -240,6 +244,7 @@ public class ObjectReplacerExtension : UIExtension, IExtension
         icons.unload();
 
         Initialize();
+        MapEditorConfigHelper.RegisterExtensionSettings(ConfigSection, CaptureSettings, ApplySettings);
     }
 
     public void Initialize()
@@ -375,11 +380,13 @@ public class ObjectReplacerExtension : UIExtension, IExtension
         if (_selectingSource)
         {
             _sourceAsset = asset;
+            _configuredSourceGuid = asset.GUID;
             _sourceButton.Text = asset.FriendlyName;
         }
         else
         {
             _targetAsset = asset;
+            _configuredTargetGuid = asset.GUID;
             _targetButton.Text = asset.FriendlyName;
         }
 
@@ -595,16 +602,9 @@ public class ObjectReplacerExtension : UIExtension, IExtension
 
     #endregion Core Logic
 
-    #region Extension Functions
-
-    public void CustomUpdate()
-    {
-    }
-
-    #endregion Extension Functions
-
     public void Dispose()
     {
+        MapEditorConfigHelper.UnregisterExtensionSettings(ConfigSection);
         if (_container == null) return;
 
         _container.RemoveChild(_menuPanel);
@@ -620,5 +620,42 @@ public class ObjectReplacerExtension : UIExtension, IExtension
         _pickNearestButton.OnClicked -= OnPickNearestButtonClicked;
         
         _allObjectAssets.Clear();
+    }
+
+    private Settings CaptureSettings() => new()
+    {
+        SourceObjectGuid = _sourceAsset?.GUID ?? _configuredSourceGuid,
+        TargetObjectGuid = _targetAsset?.GUID ?? _configuredTargetGuid,
+        Radius = _currentRadius,
+        WholeMap = _wholeMapToggle.Value
+    };
+
+    private void ApplySettings(Settings settings)
+    {
+        _currentRadius = Mathf.Clamp(settings.Radius, MinRadius, MaxRadius);
+        _radiusSlider.Value = (_currentRadius - MinRadius) / (MaxRadius - MinRadius);
+        _radiusValueLabel.Text = _currentRadius.ToString("F0");
+        _wholeMapToggle.Value = settings.WholeMap;
+        _radiusSlider.IsInteractable = !settings.WholeMap;
+
+        _configuredSourceGuid = settings.SourceObjectGuid;
+        _configuredTargetGuid = settings.TargetObjectGuid;
+        _sourceAsset = _configuredSourceGuid.HasValue
+            ? _allObjectAssets.FirstOrDefault(asset => asset.GUID == _configuredSourceGuid.Value)
+            : null;
+        _targetAsset = _configuredTargetGuid.HasValue
+            ? _allObjectAssets.FirstOrDefault(asset => asset.GUID == _configuredTargetGuid.Value)
+            : null;
+        _sourceButton.Text = _sourceAsset?.FriendlyName ?? "Click to select source...";
+        _targetButton.Text = _targetAsset?.FriendlyName ?? "Click to select target...";
+        UpdateReplaceButtonState();
+    }
+
+    private sealed class Settings
+    {
+        public Guid? SourceObjectGuid { get; set; }
+        public Guid? TargetObjectGuid { get; set; }
+        public float Radius { get; set; } = DefaultRadius;
+        public bool WholeMap { get; set; }
     }
 }

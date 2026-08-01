@@ -3,6 +3,7 @@ using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
+using EditorHelper2.Helpers;
 using EditorHelper2.UI.Builders;
 using SDG.Unturned;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace EditorHelper2.Extensions.Level.Visibility;
 [UIExtension(typeof(EditorLevelVisibilityUI))]
 public sealed class ObjectNavmeshVisualizationExtension : UIExtension, IExtension
 {
+    private const string ConfigSection = "ObjectNavmeshVisualization";
     private const float CacheRefreshIntervalSeconds = 0.5f;
 
     [ExistingMember("container")]
@@ -47,9 +49,10 @@ public sealed class ObjectNavmeshVisualizationExtension : UIExtension, IExtensio
 
         _hideObjectModelsToggle = builder.BuildToggle(
             "Hide object models while displaying their navigation geometry");
-        _hideObjectModelsToggle.Value = true;
+        _hideObjectModelsToggle.Value = false;
 
         Initialize();
+        MapEditorConfigHelper.RegisterExtensionSettings(ConfigSection, CaptureSettings, ApplySettings);
     }
 
     /// <summary>
@@ -108,6 +111,13 @@ public sealed class ObjectNavmeshVisualizationExtension : UIExtension, IExtensio
                                       && LevelVisibility.navigationVisible
                                       && _visualizationMaterial != null;
         SetObjectModelsHidden(shouldHideObjectModels);
+    }
+
+    private Settings CaptureSettings() => new() { HideObjectModels = _hideObjectModelsToggle.Value };
+
+    private void ApplySettings(Settings settings)
+    {
+        _hideObjectModelsToggle.Value = settings.HideObjectModels;
     }
 
     private void RefreshMeshColliderCache()
@@ -259,6 +269,7 @@ public sealed class ObjectNavmeshVisualizationExtension : UIExtension, IExtensio
     /// </summary>
     public void Dispose()
     {
+        MapEditorConfigHelper.UnregisterExtensionSettings(ConfigSection);
         SetObjectModelsHidden(false);
 
         _hideObjectModelsToggle.OnValueChanged -= OnHideObjectModelsToggleChanged;
@@ -271,5 +282,10 @@ public sealed class ObjectNavmeshVisualizationExtension : UIExtension, IExtensio
         _visualizationMaterial = null;
         _navmeshOnlyMaterial = null;
         _isVisible = false;
+    }
+
+    private sealed class Settings
+    {
+        public bool HideObjectModels { get; set; }
     }
 }

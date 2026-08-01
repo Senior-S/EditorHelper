@@ -4,6 +4,7 @@ using DanielWillett.UITools.API.Extensions;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.common.Keybinds;
+using EditorHelper2.Helpers;
 using EditorHelper2.UI.Builders;
 using HarmonyLib;
 using JetBrains.Annotations;
@@ -18,6 +19,7 @@ namespace EditorHelper2.Extensions.Terrain.Materials;
 [HarmonyPatch(typeof(TerrainEditor))]
 public class BrushExtension : UIExtension, IExtension
 {
+    private const string ConfigSection = "SplatmapBrush";
     private static BrushExtension? _instance;    
     private static Harmony? _harmony;
     
@@ -81,6 +83,7 @@ public class BrushExtension : UIExtension, IExtension
         _brushPositionLabel.Text = "Brush Position: N/A";
 
         Initialize();
+        MapEditorConfigHelper.RegisterExtensionSettings(ConfigSection, CaptureSettings, ApplySettings);
     }
 
     public void Initialize()
@@ -205,6 +208,7 @@ public class BrushExtension : UIExtension, IExtension
 
     public void Dispose()
     {
+        MapEditorConfigHelper.UnregisterExtensionSettings(ConfigSection);
         _instance = null;
         
         if (_currentUIInstance == null) return;
@@ -212,5 +216,26 @@ public class BrushExtension : UIExtension, IExtension
         _currentUIInstance.RemoveChild(_heightMinField);
         _currentUIInstance.RemoveChild(_heightMaxField);
         _currentUIInstance.RemoveChild(_brushPositionLabel);
+    }
+
+    private Settings CaptureSettings() => new()
+    {
+        UseHeightLimits = _useHeightLimitsToggle.Value,
+        MinHeight = _heightMinField.Value,
+        MaxHeight = _heightMaxField.Value
+    };
+
+    private void ApplySettings(Settings settings)
+    {
+        _useHeightLimitsToggle.Value = settings.UseHeightLimits;
+        _heightMinField.Value = settings.MinHeight;
+        _heightMaxField.Value = settings.MaxHeight;
+    }
+
+    private sealed class Settings
+    {
+        public bool UseHeightLimits { get; set; }
+        public float MinHeight { get; set; } = 80f;
+        public float MaxHeight { get; set; } = 110f;
     }
 }

@@ -1,6 +1,7 @@
 using DanielWillett.UITools.API.Extensions;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
+using EditorHelper2.Helpers;
 using EditorHelper2.UI.Builders;
 using SDG.Unturned;
 
@@ -10,6 +11,7 @@ namespace EditorHelper2.Extensions.Environment.Nodes;
 [EHExtension("Node Names extension", "Senior S")]
 public class NodeNamesExtension : UIExtension, IExtension
 {
+    private const string ConfigSection = "NodeNames";
     public readonly ISleekToggle NodeNameToggle;
 
     public NodeNamesExtension()
@@ -25,6 +27,7 @@ public class NodeNamesExtension : UIExtension, IExtension
         NodeNameToggle = builder.BuildToggle("Should name nodes display it's name as a text in the world?");
         
         Initialize();
+        MapEditorConfigHelper.RegisterExtensionSettings(ConfigSection, CaptureSettings, ApplySettings);
     }
 
     public void Initialize()
@@ -37,9 +40,22 @@ public class NodeNamesExtension : UIExtension, IExtension
 
     public void Dispose()
     {
+        MapEditorConfigHelper.UnregisterExtensionSettings(ConfigSection);
         object? container = this.Instance;
         if (container is not EditorEnvironmentNodesUI nodesUI) return;
         
         nodesUI.RemoveChild(NodeNameToggle);
+    }
+
+    private Settings CaptureSettings() => new() { DisplayNodeNames = NodeNameToggle.Value };
+
+    private void ApplySettings(Settings settings)
+    {
+        NodeNameToggle.Value = settings.DisplayNodeNames;
+    }
+
+    private sealed class Settings
+    {
+        public bool DisplayNodeNames { get; set; }
     }
 }

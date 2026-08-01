@@ -3,6 +3,7 @@ using System.IO;
 using DanielWillett.UITools.API.Extensions;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
+using EditorHelper2.Helpers;
 using EditorHelper2.UI.Builders;
 using SDG.Framework.Devkit;
 using SDG.Framework.Landscapes;
@@ -16,6 +17,7 @@ namespace EditorHelper2.Extensions.Terrain.Height;
 [EHExtension("Heightmap Importer", "Senior S")]
 public class HeightmapImporterExtension : UIExtension, IExtension
 {
+    private const string ConfigSection = "HeightmapImporter";
     private enum EImportScope
     {
         WholeMap = 0,
@@ -91,6 +93,7 @@ public class HeightmapImporterExtension : UIExtension, IExtension
         _statusLabel.TextContrastContext = ETextContrastContext.ColorfulBackdrop;
 
         Initialize();
+        MapEditorConfigHelper.RegisterExtensionSettings(ConfigSection, CaptureSettings, ApplySettings);
     }
 
     public void Initialize()
@@ -268,6 +271,7 @@ public class HeightmapImporterExtension : UIExtension, IExtension
 
     public void Dispose()
     {
+        MapEditorConfigHelper.UnregisterExtensionSettings(ConfigSection);
         _importButton.OnClicked -= OnImportClicked;
 
         if (_currentUIInstance == null) return;
@@ -280,6 +284,33 @@ public class HeightmapImporterExtension : UIExtension, IExtension
         _currentUIInstance.RemoveChild(_flipYToggle);
         _currentUIInstance.RemoveChild(_importButton);
         _currentUIInstance.RemoveChild(_statusLabel);
+    }
+
+    private Settings CaptureSettings() => new()
+    {
+        Scope = _scopeButton.state,
+        MinHeight = _minHeightField.Value,
+        MaxHeight = _maxHeightField.Value,
+        SmoothPasses = _smoothPassesField.Value,
+        FlipY = _flipYToggle.Value
+    };
+
+    private void ApplySettings(Settings settings)
+    {
+        _scopeButton.state = Mathf.Clamp(settings.Scope, 0, 1);
+        _minHeightField.Value = settings.MinHeight;
+        _maxHeightField.Value = settings.MaxHeight;
+        _smoothPassesField.Value = settings.SmoothPasses;
+        _flipYToggle.Value = settings.FlipY;
+    }
+
+    private sealed class Settings
+    {
+        public int Scope { get; set; }
+        public float MinHeight { get; set; } = -Landscape.TILE_HEIGHT / 2f;
+        public float MaxHeight { get; set; } = Landscape.TILE_HEIGHT / 2f;
+        public int SmoothPasses { get; set; }
+        public bool FlipY { get; set; } = true;
     }
 
     private sealed class HeightmapData

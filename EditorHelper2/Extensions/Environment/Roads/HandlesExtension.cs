@@ -4,6 +4,7 @@ using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.common.Keybinds;
 using EditorHelper2.common.Types;
+using EditorHelper2.Helpers;
 using EditorHelper2.Patches.Editor;
 using EditorHelper2.UI.Builders;
 using SDG.Framework.Rendering;
@@ -18,6 +19,7 @@ namespace EditorHelper2.Extensions.Environment.Roads;
 [EHExtension("Road Handles & Selection", "Senior S & JienSultan & Gamingtoday093")]
 public class HandlesExtension : UIExtension, IExtension
 {
+    private const string ConfigSection = "RoadHandles";
     [ExistingMember("container")]
     private readonly SleekFullscreenBox? _container;
     
@@ -146,6 +148,7 @@ public class HandlesExtension : UIExtension, IExtension
         }
         
         Initialize();
+        MapEditorConfigHelper.RegisterExtensionSettings(ConfigSection, CaptureSettings, ApplySettings);
     }
 
     public void Initialize()
@@ -1077,6 +1080,7 @@ public class HandlesExtension : UIExtension, IExtension
 
     public void Dispose()
     {
+        MapEditorConfigHelper.UnregisterExtensionSettings(ConfigSection);
         if (_container == null) return;
         _sceneCamera = null;
         _container.RemoveChild(_coordinateButton);
@@ -1089,5 +1093,34 @@ public class HandlesExtension : UIExtension, IExtension
         
         EditorRoadsPatches.OnRoadSelected -= OnRoadSelected;
         EditorRoadsPatches.OnRoadDeselected -= OnRoadDeselected;
+    }
+
+    private Settings CaptureSettings() => new()
+    {
+        CoordinateMode = (int)_dragCoordinate,
+        RadiusIncludesDepth = _depthToggleButton.Value,
+        SnapTransform = _snapTransform,
+        PrioritizeHandle = _handlePrioritizeToggleButton.Value
+    };
+
+    private void ApplySettings(Settings settings)
+    {
+        _dragCoordinate = settings.CoordinateMode == (int)EDragCoordinate.LOCAL
+            ? EDragCoordinate.LOCAL
+            : EDragCoordinate.GLOBAL;
+        _coordinateButton.state = (int)_dragCoordinate;
+        _depthToggleButton.Value = settings.RadiusIncludesDepth;
+        _snapTransform = settings.SnapTransform;
+        _snapTransformField.Value = settings.SnapTransform;
+        _handlePrioritizeToggleButton.Value = settings.PrioritizeHandle;
+        CalculateHandleOffsets();
+    }
+
+    private sealed class Settings
+    {
+        public int CoordinateMode { get; set; }
+        public bool RadiusIncludesDepth { get; set; }
+        public float SnapTransform { get; set; } = 1f;
+        public bool PrioritizeHandle { get; set; } = true;
     }
 }

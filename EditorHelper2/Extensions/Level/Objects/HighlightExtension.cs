@@ -6,6 +6,7 @@ using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.common.Helpers.Level.Objects;
 using EditorHelper2.common.Keybinds;
+using EditorHelper2.Helpers;
 using EditorHelper2.Patches.Editor;
 using EditorHelper2.UI.Builders;
 using HighlightingSystem;
@@ -18,6 +19,7 @@ namespace EditorHelper2.Extensions.Level.Objects;
 [EHExtension("Highlight Extension", "Senior S")]
 public class HighlightExtension : UIExtension, IExtension
 {
+    private const string ConfigSection = "Highlight";
     [ExistingMember("container")]
     private readonly SleekFullscreenBox? _container;
     
@@ -82,6 +84,7 @@ public class HighlightExtension : UIExtension, IExtension
         _filterByModField = builder.BuildStringField();
 
         Initialize();
+        MapEditorConfigHelper.RegisterExtensionSettings(ConfigSection, CaptureSettings, ApplySettings);
     }
 
     public void Initialize()
@@ -253,6 +256,7 @@ public class HighlightExtension : UIExtension, IExtension
     
     public void Dispose()
     {
+        MapEditorConfigHelper.UnregisterExtensionSettings(ConfigSection);
         if (_container == null) return;
         
         _container.RemoveChild(_highlightButton);
@@ -266,5 +270,25 @@ public class HighlightExtension : UIExtension, IExtension
         _selectHighlightedButton.onClickedButton -= OnSelectHighlightedClicked;
         
         EditorObjectsPatches.OnClearSelection -= OnClearSelection;
+    }
+
+    private Settings CaptureSettings() => new()
+    {
+        ColorIndex = _currentColorIndex,
+        ModFilter = _filterByModField.Text ?? string.Empty
+    };
+
+    private void ApplySettings(Settings settings)
+    {
+        _currentColorIndex = Mathf.Clamp(settings.ColorIndex, 0, _highlightColors.Length - 1);
+        _highlightColorsButton.state = _currentColorIndex;
+        _filterByModText = settings.ModFilter ?? string.Empty;
+        _filterByModField.Text = _filterByModText;
+    }
+
+    private sealed class Settings
+    {
+        public int ColorIndex { get; set; }
+        public string ModFilter { get; set; } = string.Empty;
     }
 }

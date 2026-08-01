@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using EditorHelper2.Assets;
 using EditorHelper2.Commands;
 using EditorHelper2.common.Helpers;
+using EditorHelper2.Helpers;
 using EditorHelper2.common.Keybinds;
 using EditorHelper2.Loader;
 using HarmonyLib;
@@ -42,6 +43,7 @@ public class EditorHelper : IModuleNexus
         RegisterCustomAssets();
 
         KeybindManager.Initialize();
+        MapEditorConfigHelper.Initialize();
         
         int loadedExtensions = ExtensionManager.LoadAllExtensions();
         CommandWindow.LogFormat("[EditorHelper2] Loaded {0} extensions.", loadedExtensions);
@@ -89,6 +91,7 @@ public class EditorHelper : IModuleNexus
 
     public void shutdown()
     {
+        MapEditorConfigHelper.Shutdown();
         _harmony.UnpatchAll(_harmony.Id);
         _tokenSource?.Cancel();
         Object.Destroy(_richPresence);

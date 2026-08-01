@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DanielWillett.UITools.API.Extensions;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
+using EditorHelper2.Helpers;
 using EditorHelper2.UI.Builders;
 using SDG.Framework.Devkit;
 using SDG.Framework.Landscapes;
@@ -15,6 +16,7 @@ namespace EditorHelper2.Extensions.Terrain.Height;
 [EHExtension("Terrain Generator Extension", "Senior S")]
 public class TerrainGeneratorExtension : UIExtension, IExtension
 {
+    private const string ConfigSection = "TerrainGenerator";
     private enum EGeneratorAlgorithm
     {
         Perlin = 0,
@@ -132,6 +134,7 @@ public class TerrainGeneratorExtension : UIExtension, IExtension
         _statusLabel.TextContrastContext = ETextContrastContext.ColorfulBackdrop;
 
         Initialize();
+        MapEditorConfigHelper.RegisterExtensionSettings(ConfigSection, CaptureSettings, ApplySettings);
     }
 
     public void Initialize()
@@ -1025,6 +1028,7 @@ public class TerrainGeneratorExtension : UIExtension, IExtension
 
     public void Dispose()
     {
+        MapEditorConfigHelper.UnregisterExtensionSettings(ConfigSection);
         _scopeButton.onSwappedState -= OnSwappedGenerationScope;
         _algorithmButton.onSwappedState -= OnSwappedAlgorithm;
         _generateButton.OnClicked -= OnGenerateClicked;
@@ -1043,5 +1047,47 @@ public class TerrainGeneratorExtension : UIExtension, IExtension
         _currentUIInstance.RemoveChild(_createMissingTilesToggle);
         _currentUIInstance.RemoveChild(_generateButton);
         _currentUIInstance.RemoveChild(_statusLabel);
+    }
+
+    private Settings CaptureSettings() => new()
+    {
+        Scope = _scopeButton.state,
+        Algorithm = _algorithmButton.state,
+        Seed = _seedField.Value,
+        BaseHeight = _baseHeightField.Value,
+        Amplitude = _amplitudeField.Value,
+        Frequency = _frequencyField.Value,
+        Octaves = _octavesField.Value,
+        TilePadding = _tilePaddingField.Value,
+        SeamBlend = _singleTileSeamBlendField.Value,
+        CreateMissingTiles = _createMissingTilesToggle.Value
+    };
+
+    private void ApplySettings(Settings settings)
+    {
+        _scopeButton.state = Mathf.Clamp(settings.Scope, 0, 1);
+        _algorithmButton.state = Mathf.Clamp(settings.Algorithm, 0, 5);
+        _seedField.Value = settings.Seed;
+        _baseHeightField.Value = settings.BaseHeight;
+        _amplitudeField.Value = settings.Amplitude;
+        _frequencyField.Value = settings.Frequency;
+        _octavesField.Value = settings.Octaves;
+        _tilePaddingField.Value = settings.TilePadding;
+        _singleTileSeamBlendField.Value = settings.SeamBlend;
+        _createMissingTilesToggle.Value = settings.CreateMissingTiles;
+    }
+
+    private sealed class Settings
+    {
+        public int Scope { get; set; }
+        public int Algorithm { get; set; }
+        public int Seed { get; set; } = 1337;
+        public float BaseHeight { get; set; }
+        public float Amplitude { get; set; } = 220f;
+        public float Frequency { get; set; } = 0.0018f;
+        public int Octaves { get; set; } = 4;
+        public int TilePadding { get; set; }
+        public int SeamBlend { get; set; } = 24;
+        public bool CreateMissingTiles { get; set; } = true;
     }
 }

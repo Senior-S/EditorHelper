@@ -8,6 +8,7 @@ using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
 using EditorHelper2.common.Helpers;
 using EditorHelper2.Extensions.Editor.Dashboard;
+using EditorHelper2.Helpers;
 using EditorHelper2.Loader;
 using EditorHelper2.Optimization;
 using EditorHelper2.UI.Builders;
@@ -24,6 +25,7 @@ namespace EditorHelper2.Extensions.Editor.Pause;
 [EHExtension("Mod Usage Optimizer Extension", "Senior S")]
 public class ModUsageOptimizerExtension : UIExtension, IExtension
 {
+    private const string ConfigSection = "ModUsageOptimizer";
     private const float PanelWidth = 460f;
     private const float CompactPanelHeight = 220f;
     private const float ExpandedPanelHeight = 305f;
@@ -153,6 +155,7 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
         _panel.AddChild(_statusBox);
 
         Initialize();
+        MapEditorConfigHelper.RegisterExtensionSettings(ConfigSection, CaptureSettings, ApplySettings);
     }
 
     public void Initialize()
@@ -408,6 +411,7 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
 
     public void Dispose()
     {
+        MapEditorConfigHelper.UnregisterExtensionSettings(ConfigSection);
         if (_container == null)
         {
             return;
@@ -417,5 +421,29 @@ public class ModUsageOptimizerExtension : UIExtension, IExtension
         _saveItemsAndVehiclesToggle.OnValueChanged -= OnSaveItemsAndVehiclesChanged;
         _keepAllModItemsToggle.OnValueChanged -= OnKeepAllModItemsChanged;
         _container.RemoveChild(_panel);
+    }
+
+    private Settings CaptureSettings() => new()
+    {
+        ParallelBundleJobs = _parallelBundleJobsField.Text ?? "1",
+        MetadataOnlyTrim = _metadataOnlyTrimToggle.Value,
+        SaveItemsAndVehicles = _saveItemsAndVehiclesToggle.Value,
+        KeepAllModItems = _keepAllModItemsToggle.Value
+    };
+
+    private void ApplySettings(Settings settings)
+    {
+        _parallelBundleJobsField.Text = settings.ParallelBundleJobs ?? "1";
+        _metadataOnlyTrimToggle.Value = settings.MetadataOnlyTrim;
+        _saveItemsAndVehiclesToggle.Value = settings.SaveItemsAndVehicles;
+        _keepAllModItemsToggle.Value = settings.KeepAllModItems;
+    }
+
+    private sealed class Settings
+    {
+        public string ParallelBundleJobs { get; set; } = "1";
+        public bool MetadataOnlyTrim { get; set; }
+        public bool SaveItemsAndVehicles { get; set; } = true;
+        public bool KeepAllModItems { get; set; }
     }
 }

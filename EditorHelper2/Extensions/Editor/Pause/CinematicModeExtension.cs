@@ -6,6 +6,7 @@ using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
+using EditorHelper2.Helpers;
 using SDG.Unturned;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -16,6 +17,7 @@ namespace EditorHelper2.Extensions.Editor.Pause;
 [EHExtension("Cinematic Mode Tab", "Senior S", alwaysEnabled: true)]
 public class CinematicModeExtension : UIExtension, IExtension
 {
+    private const string ConfigSection = "Cinematic";
     private static CinematicModeExtension? _instance;
 
     private enum CinematicWeatherMode
@@ -141,6 +143,7 @@ public class CinematicModeExtension : UIExtension, IExtension
     {
         _instance = this;
         Initialize();
+        MapEditorConfigHelper.RegisterExtensionSettings(ConfigSection, CaptureSettings, ApplySettings);
     }
 
     public static bool IsOpen => _instance?._active == true;
@@ -1541,6 +1544,7 @@ public class CinematicModeExtension : UIExtension, IExtension
 
     public void Dispose()
     {
+        MapEditorConfigHelper.UnregisterExtensionSettings(ConfigSection);
         CloseCinematicTab();
 
         if (_openCinematicButton != null)
@@ -1751,6 +1755,91 @@ public class CinematicModeExtension : UIExtension, IExtension
         {
             _instance = null;
         }
+    }
+
+    private Settings CaptureSettings()
+    {
+        EnsureSmoothCameraBehaviour();
+        return new Settings
+        {
+            WeatherMode = (int)GetCurrentWeatherMode(),
+            FieldOfView = _smoothCameraBehaviour?.TargetFov ?? OptionsSettings.DesiredVerticalFieldOfView,
+            Roll = _smoothCameraBehaviour?.RollDegrees ?? 0f,
+            DepthOfFieldEnabled = _smoothCameraBehaviour?.IsDepthOfFieldEnabled == true,
+            DepthOfFieldFocusDistance = _smoothCameraBehaviour?.DepthOfFieldFocusDistance ?? 25f,
+            DepthOfFieldAperture = _smoothCameraBehaviour?.DepthOfFieldAperture ?? 5.6f,
+            Vignette = _smoothCameraBehaviour?.VignetteIntensity ?? 0f,
+            Exposure = _smoothCameraBehaviour?.Exposure ?? 0f,
+            Contrast = _smoothCameraBehaviour?.Contrast ?? 0f,
+            Saturation = _smoothCameraBehaviour?.Saturation ?? 0f,
+            Temperature = _smoothCameraBehaviour?.Temperature ?? 0f,
+            Tint = _smoothCameraBehaviour?.Tint ?? 0f,
+            CameraSmoothingEnabled = _smoothCameraBehaviour?.IsSmoothingEnabled == true,
+            CameraSmoothness = _smoothCameraBehaviour?.Smoothness ?? 8f,
+            WatermarkEnabled = _isWatermarkEnabled,
+            WatermarkText = _watermarkText,
+            WatermarkOpacity = _watermarkOpacity,
+            WatermarkPositionX = _watermarkPositionX,
+            WatermarkPositionY = _watermarkPositionY,
+            WatermarkRotation = _watermarkRotation,
+            WatermarkScale = _watermarkScale
+        };
+    }
+
+    private void ApplySettings(Settings settings)
+    {
+        SetWeatherMode((CinematicWeatherMode)Mathf.Clamp(settings.WeatherMode, 0, 3));
+        EnsureSmoothCameraBehaviour();
+        if (_smoothCameraBehaviour != null)
+        {
+            _smoothCameraBehaviour.TargetFov = Mathf.Clamp(settings.FieldOfView, FovMin, FovMax);
+            _smoothCameraBehaviour.RollDegrees = Mathf.Clamp(settings.Roll, RollMin, RollMax);
+            _smoothCameraBehaviour.IsDepthOfFieldEnabled = settings.DepthOfFieldEnabled;
+            _smoothCameraBehaviour.DepthOfFieldFocusDistance = Mathf.Clamp(settings.DepthOfFieldFocusDistance, DofFocusMin, DofFocusMax);
+            _smoothCameraBehaviour.DepthOfFieldAperture = Mathf.Clamp(settings.DepthOfFieldAperture, DofApertureMin, DofApertureMax);
+            _smoothCameraBehaviour.VignetteIntensity = Mathf.Clamp(settings.Vignette, 0f, VignetteMax);
+            _smoothCameraBehaviour.Exposure = Mathf.Clamp(settings.Exposure, ExposureMin, ExposureMax);
+            _smoothCameraBehaviour.Contrast = Mathf.Clamp(settings.Contrast, GradeMin, GradeMax);
+            _smoothCameraBehaviour.Saturation = Mathf.Clamp(settings.Saturation, GradeMin, GradeMax);
+            _smoothCameraBehaviour.Temperature = Mathf.Clamp(settings.Temperature, GradeMin, GradeMax);
+            _smoothCameraBehaviour.Tint = Mathf.Clamp(settings.Tint, GradeMin, GradeMax);
+            _smoothCameraBehaviour.IsSmoothingEnabled = settings.CameraSmoothingEnabled;
+            _smoothCameraBehaviour.Smoothness = Mathf.Clamp(settings.CameraSmoothness, SmoothnessMin, SmoothnessMax);
+        }
+
+        _isWatermarkEnabled = settings.WatermarkEnabled;
+        _watermarkText = string.IsNullOrWhiteSpace(settings.WatermarkText) ? "EditorHelper2" : settings.WatermarkText;
+        _watermarkOpacity = Mathf.Clamp01(settings.WatermarkOpacity);
+        _watermarkPositionX = Mathf.Clamp01(settings.WatermarkPositionX);
+        _watermarkPositionY = Mathf.Clamp01(settings.WatermarkPositionY);
+        _watermarkRotation = Mathf.Clamp(settings.WatermarkRotation, WatermarkRotationMin, WatermarkRotationMax);
+        _watermarkScale = Mathf.Clamp(settings.WatermarkScale, WatermarkScaleMin, WatermarkScaleMax);
+        RefreshAllControls();
+    }
+
+    private sealed class Settings
+    {
+        public int WeatherMode { get; set; }
+        public float FieldOfView { get; set; } = 60f;
+        public float Roll { get; set; }
+        public bool DepthOfFieldEnabled { get; set; }
+        public float DepthOfFieldFocusDistance { get; set; } = 25f;
+        public float DepthOfFieldAperture { get; set; } = 5.6f;
+        public float Vignette { get; set; }
+        public float Exposure { get; set; }
+        public float Contrast { get; set; }
+        public float Saturation { get; set; }
+        public float Temperature { get; set; }
+        public float Tint { get; set; }
+        public bool CameraSmoothingEnabled { get; set; }
+        public float CameraSmoothness { get; set; } = 8f;
+        public bool WatermarkEnabled { get; set; } = true;
+        public string WatermarkText { get; set; } = "EditorHelper2";
+        public float WatermarkOpacity { get; set; } = 0.8f;
+        public float WatermarkPositionX { get; set; } = 0.9f;
+        public float WatermarkPositionY { get; set; } = 0.92f;
+        public float WatermarkRotation { get; set; }
+        public float WatermarkScale { get; set; } = 1f;
     }
 
     private sealed class CinematicCameraSmoothingBehaviour : MonoBehaviour
