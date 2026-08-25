@@ -471,6 +471,7 @@ public sealed class CommandPaletteExtension : UIExtension, IExtension
         public string Keywords { get; } = keywords;
         public bool IsAvailable => isAvailable?.Invoke() ?? true;
         public int CatalogIndex { get; } = catalogIndex;
+        public Action Execute { get; } = execute;
 
         public bool Matches(string query)
         {
@@ -487,11 +488,6 @@ public sealed class CommandPaletteExtension : UIExtension, IExtension
             if (Title.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0) return 2;
             if (Keywords.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0) return 3;
             return 4;
-        }
-
-        public void Execute()
-        {
-            execute();
         }
     }
 }

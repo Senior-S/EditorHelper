@@ -16,7 +16,7 @@ public static class MapEditorConfigHelper
     private const string FileName = "EditorHelper2.json";
 
     private static readonly JsonSerializer Serializer = JsonSerializer.CreateDefault();
-    private static readonly Dictionary<string, ExtensionSettingsRegistration> Registrations = new(StringComparer.Ordinal);
+    private static readonly Dictionary<string, (Func<JToken> Capture, Action<JToken> Apply)> Registrations = new(StringComparer.Ordinal);
 
     private static JObject _extensions = new();
     private static string? _filePath;
@@ -136,7 +136,7 @@ public static class MapEditorConfigHelper
             throw new ArgumentNullException(nameof(applySettings));
         }
 
-        ExtensionSettingsRegistration registration = new(
+        (Func<JToken> Capture, Action<JToken> Apply) registration = (
             () => JToken.FromObject(captureSettings()!, Serializer),
             token =>
             {
@@ -288,7 +288,7 @@ public static class MapEditorConfigHelper
 
     private static void ApplyRegisteredSettings()
     {
-        foreach (KeyValuePair<string, ExtensionSettingsRegistration> pair in Registrations)
+        foreach (KeyValuePair<string, (Func<JToken> Capture, Action<JToken> Apply)> pair in Registrations)
         {
             if (_extensions.TryGetValue(pair.Key, StringComparison.Ordinal, out JToken? token))
             {
@@ -297,7 +297,10 @@ public static class MapEditorConfigHelper
         }
     }
 
-    private static void ApplyRegistration(string extensionId, ExtensionSettingsRegistration registration, JToken token)
+    private static void ApplyRegistration(
+        string extensionId,
+        (Func<JToken> Capture, Action<JToken> Apply) registration,
+        JToken token)
     {
         try
         {
@@ -311,7 +314,7 @@ public static class MapEditorConfigHelper
 
     private static void CaptureRegisteredSettings()
     {
-        foreach (KeyValuePair<string, ExtensionSettingsRegistration> pair in Registrations)
+        foreach (KeyValuePair<string, (Func<JToken> Capture, Action<JToken> Apply)> pair in Registrations)
         {
             try
             {
@@ -337,11 +340,5 @@ public static class MapEditorConfigHelper
         {
             throw new ArgumentException("Extension identifier cannot be empty.", nameof(extensionId));
         }
-    }
-
-    private sealed class ExtensionSettingsRegistration(Func<JToken> capture, Action<JToken> apply)
-    {
-        public Func<JToken> Capture { get; } = capture;
-        public Action<JToken> Apply { get; } = apply;
     }
 }

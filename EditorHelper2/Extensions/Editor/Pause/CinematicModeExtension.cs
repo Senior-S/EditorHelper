@@ -1,12 +1,10 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
 using DanielWillett.UITools.API.Extensions;
 using DanielWillett.UITools.API.Extensions.Members;
 using EditorHelper2.common.API.Attributes;
 using EditorHelper2.common.API.Interfaces;
+using EditorHelper2.common.Helpers;
 using EditorHelper2.Helpers;
+using EditorHelper2.UI.Builders;
 using SDG.Unturned;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -20,15 +18,6 @@ public class CinematicModeExtension : UIExtension, IExtension
     private const string ConfigSection = "Cinematic";
     private static CinematicModeExtension? _instance;
 
-    private enum CinematicWeatherMode
-    {
-        None,
-        NormalRain,
-        Thunder,
-        Snow
-    }
-
-    private const string HeavyRainWeatherGuid = "6c850687bdb947a689fa8de8a8d99afb";
     private const float FovMin = 20f;
     private const float FovMax = 120f;
     private const float RollMin = -45f;
@@ -55,34 +44,6 @@ public class CinematicModeExtension : UIExtension, IExtension
     private const float LeftLabelWidth = 120f;
     private const float RightLabelWidth = 150f;
     private const float ControlWidth = 220f;
-
-    private static readonly FieldInfo? CinematicModeFlagField = typeof(GraphicsSettings)
-        .GetField("clEnableCinematicMode", BindingFlags.Static | BindingFlags.NonPublic);
-
-    private static readonly FieldInfo? RoadRegionSegmentRenderersField = typeof(LevelRoads)
-        .GetField("regionSegmentRenderers", BindingFlags.Static | BindingFlags.NonPublic);
-
-    private static readonly MethodInfo? ResourceSpawnpointUpdateActiveMethod = typeof(ResourceSpawnpoint)
-        .GetMethod("UpdateActive", BindingFlags.Instance | BindingFlags.NonPublic);
-
-    private static readonly AssetReference<WeatherAssetBase> HeavyRainWeatherReference = new(HeavyRainWeatherGuid);
-
-    private static readonly EGraphicQuality[] GraphicQualityStates =
-    [
-        EGraphicQuality.OFF,
-        EGraphicQuality.LOW,
-        EGraphicQuality.MEDIUM,
-        EGraphicQuality.HIGH,
-        EGraphicQuality.ULTRA
-    ];
-
-    private static readonly EGraphicQuality[] WaterQualityStates =
-    [
-        EGraphicQuality.LOW,
-        EGraphicQuality.MEDIUM,
-        EGraphicQuality.HIGH,
-        EGraphicQuality.ULTRA
-    ];
 
     [ExistingMember("container")]
     private readonly SleekFullscreenBox? _pauseContainer;
@@ -165,25 +126,20 @@ public class CinematicModeExtension : UIExtension, IExtension
             return;
         }
 
-        BuildCinematicContainer();
-        AddPauseMenuButton();
-        RefreshAllControls();
-    }
-
-    private void AddPauseMenuButton()
-    {
-        _openCinematicButton = Glazier.Get().CreateButton();
-        _openCinematicButton.PositionOffset_X = 110f;
-        _openCinematicButton.PositionOffset_Y = 245f;
-        _openCinematicButton.PositionScale_X = 0.5f;
-        _openCinematicButton.PositionScale_Y = 0.5f;
-        _openCinematicButton.SizeOffset_X = 200f;
-        _openCinematicButton.SizeOffset_Y = 30f;
-        _openCinematicButton.Text = "Cinematic";
-        _openCinematicButton.TooltipText = "Open cinematic controls for screenshots and flythroughs.";
-        _openCinematicButton.TextColor = ESleekTint.FONT;
+        UIBuilder builder = new(0f, 0f);
+        BuildCinematicContainer(builder);
+        builder.ResetProperties()
+            .SetSizeHorizontal(200f)
+            .SetSizeVertical(30f)
+            .SetOffsetHorizontal(110f)
+            .SetOffsetVertical(245f)
+            .SetAnchorHorizontal(0.5f)
+            .SetAnchorVertical(0.5f)
+            .SetText("Cinematic");
+        _openCinematicButton = builder.BuildButton("Open cinematic controls for screenshots and flythroughs.");
         _openCinematicButton.OnClicked += OnClickedOpenCinematicButton;
-        _pauseContainer!.AddChild(_openCinematicButton);
+        _pauseContainer.AddChild(_openCinematicButton);
+        RefreshAllControls();
     }
 
     protected override void Opened()
@@ -191,447 +147,321 @@ public class CinematicModeExtension : UIExtension, IExtension
         RefreshAllControls();
     }
 
-    private void BuildCinematicContainer()
+    private void BuildCinematicContainer(UIBuilder builder)
     {
-        _cinematicContainer = new SleekFullscreenBox
-        {
-            PositionOffset_X = 10f,
-            PositionOffset_Y = 10f,
-            PositionScale_X = 1f,
-            SizeOffset_X = -20f,
-            SizeOffset_Y = -20f,
-            SizeScale_X = 1f,
-            SizeScale_Y = 1f
-        };
+        builder.ResetProperties()
+            .SetSizeHorizontal(-20f)
+            .SetSizeVertical(-20f)
+            .SetOffsetHorizontal(10f)
+            .SetOffsetVertical(10f)
+            .SetAnchorHorizontal(1f)
+            .SetScaleHorizontal(1f)
+            .SetScaleVertical(1f);
+        _cinematicContainer = builder.BuildFullscreenBox();
         EditorUI.window.AddChild(_cinematicContainer);
 
-        AddFovSlider(90f);
-        AddRollSlider(125f);
-        AddDepthOfFieldToggle(165f);
-        AddDepthOfFieldFocusSlider(205f);
-        AddDepthOfFieldStrengthSlider(245f);
-        AddVignetteSlider(285f);
-        AddExposureSlider(325f);
-        AddContrastSlider(365f);
-        AddSaturationSlider(405f);
-        AddTemperatureSlider(445f);
-        AddTintSlider(485f);
-        AddResetVisualsButton(525f);
-        AddCinematicToggle(90f);
-        AddWeatherButton(130f);
-        AddMoonSlider(170f);
-        AddTimeSlider(205f);
-        AddSnowLevelSlider(240f);
-        AddSeaLevelSlider(280f);
-        AddSmoothCameraToggle(325f);
-        AddSmoothnessSlider(365f);
-        AddWindToggle(405f);
-        AddFilmGrainToggle(445f);
-        AddSunShaftsButton(485f);
-        AddLightingButton(525f);
-        AddWaterButton(565f);
-        AddWatermarkToggle(565f);
-        AddWatermarkSettingsButton(565f);
-        AddBackButton();
-        AddWatermarkSettingsPanel();
-        AddWatermarkRenderer();
-    }
-
-    private void AddCinematicToggle(float y)
-    {
-        AddRowLabel("Cinematic", y, "Toggles Unturned's -Cinematic mode. It renders much more of the map and can reduce performance heavily.");
-        _cinematicToggle = CreateToggle(y, "Render the whole map for screenshots and flythroughs.");
-        _cinematicToggle.OnValueChanged += OnCinematicToggleChanged;
-    }
-
-    private void AddFovSlider(float y)
-    {
-        AddRowLabel("Camera FOV", y, "Overrides the editor camera field of view for wider or tighter cinematic shots.", useLeftColumn: true);
-        _fovSlider = CreateSlider(y, useLeftColumn: true);
+        AddRowLabel(builder, "Camera FOV", 90f, "Overrides the editor camera field of view for wider or tighter cinematic shots.", useLeftColumn: true);
+        _fovSlider = CreateSlider(builder, 90f, useLeftColumn: true);
         _fovSlider.OnValueChanged += OnFovSliderChanged;
-    }
 
-    private void AddRollSlider(float y)
-    {
-        AddRowLabel("Camera Roll", y, "Tilts the camera around its forward axis. Reset to center for normal editor rotation.", useLeftColumn: true);
-        _rollSlider = CreateSlider(y, useLeftColumn: true);
+        AddRowLabel(builder, "Camera Roll", 125f, "Tilts the camera around its forward axis. Reset to center for normal editor rotation.", useLeftColumn: true);
+        _rollSlider = CreateSlider(builder, 125f, useLeftColumn: true);
         _rollSlider.OnValueChanged += OnRollSliderChanged;
-    }
 
-    private void AddDepthOfFieldToggle(float y)
-    {
-        AddRowLabel("Depth of Field", y, "Enables a cinematic focus blur on the main camera.", useLeftColumn: true);
-        _dofToggle = CreateToggle(y, "Toggle depth of field.", useLeftColumn: true);
+        AddRowLabel(builder, "Depth of Field", 165f, "Enables a cinematic focus blur on the main camera.", useLeftColumn: true);
+        _dofToggle = CreateToggle(builder, 165f, "Toggle depth of field.", useLeftColumn: true);
         _dofToggle.OnValueChanged += OnDepthOfFieldToggleChanged;
-    }
 
-    private void AddDepthOfFieldFocusSlider(float y)
-    {
-        AddRowLabel("DOF Focus", y, "Distance from the camera that remains sharp while depth of field is enabled.", useLeftColumn: true);
-        _dofFocusSlider = CreateSlider(y, useLeftColumn: true);
+        AddRowLabel(builder, "DOF Focus", 205f, "Distance from the camera that remains sharp while depth of field is enabled.", useLeftColumn: true);
+        _dofFocusSlider = CreateSlider(builder, 205f, useLeftColumn: true);
         _dofFocusSlider.OnValueChanged += OnDepthOfFieldFocusSliderChanged;
-    }
 
-    private void AddDepthOfFieldStrengthSlider(float y)
-    {
-        AddRowLabel("DOF Strength", y, "Higher values increase the blur amount by lowering aperture.", useLeftColumn: true);
-        _dofStrengthSlider = CreateSlider(y, useLeftColumn: true);
+        AddRowLabel(builder, "DOF Strength", 245f, "Higher values increase the blur amount by lowering aperture.", useLeftColumn: true);
+        _dofStrengthSlider = CreateSlider(builder, 245f, useLeftColumn: true);
         _dofStrengthSlider.OnValueChanged += OnDepthOfFieldStrengthSliderChanged;
-    }
 
-    private void AddVignetteSlider(float y)
-    {
-        AddRowLabel("Vignette", y, "Darkens the image edges for cinematic framing.", useLeftColumn: true);
-        _vignetteSlider = CreateSlider(y, useLeftColumn: true);
+        AddRowLabel(builder, "Vignette", 285f, "Darkens the image edges for cinematic framing.", useLeftColumn: true);
+        _vignetteSlider = CreateSlider(builder, 285f, useLeftColumn: true);
         _vignetteSlider.OnValueChanged += OnVignetteSliderChanged;
-    }
 
-    private void AddExposureSlider(float y)
-    {
-        AddRowLabel("Exposure", y, "Adjusts post-process exposure. Center is neutral.", useLeftColumn: true);
-        _exposureSlider = CreateSlider(y, useLeftColumn: true);
+        AddRowLabel(builder, "Exposure", 325f, "Adjusts post-process exposure. Center is neutral.", useLeftColumn: true);
+        _exposureSlider = CreateSlider(builder, 325f, useLeftColumn: true);
         _exposureSlider.OnValueChanged += OnExposureSliderChanged;
-    }
 
-    private void AddContrastSlider(float y)
-    {
-        AddRowLabel("Contrast", y, "Adjusts color grading contrast. Center is neutral.", useLeftColumn: true);
-        _contrastSlider = CreateSlider(y, useLeftColumn: true);
+        AddRowLabel(builder, "Contrast", 365f, "Adjusts color grading contrast. Center is neutral.", useLeftColumn: true);
+        _contrastSlider = CreateSlider(builder, 365f, useLeftColumn: true);
         _contrastSlider.OnValueChanged += OnContrastSliderChanged;
-    }
 
-    private void AddSaturationSlider(float y)
-    {
-        AddRowLabel("Saturation", y, "Adjusts color grading saturation. Center is neutral.", useLeftColumn: true);
-        _saturationSlider = CreateSlider(y, useLeftColumn: true);
+        AddRowLabel(builder, "Saturation", 405f, "Adjusts color grading saturation. Center is neutral.", useLeftColumn: true);
+        _saturationSlider = CreateSlider(builder, 405f, useLeftColumn: true);
         _saturationSlider.OnValueChanged += OnSaturationSliderChanged;
-    }
 
-    private void AddTemperatureSlider(float y)
-    {
-        AddRowLabel("Temperature", y, "Warms or cools the color grade. Center is neutral.", useLeftColumn: true);
-        _temperatureSlider = CreateSlider(y, useLeftColumn: true);
+        AddRowLabel(builder, "Temperature", 445f, "Warms or cools the color grade. Center is neutral.", useLeftColumn: true);
+        _temperatureSlider = CreateSlider(builder, 445f, useLeftColumn: true);
         _temperatureSlider.OnValueChanged += OnTemperatureSliderChanged;
-    }
 
-    private void AddTintSlider(float y)
-    {
-        AddRowLabel("Tint", y, "Shifts the color grade toward green or magenta. Center is neutral.", useLeftColumn: true);
-        _tintSlider = CreateSlider(y, useLeftColumn: true);
+        AddRowLabel(builder, "Tint", 485f, "Shifts the color grade toward green or magenta. Center is neutral.", useLeftColumn: true);
+        _tintSlider = CreateSlider(builder, 485f, useLeftColumn: true);
         _tintSlider.OnValueChanged += OnTintSliderChanged;
-    }
 
-    private void AddResetVisualsButton(float y)
-    {
-        _resetVisualsButton = Glazier.Get().CreateButton();
-        _resetVisualsButton.PositionOffset_X = LeftControlX;
-        _resetVisualsButton.PositionOffset_Y = y;
-        _resetVisualsButton.PositionScale_X = 0f;
-        _resetVisualsButton.SizeOffset_X = ControlWidth;
-        _resetVisualsButton.SizeOffset_Y = 30f;
-        _resetVisualsButton.Text = "Reset Visuals";
-        _resetVisualsButton.TooltipText = "Reset camera FOV, roll, depth of field, vignette, and color grading overrides.";
-        _resetVisualsButton.TextColor = ESleekTint.FONT;
+        builder.ResetProperties()
+            .SetSizeHorizontal(ControlWidth)
+            .SetSizeVertical(30f)
+            .SetOffsetHorizontal(LeftControlX)
+            .SetOffsetVertical(525f)
+            .SetText("Reset Visuals");
+        _resetVisualsButton = builder.BuildButton("Reset camera FOV, roll, depth of field, vignette, and color grading overrides.");
         _resetVisualsButton.OnClicked += OnClickedResetVisualsButton;
-        _cinematicContainer!.AddChild(_resetVisualsButton);
-    }
+        _cinematicContainer.AddChild(_resetVisualsButton);
 
-    private void AddWeatherButton(float y)
-    {
-        AddRowLabel("Weather", y, "Preview fixed weather for screenshots. Thunder uses Unturned's heavy rain weather with lightning.");
-        _weatherButton = CreateButtonState(y,
+        AddRowLabel(builder, "Cinematic", 90f, "Toggles Unturned's -Cinematic mode. It renders much more of the map and can reduce performance heavily.");
+        _cinematicToggle = CreateToggle(builder, 90f, "Render the whole map for screenshots and flythroughs.");
+        _cinematicToggle.OnValueChanged += OnCinematicToggleChanged;
+
+        AddRowLabel(builder, "Weather", 130f, "Preview fixed weather for screenshots. Thunder uses Unturned's heavy rain weather with lightning.");
+        _weatherButton = CreateButtonState(builder, 130f,
             new GUIContent("None", "Disable active weather."),
             new GUIContent("Normal Rain", "Use Unturned's default rain weather."),
             new GUIContent("Thunder", "Use the heavy rain weather asset with lightning."),
             new GUIContent("Snow", "Use Unturned's default snow weather."));
         _weatherButton.onSwappedState += OnWeatherStateChanged;
-    }
 
-    private void AddMoonSlider(float y)
-    {
-        AddRowLabel("Moon", y, "Matches the moon slider from Environment/Lighting.");
-        _moonSlider = CreateSlider(y);
+        AddRowLabel(builder, "Moon", 170f, "Matches the moon slider from Environment/Lighting.");
+        _moonSlider = CreateSlider(builder, 170f);
         _moonSlider.OnValueChanged += OnMoonSliderChanged;
-    }
 
-    private void AddTimeSlider(float y)
-    {
-        AddRowLabel("Time", y, "Matches the time slider from Environment/Lighting.");
-        _timeSlider = CreateSlider(y);
+        AddRowLabel(builder, "Time", 205f, "Matches the time slider from Environment/Lighting.");
+        _timeSlider = CreateSlider(builder, 205f);
         _timeSlider.OnValueChanged += OnTimeSliderChanged;
-    }
 
-    private void AddSnowLevelSlider(float y)
-    {
-        AddRowLabel("Snow Level", y, "Matches the snow level control from Environment/Lighting.");
-        _snowLevelSlider = CreateValueSlider(y);
+        AddRowLabel(builder, "Snow Level", 240f, "Matches the snow level control from Environment/Lighting.");
+        _snowLevelSlider = CreateValueSlider(builder, 240f);
         _snowLevelSlider.onValued += OnSnowLevelChanged;
-    }
 
-    private void AddSeaLevelSlider(float y)
-    {
-        AddRowLabel("Sea Level", y, "Matches the sea level control from Environment/Lighting.");
-        _seaLevelSlider = CreateValueSlider(y);
+        AddRowLabel(builder, "Sea Level", 280f, "Matches the sea level control from Environment/Lighting.");
+        _seaLevelSlider = CreateValueSlider(builder, 280f);
         _seaLevelSlider.onValued += OnSeaLevelChanged;
-    }
 
-    private void AddSmoothCameraToggle(float y)
-    {
-        AddRowLabel("Smooth Camera", y, "Interpolates the editor camera after normal movement for smoother flythrough recording.");
-        _smoothCameraToggle = CreateToggle(y, "Smooth editor camera movement.");
+        AddRowLabel(builder, "Smooth Camera", 325f, "Interpolates the editor camera after normal movement for smoother flythrough recording.");
+        _smoothCameraToggle = CreateToggle(builder, 325f, "Smooth editor camera movement.");
         _smoothCameraToggle.OnValueChanged += OnSmoothCameraToggleChanged;
-    }
 
-    private void AddSmoothnessSlider(float y)
-    {
-        AddRowLabel("Smoothness", y, "Higher values follow normal camera movement more tightly. Lower values feel more floaty.");
-        _smoothnessSlider = CreateSlider(y);
+        AddRowLabel(builder, "Smoothness", 365f, "Higher values follow normal camera movement more tightly. Lower values feel more floaty.");
+        _smoothnessSlider = CreateSlider(builder, 365f);
         _smoothnessSlider.OnValueChanged += OnSmoothnessSliderChanged;
-    }
 
-    private void AddWindToggle(float y)
-    {
-        AddRowLabel("Wind Effects", y, "Toggles the existing graphics wind effects option.");
-        _windToggle = CreateToggle(y, "Toggle graphics wind effects.");
+        AddRowLabel(builder, "Wind Effects", 405f, "Toggles the existing graphics wind effects option.");
+        _windToggle = CreateToggle(builder, 405f, "Toggle graphics wind effects.");
         _windToggle.OnValueChanged += OnWindToggleChanged;
-    }
 
-    private void AddFilmGrainToggle(float y)
-    {
-        AddRowLabel("Film Grain", y, "Toggles the existing graphics film grain option.");
-        _filmGrainToggle = CreateToggle(y, "Toggle post-process film grain.");
+        AddRowLabel(builder, "Film Grain", 445f, "Toggles the existing graphics film grain option.");
+        _filmGrainToggle = CreateToggle(builder, 445f, "Toggle post-process film grain.");
         _filmGrainToggle.OnValueChanged += OnFilmGrainToggleChanged;
-    }
 
-    private void AddWatermarkToggle(float y)
-    {
-        AddRowLabel("Watermark", y, "Shows the configured watermark while using cinematic capture options.", useLeftColumn: true);
-        _watermarkToggle = CreateToggle(y, "Toggle the watermark.", useLeftColumn: true);
-        _watermarkToggle.OnValueChanged += OnWatermarkToggleChanged;
-    }
-
-    private void AddWatermarkSettingsButton(float y)
-    {
-        _watermarkSettingsButton = Glazier.Get().CreateButton();
-        _watermarkSettingsButton.PositionOffset_X = LeftControlX + 50f;
-        _watermarkSettingsButton.PositionOffset_Y = y;
-        _watermarkSettingsButton.PositionScale_X = 0f;
-        _watermarkSettingsButton.SizeOffset_X = 170f;
-        _watermarkSettingsButton.SizeOffset_Y = 30f;
-        _watermarkSettingsButton.Text = "Settings";
-        _watermarkSettingsButton.TooltipText = "Open watermark text, opacity, position, rotation, and scale settings.";
-        _watermarkSettingsButton.TextColor = ESleekTint.FONT;
-        _watermarkSettingsButton.OnClicked += OnClickedWatermarkSettingsButton;
-        _cinematicContainer!.AddChild(_watermarkSettingsButton);
-    }
-
-    private void AddSunShaftsButton(float y)
-    {
-        AddRowLabel("Sun Shafts", y, "Matches the graphics Sun Shafts Quality option.");
-        _sunShaftsButton = CreateQualityButton(y, GraphicQualityStates);
+        AddRowLabel(builder, "Sun Shafts", 485f, "Matches the graphics Sun Shafts Quality option.");
+        _sunShaftsButton = CreateQualityButton(builder, 485f, CinematicModeUtility.GraphicQualityStates);
         _sunShaftsButton.onSwappedState += OnSunShaftsQualityChanged;
-    }
 
-    private void AddLightingButton(float y)
-    {
-        AddRowLabel("Lighting", y, "Matches the graphics Lighting Quality option.");
-        _lightingButton = CreateQualityButton(y, GraphicQualityStates);
+        AddRowLabel(builder, "Lighting", 525f, "Matches the graphics Lighting Quality option.");
+        _lightingButton = CreateQualityButton(builder, 525f, CinematicModeUtility.GraphicQualityStates);
         _lightingButton.onSwappedState += OnLightingQualityChanged;
-    }
 
-    private void AddWaterButton(float y)
-    {
-        AddRowLabel("Water", y, "Matches the graphics Water Quality option.");
-        _waterButton = CreateQualityButton(y, WaterQualityStates);
+        AddRowLabel(builder, "Water", 565f, "Matches the graphics Water Quality option.");
+        _waterButton = CreateQualityButton(builder, 565f, CinematicModeUtility.WaterQualityStates);
         _waterButton.onSwappedState += OnWaterQualityChanged;
+
+        AddRowLabel(builder, "Watermark", 565f, "Shows the configured watermark while using cinematic capture options.", useLeftColumn: true);
+        _watermarkToggle = CreateToggle(builder, 565f, "Toggle the watermark.", useLeftColumn: true);
+        _watermarkToggle.OnValueChanged += OnWatermarkToggleChanged;
+
+        builder.ResetProperties()
+            .SetSizeHorizontal(170f)
+            .SetSizeVertical(30f)
+            .SetOffsetHorizontal(LeftControlX + 50f)
+            .SetOffsetVertical(565f)
+            .SetText("Settings");
+        _watermarkSettingsButton = builder.BuildButton("Open watermark text, opacity, position, rotation, and scale settings.");
+        _watermarkSettingsButton.OnClicked += OnClickedWatermarkSettingsButton;
+        _cinematicContainer.AddChild(_watermarkSettingsButton);
+
+        builder.ResetProperties()
+            .SetSizeHorizontal(200f)
+            .SetSizeVertical(30f)
+            .SetOffsetHorizontal(-240f)
+            .SetOffsetVertical(-50f)
+            .SetAnchorHorizontal(1f)
+            .SetAnchorVertical(1f)
+            .SetText("Back");
+        _backButton = builder.BuildButton("Return to the pause menu.");
+        _backButton.OnClicked += OnClickedBackButton;
+        _cinematicContainer.AddChild(_backButton);
+
+        AddWatermarkSettingsPanel(builder);
+        _watermarkObject = new GameObject("EditorHelper2 Cinematic Watermark");
+        Object.DontDestroyOnLoad(_watermarkObject);
+        _watermarkRenderer = _watermarkObject.AddComponent<CinematicWatermarkRenderer>();
+        ApplyWatermarkSettings();
     }
 
-    private void AddRowLabel(string text, float y, string tooltip, bool useLeftColumn = false)
+    private void AddRowLabel(UIBuilder builder, string text, float y, string tooltip, bool useLeftColumn = false)
     {
-        ISleekBox label = Glazier.Get().CreateBox();
-        label.PositionOffset_X = useLeftColumn ? LeftLabelX : RightLabelX;
-        label.PositionOffset_Y = y;
-        label.PositionScale_X = useLeftColumn ? 0f : 1f;
-        label.SizeOffset_X = useLeftColumn ? LeftLabelWidth : RightLabelWidth;
-        label.SizeOffset_Y = 30f;
-        label.Text = text;
-        label.TextAlignment = TextAnchor.MiddleCenter;
+        builder.ResetProperties()
+            .SetSizeHorizontal(useLeftColumn ? LeftLabelWidth : RightLabelWidth)
+            .SetSizeVertical(30f)
+            .SetOffsetHorizontal(useLeftColumn ? LeftLabelX : RightLabelX)
+            .SetOffsetVertical(y)
+            .SetAnchorHorizontal(useLeftColumn ? 0f : 1f)
+            .SetText(text);
+        ISleekBox label = builder.BuildBox();
         label.FontSize = ESleekFontSize.Small;
-        label.TextColor = ESleekTint.FONT;
+        label.TooltipText = tooltip;
         _cinematicContainer!.AddChild(label);
     }
 
-    private ISleekToggle CreateToggle(float y, string tooltip, bool useLeftColumn = false)
+    private ISleekToggle CreateToggle(UIBuilder builder, float y, string tooltip, bool useLeftColumn = false)
     {
-        ISleekToggle toggle = Glazier.Get().CreateToggle();
-        toggle.PositionOffset_X = useLeftColumn ? LeftControlX : RightControlX;
-        toggle.PositionOffset_Y = y - 5f;
-        toggle.PositionScale_X = useLeftColumn ? 0f : 1f;
-        toggle.SizeOffset_X = 40f;
-        toggle.SizeOffset_Y = 40f;
-        toggle.TooltipText = tooltip;
+        builder.ResetProperties()
+            .SetSizeHorizontal(40f)
+            .SetSizeVertical(40f)
+            .SetOffsetHorizontal(useLeftColumn ? LeftControlX : RightControlX)
+            .SetOffsetVertical(y - 5f)
+            .SetAnchorHorizontal(useLeftColumn ? 0f : 1f);
+        ISleekToggle toggle = builder.BuildToggle(tooltip);
         _cinematicContainer!.AddChild(toggle);
         return toggle;
     }
 
-    private ISleekSlider CreateSlider(float y, bool useLeftColumn = false)
+    private ISleekSlider CreateSlider(UIBuilder builder, float y, bool useLeftColumn = false)
     {
-        ISleekSlider slider = Glazier.Get().CreateSlider();
-        slider.PositionOffset_X = useLeftColumn ? LeftControlX : RightControlX;
-        slider.PositionOffset_Y = y + 5f;
-        slider.PositionScale_X = useLeftColumn ? 0f : 1f;
-        slider.SizeOffset_X = ControlWidth;
-        slider.SizeOffset_Y = 20f;
-        slider.Orientation = ESleekOrientation.HORIZONTAL;
+        builder.ResetProperties()
+            .SetSizeHorizontal(ControlWidth)
+            .SetSizeVertical(20f)
+            .SetOffsetHorizontal(useLeftColumn ? LeftControlX : RightControlX)
+            .SetOffsetVertical(y + 5f)
+            .SetAnchorHorizontal(useLeftColumn ? 0f : 1f);
+        ISleekSlider slider = builder.BuildSlider();
         _cinematicContainer!.AddChild(slider);
         return slider;
     }
 
-    private SleekValue CreateValueSlider(float y)
+    private SleekValue CreateValueSlider(UIBuilder builder, float y)
     {
-        SleekValue slider = new()
-        {
-            PositionOffset_X = RightControlX,
-            PositionOffset_Y = y,
-            PositionScale_X = 1f,
-            SizeOffset_X = ControlWidth,
-            SizeOffset_Y = 30f
-        };
+        builder.ResetProperties()
+            .SetSizeHorizontal(ControlWidth)
+            .SetSizeVertical(30f)
+            .SetOffsetHorizontal(RightControlX)
+            .SetOffsetVertical(y)
+            .SetAnchorHorizontal(1f);
+        SleekValue slider = builder.BuildValue();
         _cinematicContainer!.AddChild(slider);
         return slider;
     }
 
-    private SleekButtonState CreateButtonState(float y, params GUIContent[] states)
+    private SleekButtonState CreateButtonState(UIBuilder builder, float y, params GUIContent[] states)
     {
-        SleekButtonState button = new(states)
-        {
-            PositionOffset_X = RightControlX,
-            PositionOffset_Y = y,
-            PositionScale_X = 1f,
-            SizeOffset_X = ControlWidth,
-            SizeOffset_Y = 30f,
-            UseContentTooltip = true
-        };
+        builder.ResetProperties()
+            .SetSizeHorizontal(ControlWidth)
+            .SetSizeVertical(30f)
+            .SetOffsetHorizontal(RightControlX)
+            .SetOffsetVertical(y)
+            .SetAnchorHorizontal(1f);
+        SleekButtonState button = builder.BuildButtonState(states);
+        button.UseContentTooltip = true;
         _cinematicContainer!.AddChild(button);
         return button;
     }
 
-    private SleekButtonState CreateQualityButton(float y, EGraphicQuality[] qualities)
+    private SleekButtonState CreateQualityButton(UIBuilder builder, float y, EGraphicQuality[] qualities)
     {
         GUIContent[] states = new GUIContent[qualities.Length];
         for (int i = 0; i < qualities.Length; i++)
         {
-            string label = FormatQualityName(qualities[i]);
+            string label = CinematicModeUtility.FormatQualityName(qualities[i]);
             states[i] = new GUIContent(label, $"Set quality to {label}.");
         }
 
-        return CreateButtonState(y, states);
+        return CreateButtonState(builder, y, states);
     }
 
-    private void AddBackButton()
+    private void AddWatermarkSettingsPanel(UIBuilder builder)
     {
-        _backButton = Glazier.Get().CreateButton();
-        _backButton.PositionOffset_X = -240f;
-        _backButton.PositionOffset_Y = -50f;
-        _backButton.PositionScale_X = 1f;
-        _backButton.PositionScale_Y = 1f;
-        _backButton.SizeOffset_X = 200f;
-        _backButton.SizeOffset_Y = 30f;
-        _backButton.Text = "Back";
-        _backButton.TooltipText = "Return to the pause menu.";
-        _backButton.TextColor = ESleekTint.FONT;
-        _backButton.OnClicked += OnClickedBackButton;
-        _cinematicContainer!.AddChild(_backButton);
-    }
-
-    private void AddWatermarkSettingsPanel()
-    {
-        _watermarkSettingsPanel = new SleekFullscreenBox
-        {
-            PositionOffset_X = -230f,
-            PositionOffset_Y = 120f,
-            PositionScale_X = 0.5f,
-            SizeOffset_X = 460f,
-            SizeOffset_Y = 300f
-        };
+        builder.ResetProperties()
+            .SetSizeHorizontal(460f)
+            .SetSizeVertical(300f)
+            .SetOffsetHorizontal(-230f)
+            .SetOffsetVertical(120f)
+            .SetAnchorHorizontal(0.5f);
+        _watermarkSettingsPanel = builder.BuildFullscreenBox();
         _watermarkSettingsPanel.IsVisible = false;
         _cinematicContainer!.AddChild(_watermarkSettingsPanel);
 
-        AddWatermarkPanelLabel("Watermark Text", 20f);
-        _watermarkTextField = Glazier.Get().CreateStringField();
-        _watermarkTextField.PositionOffset_X = 180f;
-        _watermarkTextField.PositionOffset_Y = 20f;
-        _watermarkTextField.SizeOffset_X = 240f;
-        _watermarkTextField.SizeOffset_Y = 30f;
+        AddWatermarkPanelLabel(builder, "Watermark Text", 20f);
+        builder.ResetProperties()
+            .SetSizeHorizontal(240f)
+            .SetSizeVertical(30f)
+            .SetOffsetHorizontal(180f)
+            .SetOffsetVertical(20f);
+        _watermarkTextField = builder.BuildStringField();
         _watermarkTextField.Text = _watermarkText;
         _watermarkTextField.MaxLength = 64;
         _watermarkTextField.TextColor = ESleekTint.FONT;
         _watermarkTextField.OnTextChanged += OnWatermarkTextChanged;
         _watermarkSettingsPanel.AddChild(_watermarkTextField);
 
-        AddWatermarkPanelLabel("Opacity", 60f);
-        _watermarkOpacitySlider = CreateWatermarkPanelSlider(60f);
+        AddWatermarkPanelLabel(builder, "Opacity", 60f);
+        _watermarkOpacitySlider = CreateWatermarkPanelSlider(builder, 60f);
         _watermarkOpacitySlider.OnValueChanged += OnWatermarkOpacityChanged;
 
-        AddWatermarkPanelLabel("Position X", 95f);
-        _watermarkXSlider = CreateWatermarkPanelSlider(95f);
+        AddWatermarkPanelLabel(builder, "Position X", 95f);
+        _watermarkXSlider = CreateWatermarkPanelSlider(builder, 95f);
         _watermarkXSlider.OnValueChanged += OnWatermarkXChanged;
 
-        AddWatermarkPanelLabel("Position Y", 130f);
-        _watermarkYSlider = CreateWatermarkPanelSlider(130f);
+        AddWatermarkPanelLabel(builder, "Position Y", 130f);
+        _watermarkYSlider = CreateWatermarkPanelSlider(builder, 130f);
         _watermarkYSlider.OnValueChanged += OnWatermarkYChanged;
 
-        AddWatermarkPanelLabel("Rotation", 165f);
-        _watermarkRotationSlider = CreateWatermarkPanelSlider(165f);
+        AddWatermarkPanelLabel(builder, "Rotation", 165f);
+        _watermarkRotationSlider = CreateWatermarkPanelSlider(builder, 165f);
         _watermarkRotationSlider.OnValueChanged += OnWatermarkRotationChanged;
 
-        AddWatermarkPanelLabel("Scale", 200f);
-        _watermarkScaleSlider = CreateWatermarkPanelSlider(200f);
+        AddWatermarkPanelLabel(builder, "Scale", 200f);
+        _watermarkScaleSlider = CreateWatermarkPanelSlider(builder, 200f);
         _watermarkScaleSlider.OnValueChanged += OnWatermarkScaleChanged;
 
-        _resetWatermarkButton = Glazier.Get().CreateButton();
-        _resetWatermarkButton.PositionOffset_X = 180f;
-        _resetWatermarkButton.PositionOffset_Y = 245f;
-        _resetWatermarkButton.SizeOffset_X = 240f;
-        _resetWatermarkButton.SizeOffset_Y = 30f;
-        _resetWatermarkButton.Text = "Reset Watermark";
-        _resetWatermarkButton.TextColor = ESleekTint.FONT;
+        builder.ResetProperties()
+            .SetSizeHorizontal(240f)
+            .SetSizeVertical(30f)
+            .SetOffsetHorizontal(180f)
+            .SetOffsetVertical(245f)
+            .SetText("Reset Watermark");
+        _resetWatermarkButton = builder.BuildButton();
         _resetWatermarkButton.OnClicked += OnClickedResetWatermarkButton;
         _watermarkSettingsPanel.AddChild(_resetWatermarkButton);
     }
 
-    private void AddWatermarkPanelLabel(string text, float y)
+    private void AddWatermarkPanelLabel(UIBuilder builder, string text, float y)
     {
-        ISleekBox label = Glazier.Get().CreateBox();
-        label.PositionOffset_X = 20f;
-        label.PositionOffset_Y = y;
-        label.SizeOffset_X = 140f;
-        label.SizeOffset_Y = 30f;
-        label.Text = text;
-        label.TextAlignment = TextAnchor.MiddleCenter;
+        builder.ResetProperties()
+            .SetSizeHorizontal(140f)
+            .SetSizeVertical(30f)
+            .SetOffsetHorizontal(20f)
+            .SetOffsetVertical(y)
+            .SetText(text);
+        ISleekBox label = builder.BuildBox();
         label.FontSize = ESleekFontSize.Small;
-        label.TextColor = ESleekTint.FONT;
         _watermarkSettingsPanel!.AddChild(label);
     }
 
-    private ISleekSlider CreateWatermarkPanelSlider(float y)
+    private ISleekSlider CreateWatermarkPanelSlider(UIBuilder builder, float y)
     {
-        ISleekSlider slider = Glazier.Get().CreateSlider();
-        slider.PositionOffset_X = 180f;
-        slider.PositionOffset_Y = y + 5f;
-        slider.SizeOffset_X = 240f;
-        slider.SizeOffset_Y = 20f;
-        slider.Orientation = ESleekOrientation.HORIZONTAL;
+        builder.ResetProperties()
+            .SetSizeHorizontal(240f)
+            .SetSizeVertical(20f)
+            .SetOffsetHorizontal(180f)
+            .SetOffsetVertical(y + 5f);
+        ISleekSlider slider = builder.BuildSlider();
         _watermarkSettingsPanel!.AddChild(slider);
         return slider;
-    }
-
-    private void AddWatermarkRenderer()
-    {
-        _watermarkObject = new GameObject("EditorHelper2 Cinematic Watermark");
-        Object.DontDestroyOnLoad(_watermarkObject);
-        _watermarkRenderer = _watermarkObject.AddComponent<CinematicWatermarkRenderer>();
-        ApplyWatermarkSettings();
     }
 
     private void OnClickedOpenCinematicButton(ISleekElement button)
@@ -693,7 +523,7 @@ public class CinematicModeExtension : UIExtension, IExtension
 
         if (_weatherButton != null)
         {
-            _weatherButton.state = (int)GetCurrentWeatherMode();
+            _weatherButton.state = (int)CinematicModeUtility.GetCurrentWeatherMode();
         }
 
         if (_moonSlider != null)
@@ -719,12 +549,12 @@ public class CinematicModeExtension : UIExtension, IExtension
         EnsureSmoothCameraBehaviour();
         if (_fovSlider != null)
         {
-            _fovSlider.Value = FovToSliderValue(_smoothCameraBehaviour?.TargetFov ?? OptionsSettings.DesiredVerticalFieldOfView);
+            _fovSlider.Value = RangedValueToSliderValue(_smoothCameraBehaviour?.TargetFov ?? OptionsSettings.DesiredVerticalFieldOfView, FovMin, FovMax);
         }
 
         if (_rollSlider != null)
         {
-            _rollSlider.Value = RollToSliderValue(_smoothCameraBehaviour?.RollDegrees ?? 0f);
+            _rollSlider.Value = RangedValueToSliderValue(_smoothCameraBehaviour?.RollDegrees ?? 0f, RollMin, RollMax);
         }
 
         if (_dofToggle != null)
@@ -734,17 +564,17 @@ public class CinematicModeExtension : UIExtension, IExtension
 
         if (_dofFocusSlider != null)
         {
-            _dofFocusSlider.Value = DofFocusToSliderValue(_smoothCameraBehaviour?.DepthOfFieldFocusDistance ?? 25f);
+            _dofFocusSlider.Value = RangedValueToSliderValue(_smoothCameraBehaviour?.DepthOfFieldFocusDistance ?? 25f, DofFocusMin, DofFocusMax);
         }
 
         if (_dofStrengthSlider != null)
         {
-            _dofStrengthSlider.Value = DofStrengthToSliderValue(_smoothCameraBehaviour?.DepthOfFieldAperture ?? 5.6f);
+            _dofStrengthSlider.Value = RangedValueToSliderValue(_smoothCameraBehaviour?.DepthOfFieldAperture ?? 5.6f, DofApertureMax, DofApertureMin);
         }
 
         if (_vignetteSlider != null)
         {
-            _vignetteSlider.Value = VignetteToSliderValue(_smoothCameraBehaviour?.VignetteIntensity ?? 0f);
+            _vignetteSlider.Value = RangedValueToSliderValue(_smoothCameraBehaviour?.VignetteIntensity ?? 0f, 0f, VignetteMax);
         }
 
         if (_exposureSlider != null)
@@ -779,7 +609,7 @@ public class CinematicModeExtension : UIExtension, IExtension
 
         if (_smoothnessSlider != null)
         {
-            _smoothnessSlider.Value = SmoothnessToSliderValue(_smoothCameraBehaviour?.Smoothness ?? 8f);
+            _smoothnessSlider.Value = RangedValueToSliderValue(_smoothCameraBehaviour?.Smoothness ?? 8f, SmoothnessMax, SmoothnessMin);
         }
 
         if (_windToggle != null)
@@ -829,17 +659,17 @@ public class CinematicModeExtension : UIExtension, IExtension
 
         if (_sunShaftsButton != null)
         {
-            _sunShaftsButton.state = IndexOfQuality(GraphicQualityStates, GraphicsSettings.sunShaftsQuality);
+            _sunShaftsButton.state = CinematicModeUtility.IndexOfQuality(CinematicModeUtility.GraphicQualityStates, GraphicsSettings.sunShaftsQuality);
         }
 
         if (_lightingButton != null)
         {
-            _lightingButton.state = IndexOfQuality(GraphicQualityStates, GraphicsSettings.lightingQuality);
+            _lightingButton.state = CinematicModeUtility.IndexOfQuality(CinematicModeUtility.GraphicQualityStates, GraphicsSettings.lightingQuality);
         }
 
         if (_waterButton != null)
         {
-            _waterButton.state = IndexOfQuality(WaterQualityStates, GraphicsSettings.waterQuality);
+            _waterButton.state = CinematicModeUtility.IndexOfQuality(CinematicModeUtility.WaterQualityStates, GraphicsSettings.waterQuality);
         }
 
         _isRefreshing = false;
@@ -854,7 +684,7 @@ public class CinematicModeExtension : UIExtension, IExtension
             return;
         }
 
-        if (!TrySetCinematicMode(value))
+        if (!CinematicModeUtility.TrySetCinematicMode(value))
         {
             RefreshAllControls();
             UnturnedLog.warn("[EditorHelper2] Unable to toggle cinematic mode because the Unturned graphics flag was not found.");
@@ -862,7 +692,7 @@ public class CinematicModeExtension : UIExtension, IExtension
         }
 
         GraphicsSettings.apply("EditorHelper2 cinematic mode toggle");
-        RefreshLoadedVisibility(value);
+        CinematicModeUtility.RefreshLoadedVisibility(value);
         RefreshWatermarkVisibility();
     }
 
@@ -933,7 +763,7 @@ public class CinematicModeExtension : UIExtension, IExtension
         EnsureSmoothCameraBehaviour();
         if (_smoothCameraBehaviour != null)
         {
-            _smoothCameraBehaviour.TargetFov = SliderValueToFov(state);
+            _smoothCameraBehaviour.TargetFov = SliderValueToRangedValue(state, FovMin, FovMax);
         }
     }
 
@@ -947,7 +777,7 @@ public class CinematicModeExtension : UIExtension, IExtension
         EnsureSmoothCameraBehaviour();
         if (_smoothCameraBehaviour != null)
         {
-            _smoothCameraBehaviour.RollDegrees = SliderValueToRoll(state);
+            _smoothCameraBehaviour.RollDegrees = SliderValueToRangedValue(state, RollMin, RollMax);
         }
     }
 
@@ -975,7 +805,7 @@ public class CinematicModeExtension : UIExtension, IExtension
         EnsureSmoothCameraBehaviour();
         if (_smoothCameraBehaviour != null)
         {
-            _smoothCameraBehaviour.DepthOfFieldFocusDistance = SliderValueToDofFocus(state);
+            _smoothCameraBehaviour.DepthOfFieldFocusDistance = SliderValueToRangedValue(state, DofFocusMin, DofFocusMax);
         }
     }
 
@@ -989,7 +819,7 @@ public class CinematicModeExtension : UIExtension, IExtension
         EnsureSmoothCameraBehaviour();
         if (_smoothCameraBehaviour != null)
         {
-            _smoothCameraBehaviour.DepthOfFieldAperture = SliderValueToDofAperture(state);
+            _smoothCameraBehaviour.DepthOfFieldAperture = SliderValueToRangedValue(state, DofApertureMax, DofApertureMin);
         }
     }
 
@@ -1003,36 +833,11 @@ public class CinematicModeExtension : UIExtension, IExtension
         EnsureSmoothCameraBehaviour();
         if (_smoothCameraBehaviour != null)
         {
-            _smoothCameraBehaviour.VignetteIntensity = SliderValueToVignette(state);
+            _smoothCameraBehaviour.VignetteIntensity = SliderValueToRangedValue(state, 0f, VignetteMax);
         }
     }
 
     private void OnExposureSliderChanged(ISleekSlider slider, float state)
-    {
-        SetColorGrade(exposure: SliderValueToRangedValue(state, ExposureMin, ExposureMax));
-    }
-
-    private void OnContrastSliderChanged(ISleekSlider slider, float state)
-    {
-        SetColorGrade(contrast: SliderValueToRangedValue(state, GradeMin, GradeMax));
-    }
-
-    private void OnSaturationSliderChanged(ISleekSlider slider, float state)
-    {
-        SetColorGrade(saturation: SliderValueToRangedValue(state, GradeMin, GradeMax));
-    }
-
-    private void OnTemperatureSliderChanged(ISleekSlider slider, float state)
-    {
-        SetColorGrade(temperature: SliderValueToRangedValue(state, GradeMin, GradeMax));
-    }
-
-    private void OnTintSliderChanged(ISleekSlider slider, float state)
-    {
-        SetColorGrade(tint: SliderValueToRangedValue(state, GradeMin, GradeMax));
-    }
-
-    private void SetColorGrade(float? exposure = null, float? contrast = null, float? saturation = null, float? temperature = null, float? tint = null)
     {
         if (_isRefreshing)
         {
@@ -1040,34 +845,65 @@ public class CinematicModeExtension : UIExtension, IExtension
         }
 
         EnsureSmoothCameraBehaviour();
-        if (_smoothCameraBehaviour == null)
+        if (_smoothCameraBehaviour != null)
+        {
+            _smoothCameraBehaviour.Exposure = SliderValueToRangedValue(state, ExposureMin, ExposureMax);
+        }
+    }
+
+    private void OnContrastSliderChanged(ISleekSlider slider, float state)
+    {
+        if (_isRefreshing)
         {
             return;
         }
 
-        if (exposure.HasValue)
+        EnsureSmoothCameraBehaviour();
+        if (_smoothCameraBehaviour != null)
         {
-            _smoothCameraBehaviour.Exposure = exposure.Value;
+            _smoothCameraBehaviour.Contrast = SliderValueToRangedValue(state, GradeMin, GradeMax);
+        }
+    }
+
+    private void OnSaturationSliderChanged(ISleekSlider slider, float state)
+    {
+        if (_isRefreshing)
+        {
+            return;
         }
 
-        if (contrast.HasValue)
+        EnsureSmoothCameraBehaviour();
+        if (_smoothCameraBehaviour != null)
         {
-            _smoothCameraBehaviour.Contrast = contrast.Value;
+            _smoothCameraBehaviour.Saturation = SliderValueToRangedValue(state, GradeMin, GradeMax);
+        }
+    }
+
+    private void OnTemperatureSliderChanged(ISleekSlider slider, float state)
+    {
+        if (_isRefreshing)
+        {
+            return;
         }
 
-        if (saturation.HasValue)
+        EnsureSmoothCameraBehaviour();
+        if (_smoothCameraBehaviour != null)
         {
-            _smoothCameraBehaviour.Saturation = saturation.Value;
+            _smoothCameraBehaviour.Temperature = SliderValueToRangedValue(state, GradeMin, GradeMax);
+        }
+    }
+
+    private void OnTintSliderChanged(ISleekSlider slider, float state)
+    {
+        if (_isRefreshing)
+        {
+            return;
         }
 
-        if (temperature.HasValue)
+        EnsureSmoothCameraBehaviour();
+        if (_smoothCameraBehaviour != null)
         {
-            _smoothCameraBehaviour.Temperature = temperature.Value;
-        }
-
-        if (tint.HasValue)
-        {
-            _smoothCameraBehaviour.Tint = tint.Value;
+            _smoothCameraBehaviour.Tint = SliderValueToRangedValue(state, GradeMin, GradeMax);
         }
     }
 
@@ -1102,7 +938,7 @@ public class CinematicModeExtension : UIExtension, IExtension
         EnsureSmoothCameraBehaviour();
         if (_smoothCameraBehaviour != null)
         {
-            _smoothCameraBehaviour.Smoothness = SliderValueToSmoothness(state);
+            _smoothCameraBehaviour.Smoothness = SliderValueToRangedValue(state, SmoothnessMax, SmoothnessMin);
         }
     }
 
@@ -1232,7 +1068,7 @@ public class CinematicModeExtension : UIExtension, IExtension
             return;
         }
 
-        GraphicsSettings.sunShaftsQuality = GraphicQualityStates[Mathf.Clamp(index, 0, GraphicQualityStates.Length - 1)];
+        GraphicsSettings.sunShaftsQuality = CinematicModeUtility.GraphicQualityStates[Mathf.Clamp(index, 0, CinematicModeUtility.GraphicQualityStates.Length - 1)];
         GraphicsSettings.apply("EditorHelper2 cinematic sun shafts quality");
     }
 
@@ -1243,7 +1079,7 @@ public class CinematicModeExtension : UIExtension, IExtension
             return;
         }
 
-        GraphicsSettings.lightingQuality = GraphicQualityStates[Mathf.Clamp(index, 0, GraphicQualityStates.Length - 1)];
+        GraphicsSettings.lightingQuality = CinematicModeUtility.GraphicQualityStates[Mathf.Clamp(index, 0, CinematicModeUtility.GraphicQualityStates.Length - 1)];
         GraphicsSettings.apply("EditorHelper2 cinematic lighting quality");
     }
 
@@ -1254,7 +1090,7 @@ public class CinematicModeExtension : UIExtension, IExtension
             return;
         }
 
-        GraphicsSettings.waterQuality = WaterQualityStates[Mathf.Clamp(index, 0, WaterQualityStates.Length - 1)];
+        GraphicsSettings.waterQuality = CinematicModeUtility.WaterQualityStates[Mathf.Clamp(index, 0, CinematicModeUtility.WaterQualityStates.Length - 1)];
         GraphicsSettings.apply("EditorHelper2 cinematic water quality");
     }
 
@@ -1294,232 +1130,37 @@ public class CinematicModeExtension : UIExtension, IExtension
         _watermarkRenderer.Scale = Mathf.Clamp(_watermarkScale, WatermarkScaleMin, WatermarkScaleMax);
     }
 
-    private static CinematicWeatherMode GetCurrentWeatherMode()
-    {
-        WeatherAssetBase activeWeather = LevelLighting.GetActiveWeatherAsset();
-        if (activeWeather == null)
-        {
-            return CinematicWeatherMode.None;
-        }
-
-        if (activeWeather.GUID == HeavyRainWeatherReference.GUID)
-        {
-            return CinematicWeatherMode.Thunder;
-        }
-
-        if (WeatherAssetBase.DEFAULT_RAIN.isReferenceTo(activeWeather))
-        {
-            return CinematicWeatherMode.NormalRain;
-        }
-
-        if (WeatherAssetBase.DEFAULT_SNOW.isReferenceTo(activeWeather))
-        {
-            return CinematicWeatherMode.Snow;
-        }
-
-        return CinematicWeatherMode.None;
-    }
-
     private static void SetWeatherMode(CinematicWeatherMode mode)
     {
-        switch (mode)
+        if (mode == CinematicWeatherMode.None)
         {
-            case CinematicWeatherMode.None:
-                LightingManager.DisableWeather();
-                LevelLighting.rainyness = ELightingRain.NONE;
-                LevelLighting.snowyness = ELightingSnow.NONE;
-                break;
-
-            case CinematicWeatherMode.NormalRain:
-                ActivateWeather(WeatherAssetBase.DEFAULT_RAIN, "default rain");
-                LevelLighting.rainyness = ELightingRain.DRIZZLE;
-                LevelLighting.snowyness = ELightingSnow.NONE;
-                break;
-
-            case CinematicWeatherMode.Thunder:
-                ActivateWeather(HeavyRainWeatherReference, "heavy rain with lightning");
-                LevelLighting.rainyness = ELightingRain.DRIZZLE;
-                LevelLighting.snowyness = ELightingSnow.NONE;
-                break;
-
-            case CinematicWeatherMode.Snow:
-                ActivateWeather(WeatherAssetBase.DEFAULT_SNOW, "default snow");
-                LevelLighting.rainyness = ELightingRain.NONE;
-                LevelLighting.snowyness = ELightingSnow.BLIZZARD;
-                break;
+            LightingManager.DisableWeather();
+            LevelLighting.rainyness = ELightingRain.NONE;
+            LevelLighting.snowyness = ELightingSnow.NONE;
+            LevelLighting.MarkParticleCloudsNeedRestart();
+            return;
         }
 
-        LevelLighting.MarkParticleCloudsNeedRestart();
-    }
-
-    private static void ActivateWeather(AssetReference<WeatherAssetBase> reference, string label)
-    {
-        WeatherAssetBase asset = reference.Find();
+        WeatherAssetBase? asset = CinematicModeUtility.FindWeatherAsset(mode);
         if (asset == null)
         {
-            UnturnedLog.warn("[EditorHelper2] Unable to activate cinematic weather because {0} was not found.", label);
+            UnturnedLog.warn("[EditorHelper2] Unable to activate cinematic weather because the {0} asset was not found.", mode);
             return;
         }
 
         LightingManager.ActivatePerpetualWeather(asset);
-    }
-
-    private static bool TrySetCinematicMode(bool value)
-    {
-        if (CinematicModeFlagField?.GetValue(null) is not CommandLineFlag flag)
+        if (mode == CinematicWeatherMode.Snow)
         {
-            return false;
-        }
-
-        flag.value = value;
-        return true;
-    }
-
-    private static void RefreshLoadedVisibility(bool cinematicEnabled)
-    {
-        RefreshObjectVisibility();
-        RefreshResourceVisibility();
-        RefreshRoadVisibility(cinematicEnabled);
-    }
-
-    private static void RefreshObjectVisibility()
-    {
-        List<LevelObject>[,]? objects = LevelObjects.objects;
-        if (objects == null)
-        {
-            return;
-        }
-
-        for (int x = 0; x < objects.GetLength(0); x++)
-        {
-            for (int y = 0; y < objects.GetLength(1); y++)
-            {
-                foreach (LevelObject levelObject in objects[x, y])
-                {
-                    levelObject?.UpdateActiveAndRenderersEnabled();
-                }
-            }
-        }
-    }
-
-    private static void RefreshResourceVisibility()
-    {
-        if (ResourceSpawnpointUpdateActiveMethod == null)
-        {
-            return;
-        }
-
-        List<ResourceSpawnpoint> resources = [];
-        LevelGround.GatherAllTrees(resources);
-        foreach (ResourceSpawnpoint resource in resources)
-        {
-            ResourceSpawnpointUpdateActiveMethod.Invoke(resource, null);
-        }
-    }
-
-    private static void RefreshRoadVisibility(bool cinematicEnabled)
-    {
-        if (cinematicEnabled)
-        {
-            ForceAllRoadSegmentsVisible();
+            LevelLighting.rainyness = ELightingRain.NONE;
+            LevelLighting.snowyness = ELightingSnow.BLIZZARD;
         }
         else
         {
-            LevelRoads.ImmediatelySyncRegionalVisibility();
-        }
-    }
-
-    private static void ForceAllRoadSegmentsVisible()
-    {
-        if (RoadRegionSegmentRenderersField?.GetValue(null) is not IDictionary regionSegmentRenderers)
-        {
-            return;
+            LevelLighting.rainyness = ELightingRain.DRIZZLE;
+            LevelLighting.snowyness = ELightingSnow.NONE;
         }
 
-        foreach (object? value in regionSegmentRenderers.Values)
-        {
-            if (value is not IEnumerable renderers)
-            {
-                continue;
-            }
-
-            foreach (object? rendererObject in renderers)
-            {
-                if (rendererObject is MeshRenderer renderer)
-                {
-                    renderer.forceRenderingOff = false;
-                }
-            }
-        }
-    }
-
-    private static int IndexOfQuality(EGraphicQuality[] qualities, EGraphicQuality quality)
-    {
-        int index = Array.IndexOf(qualities, quality);
-        return index >= 0 ? index : 0;
-    }
-
-    private static string FormatQualityName(EGraphicQuality quality)
-    {
-        return quality switch
-        {
-            EGraphicQuality.OFF => "Off",
-            EGraphicQuality.LOW => "Low",
-            EGraphicQuality.MEDIUM => "Medium",
-            EGraphicQuality.HIGH => "High",
-            EGraphicQuality.ULTRA => "Ultra",
-            _ => quality.ToString()
-        };
-    }
-
-    private static float SliderValueToFov(float value)
-    {
-        return Mathf.Lerp(FovMin, FovMax, Mathf.Clamp01(value));
-    }
-
-    private static float FovToSliderValue(float fov)
-    {
-        return Mathf.InverseLerp(FovMin, FovMax, Mathf.Clamp(fov, FovMin, FovMax));
-    }
-
-    private static float SliderValueToRoll(float value)
-    {
-        return Mathf.Lerp(RollMin, RollMax, Mathf.Clamp01(value));
-    }
-
-    private static float RollToSliderValue(float roll)
-    {
-        return Mathf.InverseLerp(RollMin, RollMax, Mathf.Clamp(roll, RollMin, RollMax));
-    }
-
-    private static float SliderValueToDofFocus(float value)
-    {
-        return Mathf.Lerp(DofFocusMin, DofFocusMax, Mathf.Clamp01(value));
-    }
-
-    private static float DofFocusToSliderValue(float focusDistance)
-    {
-        return Mathf.InverseLerp(DofFocusMin, DofFocusMax, Mathf.Clamp(focusDistance, DofFocusMin, DofFocusMax));
-    }
-
-    private static float SliderValueToDofAperture(float value)
-    {
-        return Mathf.Lerp(DofApertureMax, DofApertureMin, Mathf.Clamp01(value));
-    }
-
-    private static float DofStrengthToSliderValue(float aperture)
-    {
-        return Mathf.InverseLerp(DofApertureMax, DofApertureMin, Mathf.Clamp(aperture, DofApertureMin, DofApertureMax));
-    }
-
-    private static float SliderValueToVignette(float value)
-    {
-        return Mathf.Lerp(0f, VignetteMax, Mathf.Clamp01(value));
-    }
-
-    private static float VignetteToSliderValue(float intensity)
-    {
-        return Mathf.InverseLerp(0f, VignetteMax, Mathf.Clamp(intensity, 0f, VignetteMax));
+        LevelLighting.MarkParticleCloudsNeedRestart();
     }
 
     private static float SliderValueToRangedValue(float value, float min, float max)
@@ -1530,16 +1171,6 @@ public class CinematicModeExtension : UIExtension, IExtension
     private static float RangedValueToSliderValue(float value, float min, float max)
     {
         return Mathf.InverseLerp(min, max, Mathf.Clamp(value, min, max));
-    }
-
-    private static float SliderValueToSmoothness(float value)
-    {
-        return Mathf.Lerp(SmoothnessMax, SmoothnessMin, Mathf.Clamp01(value));
-    }
-
-    private static float SmoothnessToSliderValue(float smoothness)
-    {
-        return Mathf.InverseLerp(SmoothnessMax, SmoothnessMin, Mathf.Clamp(smoothness, SmoothnessMin, SmoothnessMax));
     }
 
     public void Dispose()
@@ -1762,7 +1393,7 @@ public class CinematicModeExtension : UIExtension, IExtension
         EnsureSmoothCameraBehaviour();
         return new Settings
         {
-            WeatherMode = (int)GetCurrentWeatherMode(),
+            WeatherMode = (int)CinematicModeUtility.GetCurrentWeatherMode(),
             FieldOfView = _smoothCameraBehaviour?.TargetFov ?? OptionsSettings.DesiredVerticalFieldOfView,
             Roll = _smoothCameraBehaviour?.RollDegrees ?? 0f,
             DepthOfFieldEnabled = _smoothCameraBehaviour?.IsDepthOfFieldEnabled == true,
@@ -1947,7 +1578,16 @@ public class CinematicModeExtension : UIExtension, IExtension
             ApplyCameraOverrides(cameraTransform);
             if (HasPostProcessOverrides)
             {
-                _postProcessOverrides.Apply(this);
+                _postProcessOverrides.Apply(
+                    IsDepthOfFieldEnabled,
+                    DepthOfFieldFocusDistance,
+                    DepthOfFieldAperture,
+                    VignetteIntensity,
+                    Exposure,
+                    Contrast,
+                    Saturation,
+                    Temperature,
+                    Tint);
             }
             else
             {
@@ -2103,155 +1743,4 @@ public class CinematicModeExtension : UIExtension, IExtension
         }
     }
 
-    private sealed class CinematicPostProcessOverrides
-    {
-        private static readonly FieldInfo? BaseProfileField = typeof(UnturnedPostProcess)
-            .GetField("baseProfile", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private bool _hasAppliedOverrides;
-
-        public void Apply(CinematicCameraSmoothingBehaviour settings)
-        {
-            object? baseProfile = GetBaseProfile();
-            if (baseProfile == null)
-            {
-                return;
-            }
-
-            _hasAppliedOverrides = true;
-            ApplyDepthOfField(baseProfile, settings);
-            ApplyVignette(baseProfile, settings);
-            ApplyColorGrading(baseProfile, settings);
-        }
-
-        public void Reset()
-        {
-            if (!_hasAppliedOverrides)
-            {
-                return;
-            }
-
-            object? baseProfile = GetBaseProfile();
-            if (baseProfile == null)
-            {
-                return;
-            }
-
-            object? dof = GetSetting(baseProfile, "dof");
-            SetActive(dof, false);
-            OverrideFloat(dof, "focusDistance", 1f);
-
-            object? vignette = GetSetting(baseProfile, "vignette");
-            SetActive(vignette, false);
-            OverrideFloat(vignette, "intensity", 0f);
-
-            object? colorGrading = GetSetting(baseProfile, "colorGrading");
-            SetActive(colorGrading, false);
-            OverrideFloat(colorGrading, "postExposure", 0f);
-            OverrideFloat(colorGrading, "contrast", 0f);
-            OverrideFloat(colorGrading, "saturation", 0f);
-            OverrideFloat(colorGrading, "temperature", 0f);
-            OverrideFloat(colorGrading, "tint", 0f);
-            _hasAppliedOverrides = false;
-        }
-
-        private static object? GetBaseProfile()
-        {
-            UnturnedPostProcess postProcess = UnturnedPostProcess.instance;
-            if (postProcess == null)
-            {
-                return null;
-            }
-
-            return BaseProfileField?.GetValue(postProcess);
-        }
-
-        private static void ApplyDepthOfField(object baseProfile, CinematicCameraSmoothingBehaviour settings)
-        {
-            object? dof = GetSetting(baseProfile, "dof");
-            SetActive(dof, settings.IsDepthOfFieldEnabled);
-            if (!settings.IsDepthOfFieldEnabled)
-            {
-                return;
-            }
-
-            OverrideFloat(dof, "focusDistance", Mathf.Clamp(settings.DepthOfFieldFocusDistance, DofFocusMin, DofFocusMax));
-            OverrideFloat(dof, "aperture", Mathf.Clamp(settings.DepthOfFieldAperture, DofApertureMin, DofApertureMax));
-        }
-
-        private static void ApplyVignette(object baseProfile, CinematicCameraSmoothingBehaviour settings)
-        {
-            float intensity = Mathf.Clamp(settings.VignetteIntensity, 0f, VignetteMax);
-            object? vignette = GetSetting(baseProfile, "vignette");
-            SetActive(vignette, intensity > 0.001f);
-            OverrideFloat(vignette, "intensity", intensity);
-        }
-
-        private static void ApplyColorGrading(object baseProfile, CinematicCameraSmoothingBehaviour settings)
-        {
-            bool isActive = IsNonZero(settings.Exposure)
-                || IsNonZero(settings.Contrast)
-                || IsNonZero(settings.Saturation)
-                || IsNonZero(settings.Temperature)
-                || IsNonZero(settings.Tint);
-
-            object? colorGrading = GetSetting(baseProfile, "colorGrading");
-            SetActive(colorGrading, isActive);
-            OverrideFloat(colorGrading, "postExposure", Mathf.Clamp(settings.Exposure, ExposureMin, ExposureMax));
-            OverrideFloat(colorGrading, "contrast", Mathf.Clamp(settings.Contrast, GradeMin, GradeMax));
-            OverrideFloat(colorGrading, "saturation", Mathf.Clamp(settings.Saturation, GradeMin, GradeMax));
-            OverrideFloat(colorGrading, "temperature", Mathf.Clamp(settings.Temperature, GradeMin, GradeMax));
-            OverrideFloat(colorGrading, "tint", Mathf.Clamp(settings.Tint, GradeMin, GradeMax));
-        }
-
-        private static object? GetSetting(object profileWrapper, string fieldName)
-        {
-            return profileWrapper.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                ?.GetValue(profileWrapper);
-        }
-
-        private static void SetActive(object? setting, bool active)
-        {
-            if (setting == null)
-            {
-                return;
-            }
-
-            FieldInfo? activeField = setting.GetType().GetField("active", BindingFlags.Instance | BindingFlags.Public);
-            if (activeField != null)
-            {
-                activeField.SetValue(setting, active);
-                return;
-            }
-
-            PropertyInfo? activeProperty = setting.GetType().GetProperty("active", BindingFlags.Instance | BindingFlags.Public);
-            activeProperty?.SetValue(setting, active);
-        }
-
-        private static void OverrideFloat(object? setting, string parameterName, float value)
-        {
-            object? parameter = GetSettingParameter(setting, parameterName);
-            MethodInfo? overrideMethod = parameter?.GetType().GetMethod("Override", [typeof(float)]);
-            overrideMethod?.Invoke(parameter, [value]);
-        }
-
-        private static object? GetSettingParameter(object? setting, string parameterName)
-        {
-            if (setting == null)
-            {
-                return null;
-            }
-
-            Type settingType = setting.GetType();
-            return settingType.GetField(parameterName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                ?.GetValue(setting)
-                ?? settingType.GetProperty(parameterName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                    ?.GetValue(setting);
-        }
-
-        private static bool IsNonZero(float value)
-        {
-            return Mathf.Abs(value) > 0.001f;
-        }
-    }
 }

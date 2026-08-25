@@ -48,8 +48,15 @@ public static class ExtensionManager
 
     public static bool IsEnabled(string extensionName)
     {
-        return _instanceStatus.Any(c => c.Key.Name.Equals(extensionName, StringComparison.OrdinalIgnoreCase)) 
-               && _instanceStatus.First(c => c.Key.Name.Equals(extensionName, StringComparison.OrdinalIgnoreCase)).Value;
+        foreach (KeyValuePair<EHExtensionAttribute, bool> extension in _instanceStatus)
+        {
+            if (extension.Key.Name.Equals(extensionName, StringComparison.OrdinalIgnoreCase))
+            {
+                return extension.Value;
+            }
+        }
+
+        return false;
     }
 
     public static bool IsEnabled<TExtension>() where TExtension : class
@@ -97,7 +104,7 @@ public static class ExtensionManager
 
         if (extensionAttribute.Name.Equals("Discord extension", StringComparison.OrdinalIgnoreCase))
         {
-            UpdateDiscordRichPresence(enabled);
+            EditorHelper.GetRichPresence().UpdateAnonymous(enabled);
         }
         
         if (enabled)
@@ -111,11 +118,6 @@ public static class ExtensionManager
         SaveDisabledExtensions();
     }
 
-    private static void UpdateDiscordRichPresence(bool value)
-    {
-        EditorHelper.GetRichPresence().UpdateAnonymous(value);
-    }
-    
     private static void LoadDisabledExtensions()
     {
         try

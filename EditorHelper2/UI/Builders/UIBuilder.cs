@@ -455,6 +455,15 @@ public class UIBuilder
         ApplySpacing();
         return slider;
     }
+    
+    public SleekValue BuildValue()
+    {
+        SleekValue value = new();
+        FormatElement(ref value);
+
+        ApplySpacing();
+        return value;
+    }
 
     public ISleekButton CreateSimpleButton()
     {

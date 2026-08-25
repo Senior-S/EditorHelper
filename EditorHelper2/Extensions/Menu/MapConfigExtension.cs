@@ -75,20 +75,7 @@ public class MapConfigExtension : UIExtension, IExtension
         "Loadouts"
     ];
 
-    private sealed class FieldMetadata
-    {
-        public FieldMetadata(string section, string hint)
-        {
-            Section = section;
-            Hint = hint;
-        }
-
-        public string Section { get; }
-
-        public string Hint { get; }
-    }
-
-    private static readonly Dictionary<string, FieldMetadata> FieldMetadataByName = new(StringComparer.Ordinal)
+    private static readonly Dictionary<string, (string Section, string Hint)> FieldMetadataByName = new(StringComparer.Ordinal)
     {
         [nameof(LevelInfoConfigData.Creators)] = new("Credits", "Shown under Creators in the play menu and loading screen credits. Format: Name, Name."),
         [nameof(LevelInfoConfigData.Collaborators)] = new("Credits", "Shown under Collaborators in the play menu and loading screen credits. Format: Name, Name."),
@@ -154,6 +141,12 @@ public class MapConfigExtension : UIExtension, IExtension
         [nameof(LevelInfoConfigData.Arena_Loadouts)] = new("Loadouts", "Arena item spawn table grants. Each entry resolves Table_ID as an item spawn table and grants Amount rolls to arena players. Format: TableID, Amount; ..."),
         [nameof(LevelInfoConfigData.Spawn_Loadouts)] = new("Loadouts", "Item spawn table grants for players when they spawn. Each entry resolves Table_ID as an item spawn table and grants Amount rolls. Format: TableID, Amount; ...")
     };
+
+    private static readonly FieldInfo[] SerializableConfigFields = typeof(LevelInfoConfigData)
+        .GetFields(BindingFlags.Instance | BindingFlags.Public)
+        .Where(field => !IgnoredFields.Contains(field.Name))
+        .Where(field => field.GetCustomAttribute<JsonIgnoreAttribute>() == null)
+        .ToArray();
 
     [ExistingMember("container")]
     private readonly SleekFullscreenBox? _container;
@@ -738,16 +731,12 @@ public class MapConfigExtension : UIExtension, IExtension
 
     private static IEnumerable<FieldInfo> GetSectionFields(string section)
     {
-        return typeof(LevelInfoConfigData)
-            .GetFields(BindingFlags.Instance | BindingFlags.Public)
-            .Where(field => !IgnoredFields.Contains(field.Name))
-            .Where(field => field.GetCustomAttribute<JsonIgnoreAttribute>() == null)
-            .Where(field => BelongsToSection(field, section));
+        return SerializableConfigFields.Where(field => BelongsToSection(field, section));
     }
 
     private static bool BelongsToSection(FieldInfo field, string section)
     {
-        if (FieldMetadataByName.TryGetValue(field.Name, out FieldMetadata metadata))
+        if (FieldMetadataByName.TryGetValue(field.Name, out (string Section, string Hint) metadata))
         {
             return metadata.Section == section;
         }
@@ -1179,7 +1168,7 @@ public class MapConfigExtension : UIExtension, IExtension
 
     private static string BuildMeaningHint(FieldInfo field)
     {
-        return FieldMetadataByName.TryGetValue(field.Name, out FieldMetadata metadata)
+        return FieldMetadataByName.TryGetValue(field.Name, out (string Section, string Hint) metadata)
             ? metadata.Hint
             : "Latest-source field with no custom legend yet. It is saved to Config.json only when different from Unturned's default.";
     }
@@ -1257,7 +1246,7 @@ public class MapConfigExtension : UIExtension, IExtension
         JObject result = new();
         LevelInfoConfigData defaults = new();
 
-        foreach (FieldInfo field in GetSerializableConfigFields())
+        foreach (FieldInfo field in SerializableConfigFields)
         {
             object? value = field.GetValue(configData);
             object? defaultValue = field.GetValue(defaults);
@@ -1270,14 +1259,6 @@ public class MapConfigExtension : UIExtension, IExtension
         }
 
         return result;
-    }
-
-    private static IEnumerable<FieldInfo> GetSerializableConfigFields()
-    {
-        return typeof(LevelInfoConfigData)
-            .GetFields(BindingFlags.Instance | BindingFlags.Public)
-            .Where(field => !IgnoredFields.Contains(field.Name))
-            .Where(field => field.GetCustomAttribute<JsonIgnoreAttribute>() == null);
     }
 
     private static bool AreJsonValuesEqual(object? value, object? defaultValue)
